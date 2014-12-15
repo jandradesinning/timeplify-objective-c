@@ -12,12 +12,89 @@
 
 @implementation AppDelegate
 
+@synthesize m_arrFavoriteTrains;
+@synthesize m_GPSCoordinate;
+@synthesize m_iGPSStatus;
+
+
+#pragma mark - GPS
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
+{
+    if ([locations count] < 1) {
+        return;
+    }
+    
+    CLLocation* newLocation = [locations lastObject];
+	NSTimeInterval locationAge = -[newLocation.timestamp timeIntervalSinceNow];
+	if (locationAge > 5.0)
+    {
+        return;
+    }
+    
+	//NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
+	   
+    
+	m_GPSCoordinate = newLocation.coordinate;
+	m_iGPSStatus = 2;
+	
+    
+    
+}
+
+
+
+- (void)locationManager: (CLLocationManager *)manager
+	   didFailWithError: (NSError *)error
+{
+	NSLog(@"locationManager failed");
+    
+	m_iGPSStatus = 1;
+	
+}
+
+-(void) startGPS
+{
+    [m_LocationManager stopUpdatingLocation];
+    [m_LocationManager startUpdatingLocation];
+}
+
+-(void) stopGPS
+{
+    [m_LocationManager stopUpdatingLocation];
+}
+
+- (void) initGPS
+{
+ 	
+	m_iGPSStatus = 0;
+	m_LocationManager = [[CLLocationManager alloc] init];
+	m_LocationManager.desiredAccuracy = kCLLocationAccuracyBest;
+    m_LocationManager.activityType = CLActivityTypeFitness;
+	m_LocationManager.delegate = self;
+}
+
+#pragma mark - Others
+
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     // Override point for customization after application launch.
     self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
-    self.window.rootViewController = self.viewController;
+    
+    m_arrFavoriteTrains = [[NSMutableArray alloc] init];
+    
+    UINavigationController* navigationController;
+    navigationController = [[UINavigationController alloc]
+                            initWithRootViewController:self.viewController ];
+    navigationController.navigationBarHidden = YES;
+    self.window.rootViewController = navigationController;
+    
+    [self initGPS];
+    [self startGPS];
+    
+    //self.window.rootViewController = self.viewController;
     [self.window makeKeyAndVisible];
     return YES;
 }
@@ -42,6 +119,8 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    
+    [self startGPS];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

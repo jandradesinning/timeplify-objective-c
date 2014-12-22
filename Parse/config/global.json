@@ -1,0 +1,14 @@
+{
+    "applications": {
+        "Timeplify": {
+            "applicationId": "zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i", 
+            "masterKey": "apai84JvVJ5vmdcDp6VIWZAiQ4n1Uoz6mQXEpQPE"
+        }, 
+        "_default": {
+            "link": "Timeplify"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.3.1"
+    }
+}

@@ -46,7 +46,13 @@ namespace Timeplify
             
             
         private const int    HALF_MILLI_SECS = 30*1000;
-            
+
+        private const string PT_S_RSB           = "RouteStationBounds";
+        private const string PT_S_S             = "Station";
+        private const string PT_S_SD            = "ScheduledData";
+        private const string PT_S_R             = "Route";
+        private const string PT_RT_RTD          = "RealTimeData";
+
         #endregion //Constants
             
         #region Static Members
@@ -90,14 +96,17 @@ namespace Timeplify
         /// </summary>
         private Hashtable _routeMap = null;
 
-        private List<ParseObject> _listStaticPO = null;
-
-        private List<ParseObject> _listRealTimePO = null;
+        private string _staticCounter = "";
+        private string _realTimeCounter = "";
             
         #endregion //Private Members
-            
+
+        #region Private Properties
+
+        #endregion //Private Properties
+
         #region Constructor
-            
+
         public Processor()
         {   
         }
@@ -336,19 +345,14 @@ namespace Timeplify
             return fm;
         }
 
-        private void ProcessRTFeed(FeedMessage fm)
+        private async void ProcessRTFeed(FeedMessage fm)
         {
             // Locals
             List<ParseObject> listPO = null;
 
             try
             {
-                if(null == _listRealTimePO)//first time
-                {
-                }
-                else// update
-                {
-                }
+                _realTimeCounter = GetCurrentTimeString();
 
                 listPO = new List<ParseObject>();
 
@@ -365,34 +369,71 @@ namespace Timeplify
                             poRealTimeData["routeId"] = tu.trip.route_id;
                             poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "SOUTH" : "NORTH";
                             poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
+                            DateTime dtUTC = DateTime.UtcNow;
+                            //TimeZoneInfo tziEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+                            //DateTime dtEST = TimeZoneInfo.ConvertTimeFromUtc(dtUTC, tziEST);
+                            DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
+                            TimeSpan tsNext = (dtUTC - dtArrival);
+                            poRealTimeData["arrivalTime"] = tsNext.ToString(@"hh\:mm\:ss");
+                            poRealTimeData["uid"] = _realTimeCounter;
                             listPO.Add(poRealTimeData);
                         }
                     }
                 }
 
-                ParseObject poSettings = new ParseObject("Settings");
-                poSettings["settingsKey"] = "realTime";
-                poSettings["settingsValue"] = DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT);
-                listPO.Add(poSettings);
+                SaveSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, ref listPO);
 
-                if(null != _listRealTimePO)
-                {
-                    // TODO: Delete previous entries???
-                    //??ParseObject.DeleteAllAsync(_listRealTimePO);
-                    _listRealTimePO = null;
-                    // For better memory performance.
-                    GC.Collect();
-                }
+                await ParseObject.SaveAllAsync(listPO);
 
-                if(null != listPO)
-                {
-                    ParseObject.SaveAllAsync(listPO);
-                    _listRealTimePO = listPO;
-                }
+                DeleteOldRows(_realTimeCounter, new string[] { PT_RT_RTD });
             }
             catch (Exception e)
             {
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process real time feed. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void SaveSettings(string settingsKey, string[] settingsValues, ref List<ParseObject> listPO)
+        {
+            try
+            {
+                ParseObject poSettings = new ParseObject("Settings");
+                poSettings["settingsKey"] = settingsKey;
+
+                foreach (var settingsValue in settingsValues)
+                {
+                    poSettings.AddToList("settingsValues", settingsValue);
+                }
+                listPO.Add(poSettings);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to save settings for {1}. [Error] {0}.", e.Message, settingsKey);
+            }
+        }
+
+        private async void DeleteOldRows(string uid, string[] tablesToDelete)
+        {
+            try
+            {
+                if (null != uid && 0 < uid.Length)
+                {
+                    Dictionary<string, object> parameters = new Dictionary<string, object>();
+                    List<string> tables = new List<string>();
+
+                    foreach (var table in tablesToDelete)
+                    {
+                        tables.Add(table);
+                    }
+                    parameters.Add("tables", tables);
+                    parameters.Add("uid", uid);
+
+                    await ParseCloud.CallFunctionAsync<Dictionary<string, object>>("deleteAllRows", parameters);
+                }
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to delete old rows. [Error] {0}.", e.Message);
             }
         }
 
@@ -726,12 +767,9 @@ namespace Timeplify
                 var stopTimes = new List<StopTime>(feed.GetStopTimes());
                 var stops = new List<Stop>(feed.GetStops());
 
-                if (null == _listStaticPO)//firsttime
-                {
-                }
-                else // update
-                { 
-                }
+                _staticCounter = GetCurrentTimeString();
+
+                List<ParseObject> listStaticPO = new List<ParseObject>();
 
                 int i = 0;
 
@@ -740,13 +778,7 @@ namespace Timeplify
                 foreach (var stop in parentStops)
                 {
                     i++;
-                    ParseObject poStation = new ParseObject("Station");
-                    poStation["stationId"] = stop.Id;
-                    poStation["name"] = stop.Name;
-                    poStation["latitude"] = stop.Latitude;
-                    poStation["longitude"] = stop.Longitude;
-                    _listStaticPO.Add(poStation);
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\tstationId\t" + stop.Id + "\tname\t" + stop.Name);
+                    AddStation(stop, i, ref listStaticPO);
                 }
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STATIONS****************");
@@ -766,16 +798,7 @@ namespace Timeplify
 
                     if (0 < routeStops.Count)
                     {
-                        ParseObject poRoute = new ParseObject("Route");
-                        poRoute["routeId"] = route.Id;
-                        poRoute["shortName"] = route.ShortName;
-                        poRoute["backgroundColor"] = route.Color;
-                        poRoute["textColor"] = route.TextColor;
-                        poRoute["northStationId"] = routeStops[0].ParentStation;
-                        poRoute["southStationId"] = routeStops[routeStops.Count - 1].ParentStation;
-                        
-                        Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\trouteId\t" + route.Id + "\tnorthStationId\t" + routeStops[0].ParentStation
-                            + "\tsouthStationId\t" + routeStops[routeStops.Count - 1].ParentStation);
+                        ParseObject poRoute = AddRoute(route, routeStops, i);
 
                         Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "*********RouteStationMap***************");
 
@@ -783,19 +806,10 @@ namespace Timeplify
 
                         foreach (var routeStop in routeStops)
                         {
-                            j++;
-                            poRoute.AddToList("stations", routeStop.ParentStation);
-
-                            ParseObject poRouteStationBounds = new ParseObject("RouteStationBounds");
-                            poRouteStationBounds["routeId"] = route.Id;
-                            poRouteStationBounds["stationId"] = routeStop.ParentStation;
-                            poRouteStationBounds["northBound"] = GetDisplayName(route.Id, routeStop.ParentStation, true);
-                            poRouteStationBounds["southBound"] = GetDisplayName(route.Id, routeStop.ParentStation, false);
-                            _listStaticPO.Add(poRoute);
-
-                            Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, j + ".\trouteId\t" + route.Id + "\tstationId\t" + routeStop.ParentStation + "\tstationName\t" + routeStop.Name);
+                            j++;                            
+                            AddRouteStationBounds(route.Id, routeStop.ParentStation, routeStop.Name, j, ref poRoute, ref listStaticPO);
                         }
-                        _listStaticPO.Add(poRoute);
+                        listStaticPO.Add(poRoute);
                     }
                     else
                     {
@@ -808,16 +822,20 @@ namespace Timeplify
                 // this is what we need
                 foreach (var parentStop in parentStops)
                 {
-                    ProcessStationTimes(stopTimes, parentStop.Id, "S", trips);
-                    ProcessStationTimes(stopTimes, parentStop.Id, "N", trips);
+                    ProcessStationTimes(stopTimes, parentStop.Id, "S", trips, ref listStaticPO);
+                    ProcessStationTimes(stopTimes, parentStop.Id, "N", trips, ref listStaticPO);
                 }
 
                 ParseObject poSettings = new ParseObject("Settings");
                 poSettings["settingsKey"] = "staticTime";
-                poSettings["settingsValue"] = GetCurrentTimeString();
-                _listStaticPO.Add(poSettings);
+                poSettings.AddToList("settingsValue", _staticCounter);                
+                listStaticPO.Add(poSettings);
 
-                await ParseObject.SaveAllAsync<ParseObject>(_listStaticPO);
+                SaveSettings("staticTime", new string[] { _staticCounter }, ref listStaticPO);
+
+                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
+
+                DeleteOldRows(_staticCounter, new string[] { PT_S_RSB, PT_S_S, PT_S_SD, PT_S_R });
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STOP TIMES****************");
 
@@ -827,6 +845,71 @@ namespace Timeplify
             {
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process static feed. [Error] {0}.", e.Message);
             }
+        }
+
+        private void AddRouteStationBounds(string routeId, string stationId, string stopName, int iIndex, ref ParseObject poRoute, ref List<ParseObject> listStaticPO)
+        {
+            try
+            {
+                poRoute.AddToList("stations", stationId);
+                ParseObject poRouteStationBounds = new ParseObject("RouteStationBounds");
+                poRouteStationBounds["routeId"] = routeId;
+                poRouteStationBounds["stationId"] = stationId;
+                poRouteStationBounds["northBound"] = GetDisplayName(routeId, stationId, true);
+                poRouteStationBounds["southBound"] = GetDisplayName(routeId, stationId, false);
+                poRouteStationBounds["uid"] = _staticCounter;
+                listStaticPO.Add(poRouteStationBounds);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stationId + "\tstationName\t" + stopName);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Stations. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void AddStation(Stop stop, int iIndex, ref List<ParseObject> listStaticPO)
+        {
+            try
+            {
+                ParseObject poStation = new ParseObject("Station");
+                poStation["stationId"] = stop.Id;
+                poStation["name"] = stop.Name;
+                poStation["latitude"] = stop.Latitude;
+                poStation["longitude"] = stop.Longitude;
+                poStation["uid"] = _staticCounter;
+                listStaticPO.Add(poStation);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\tstationId\t" + stop.Id + "\tname\t" + stop.Name);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Stations. [Error] {0}.", e.Message);
+            }
+        }
+
+        private ParseObject AddRoute(Route route, List<Stop> routeStops, int iIndex)
+        {
+            ParseObject poRoute = null;
+
+            try
+            {
+                poRoute = new ParseObject("Route");
+                poRoute["routeId"] = route.Id;
+                poRoute["shortName"] = route.ShortName;
+                poRoute["backgroundColor"] = route.Color;
+                poRoute["textColor"] = route.TextColor;
+                poRoute["northStationId"] = routeStops[0].ParentStation;
+                poRoute["southStationId"] = routeStops[routeStops.Count - 1].ParentStation;
+                poRoute["uid"] = _staticCounter;
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + route.Id + "\tnorthStationId\t" + routeStops[0].ParentStation
+                    + "\tsouthStationId\t" + routeStops[routeStops.Count - 1].ParentStation);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Route. [Error] {0}.", e.Message);
+            }
+
+            return poRoute;
         }
 
         private static IEnumerable<TSource> DistinctBy<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
@@ -841,7 +924,29 @@ namespace Timeplify
             }
         }
 
-        private void ProcessStationTimes(List<StopTime> stopTimes, String stopId, string direction, List<Trip> trips)
+        private void AddScheduleData(string stopId, string routeId, TimeOfDay arrivalTime, string direction, int iIndex, ref List<ParseObject> listStaticPO)
+        {
+            try
+            {
+                ParseObject poSData = new ParseObject("ScheduledData");
+
+                poSData["stationId"] = stopId;
+                poSData["routeId"] = routeId;
+                poSData["arrivalTime"] = arrivalTime.Hours + ":" + arrivalTime.Minutes + ":" + arrivalTime.Seconds;
+                poSData["direction"] = direction;
+                poSData["uid"] = _staticCounter;
+                listStaticPO.Add(poSData);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stopId
+                    + "\tarrivalTime\t" + poSData["arrivalTime"] + "\tdirection\t" + direction
+                    );
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Stations. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void ProcessStationTimes(List<StopTime> stopTimes, String stopId, string direction, List<Trip> trips, ref List<ParseObject> listStaticPO)
         {
             try
             {
@@ -862,16 +967,7 @@ namespace Timeplify
                     var curTrip = trips.Where(trip => trip.Id == stationTime.TripId).FirstOrDefault();
 
                     i++;
-                    ParseObject poSData = new ParseObject("ScheduledData");
-
-                    poSData["stationId"] = stopId;
-                    poSData["routeId"] = curTrip.RouteId;
-                    poSData["arrivalTime"] = stationTime.ArrivalTime.Hours + ":" + stationTime.ArrivalTime.Minutes + ":" + stationTime.ArrivalTime.Seconds;
-                    poSData["direction"] = direction;
-                    _listStaticPO.Add(poSData);
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\trouteId\t" + curTrip.RouteId + "\tstationId\t" + stopId
-                        + "\tarrivalTime\t" + poSData["arrivalTime"] + "\tdirection\t" + direction
-                        );
+                    AddScheduleData(stopId, curTrip.RouteId, stationTime.ArrivalTime, direction, i, ref listStaticPO);
                 }
             }
             catch (Exception e)

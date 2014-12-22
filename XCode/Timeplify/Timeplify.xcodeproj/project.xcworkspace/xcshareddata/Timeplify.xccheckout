@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>75CD84DD-B2A5-45BB-9621-CEC2849964FD</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Timeplify</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>4B4A526B-2612-4FBB-87D2-91B918471147</key>
+		<string>https://git3.projectlocker.com/firmusoft/Jose.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>iOS/Timeplify/Timeplify.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>4B4A526B-2612-4FBB-87D2-91B918471147</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://git3.projectlocker.com/firmusoft/Jose.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>4B4A526B-2612-4FBB-87D2-91B918471147</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>4B4A526B-2612-4FBB-87D2-91B918471147</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Timeplify</string>
+		</dict>
+	</array>
+</dict>
+</plist>

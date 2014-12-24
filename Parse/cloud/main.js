@@ -1,329 +1,198 @@
+function getScheduledData(routeId, stationId, direction, uid) {
+	var promises = [];
+	var scheduledData = [];
+	var ScheduledData = Parse.Object.extend("ScheduledDataX");
+	var querySData = new Parse.Query(ScheduledData);
+	
+	querySData.equalTo("routeId", routeId);
+	querySData.equalTo("stationId", stationId);
+	querySData.equalTo("direction", direction);
+	querySData.equalTo("uid", uid);	
+	querySData.limit(1000);	
+	
+	promises.push(querySData.find());
+
+	return Parse.Promise.when(promises).then(function(sdObjs) {
+		var promise = Parse.Promise.as();
+		promise = promise.then(function() {
+			for (var i = 0; i < sdObjs.length; i++) {
+				var sdObj = sdObjs[i];
+				var sData = {
+					"arrivalTime": sdObj.get("arrivalTime")
+				}
+
+				scheduledData.push(sData);
+			}
+			return scheduledData;
+		});
+		return promise;
+	});
+}
+
+function getRealTimeData(routeId, stationId, direction, uid) {
+	var promises = [];
+	var realTimeData = [];
+	var RealTimeData = Parse.Object.extend("RealTimeData");
+	var queryRTData = new Parse.Query(RealTimeData);
+	
+	queryRTData.equalTo("routeId", routeId);
+	queryRTData.equalTo("stationId", stationId);
+	queryRTData.equalTo("direction", direction);
+	queryRTData.equalTo("uid", uid);
+	queryRTData.limit(1000);	
+	
+	promises.push(queryRTData.find());
+
+	return Parse.Promise.when(promises).then(function(rtdObjs) {
+		var promise = Parse.Promise.as();
+		promise = promise.then(function() {
+			for (var i = 0; i < rtdObjs.length; i++) {
+				var rtdObj = rtdObjs[i];
+				var rtData = {
+					"arrivalTime": rtdObj.get("arrivalTime"),
+					"tripAssignment": rtdObj.get("assigned")
+				}
+				
+				// Find out the service status for the first station only.
+				if(0 == i){
+					rtData.serviceStatus = "Good Service";
+				}
+
+				realTimeData.push(rtData);
+			}
+			return realTimeData;
+		});
+		return promise;
+	});
+}
+
+function getStatus(routeId, stationId, direction, fetchScheduledData) {
+	var promises = [];	
+	var Settings = Parse.Object.extend("Settings");
+	var querySettings = new Parse.Query(Settings);
+	
+	promises.push(querySettings.find());
+
+	return Parse.Promise.when(promises).then(function(settingsObjs) {
+		var promise = Parse.Promise.as();
+		promise = promise.then(function() {
+			var settings = [];
+
+			for (var i = 0; i < settingsObjs.length; i++) {
+				var settingsObj = settingsObjs[i];
+				
+				var settingsValues = settingsObj.get("settingsValues");;
+				if("staticTime" == settingsObj.settingsKey) {
+					settings.staticFeedTime = settingsValues[0];
+				} else {
+					settingsValues = settingsObj.get("settingsValues");
+					settings.realTimeFeedTime = settingsValues[1];
+				}
+			}
+
+			promises.push(getRealTimeData(routeId, stationId, direction, settings.realTimeFeedTime));
+			
+			if(fetchScheduledData) {
+				promises.push(getScheduledData(routeId, stationId, direction, settings.staticFeedTime));
+			}
+			
+			var status = {};
+			
+			Parse.Promise.when(promises).then(function(realTimeData, scheduledData) {
+				status = {
+					"realTime": {
+						"data": realTimeData,
+						"feedTime": settings.realTimeFeedTime
+					}
+				};
+				
+				if(fetchScheduledData && scheduledData) {
+					status.scheduled = {
+						"data": scheduledData,
+						"feedTime": settings.staticFeedTime
+					}
+				}
+			}, function(error) {
+				// Never called
+				response.error();
+			});
+			return status;
+		});
+		return promise;
+	});
+}
+
 // returns all routes' stations
 Parse.Cloud.define("getStatus", function(request, response) {
     var bOK = true;
-	var routes = null;
-	var route = null;
-	var station = null;
+	var routeId = null;
+	var stationId = null;
+	var direction = null;
 	
+	/*	
+	{
+	  "appVersion": "10020",
+	  "route": "1",
+	  "station": "101",
+	  "direction": "North",
+	  "fetchScheduledData": "true",
+	}
+	*/
+
     try
     {
-		routes = request.params.routes;
-        if(bOK && null == routes) {
-            response.error("Parameter 'routes' is missing");
+		routeId = request.params.route;
+		if(bOK && null == routeId) {
+            response.error("Parameter 'route' is missing");
+            bOK = false;
+        }
+
+		stationId = request.params.station;
+        if(bOK && null == stationId) {
+            response.error("Parameter 'station' is missing");
             bOK = false;
         }
 		
-		for (var i = 0; i < routes.length; i++) { 
-			route = routes[i];
-			for (var j = 0; j < route.stations.length; i++) { 
-				station = route.stations[i];
-			}
-		}
-
-        if(bOK && null == request.params.lat) {
-            response.error("Parameter 'lat' is missing");
-            bOK = false;
-        }
-
-        if(bOK && null == request.params.lon) {
-            response.error("Parameter 'lon' is missing");
+		direction = request.params.direction;
+		if(bOK && null == direction) {
+            response.error("Parameter 'direction' is missing");
             bOK = false;
         }
 
         if(bOK) {
-            var myResponse = 
-				{
-				  "feedTime": "05122014140530",
-				  "station": {
-					"id": "102",
-					"scheduledData": [
-					  {
-						"time": "00:30:30",
-						"route": "6"
-					  },
-					  {
-						"time": "02:30:30",
-						"route": "5"
-					  },
-					  {
-						"time": "04:30:30",
-						"route": "6"
-					  },
-					  {
-						"time": "06:30:30",
-						"route": "2"
-					  }
-					],
-					"next": [
-					  {
-						"route": "6",
-						"time": "6",
-						"unit": "Min",
-						"tripAssingment": "live",
-						"serviceStatus": "goodService"
-					  },
-					  {
-						"route": "5",
-						"time": "16",
-						"unit": "Min"
-					  },
-					  {
-						"route": "6",
-						"time": "20",
-						"unit": "Min"
-					  },
-					  {
-						"route": "4",
-						"time": "30",
-						"unit": "Min"
-					  },
-					  {
-						"route": "6",
-						"time": "32",
-						"unit": "Min"
-					  }
-					]
-				  }
-				};
+			var promises = [];
 
-  "feedTime": "05122014140530",
-  "routes": [
-	{
-	  "id": "1",
-	  "stations": [
-		{
-		  "id": "102",
-		  "tripAssingment" : "live",
-		  "north": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  },
-		  "south": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  }
-		},
-		{
-		  "id": "103",
-		  "tripAssingment" : "scheduled",
-		  "north": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  },
-		  "south": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  }
-		}
-	  ]
-	},
-	{
-	  "id": "2",
-	  "stations": [
-		{
-		  "id": "104",
-		  "tripAssingment" : "live",
-		  "north": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  },
-		  "south": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  }
-		},
-		{
-		  "id": "105",
-		  "tripAssingment" : "live",						  
-		  "north": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  },
-		  "south": {
-			"next": [
-			  {
-				"time": "6",
-				"unit": "Min"
-			  },
-			  {
-				"time": "16",
-				"unit": "Min"
-			  },
-			  {
-				"time": "20",
-				"unit": "Min"
-			  },
-			  {
-				"time": "30",
-				"unit": "Min"
-			  },
-			  {
-				"time": "32",
-				"unit": "Min"
-			  }
-			],
-			"serviceStatus": "goodService"
-		  }
-		}
-	  ]
-	}
-  ]
-}*/			
-            response.success(myResponse);
+			promises.push(getRealTimeData(routeId, stationId, direction, "20122014005608"));
+			
+			if(request.params.fetchScheduledData) {
+				promises.push(getScheduledData(routeId, stationId, direction, "23122014005608"));
+			}
+			
+			Parse.Promise.when(promises).then(function(realTimeData, scheduledData) {
+				status = {
+					"realTime": {
+						"data": realTimeData,
+						"feedTime": "20122014005608"
+					}
+				};
+				
+				if(request.params.fetchScheduledData && scheduledData) {
+					status.scheduled = {
+						"data": scheduledData,
+						"feedTime": "23122014005608"
+					}
+				}
+				response.success(status);
+			}, function(error) {
+				// Never called
+				response.error();
+			});
         }
     } catch (e) {
         console.log(e.message);
         response.error(e.message);
     }
 });
-
 
 function deleteObjects(objs) {
     var delCount = 0;

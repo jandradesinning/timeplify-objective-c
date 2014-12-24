@@ -367,7 +367,7 @@ namespace Timeplify
                             // Last character denoting direction not needed, as we store parent stationid
                             poRealTimeData["stationId"] = stu.stop_id.Remove(stu.stop_id.Length-1, 1);
                             poRealTimeData["routeId"] = tu.trip.route_id;
-                            poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "SOUTH" : "NORTH";
+                            poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "S" : "N";
                             poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
                             DateTime dtUTC = DateTime.UtcNow;
                             //TimeZoneInfo tziEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");

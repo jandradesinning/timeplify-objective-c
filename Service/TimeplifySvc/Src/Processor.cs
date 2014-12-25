@@ -290,7 +290,8 @@ namespace Timeplify
                 file = folder + GetCurrentTimeString();
                 fm = DownloadRTFile(url, file);
                 SaveRTFeed(file, fm);
-                ProcessRTFeed(fm);                
+                ProcessRTFeed(fm);
+                File.Delete(file);
             }
             catch (Exception e)
             {
@@ -548,6 +549,7 @@ namespace Timeplify
         private void ProcessStatusFeed(string statusFile)
         { 
             //TODO
+            File.Delete(statusFile);
         }
 
         private void DownloadStaticFeed()
@@ -836,6 +838,8 @@ namespace Timeplify
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
 
                 DeleteOldRows(_staticCounter, new string[] { PT_S_RSB, PT_S_S, PT_S_SD, PT_S_R });
+
+                Directory.Delete(dataFolder, true);
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STOP TIMES****************");
 

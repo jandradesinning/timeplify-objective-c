@@ -1,3 +1,23 @@
+function getServiceStatus(routeId, uid) {
+	var promises = [];
+	var serviceStatus = null;
+	var ServiceStatus = Parse.Object.extend("ServiceStatus");
+	var querySStatus = new Parse.Query(ServiceStatus);
+	
+	querySStatus.equalTo("routeId", routeId);
+	querySStatus.equalTo("uid", uid);
+	
+	promises.push(querySStatus.first());
+
+	return Parse.Promise.when(promises).then(function(ssObj) {
+		var promise = Parse.Promise.as();
+		promise = promise.then(function() {
+			return ssObj.get("status");
+		});
+		return promise;
+	});
+}
+
 function getScheduledData(routeId, stationId, direction, uid) {
 	var promises = [];
 	var scheduledData = [];
@@ -29,7 +49,7 @@ function getScheduledData(routeId, stationId, direction, uid) {
 	});
 }
 
-function getRealTimeData(routeId, stationId, direction, uid) {
+function getRealTimeData(routeId, stationId, direction, uid, ssUID) {
 	var promises = [];
 	var realTimeData = [];
 	var RealTimeData = Parse.Object.extend("RealTimeData");
@@ -52,21 +72,27 @@ function getRealTimeData(routeId, stationId, direction, uid) {
 					"arrivalTime": rtdObj.get("arrivalTime"),
 					"tripAssignment": rtdObj.get("assigned")
 				}
-				
-				// Find out the service status for the first station only.
-				if(0 == i){
-					rtData.serviceStatus = "Good Service";
-				}
-
 				realTimeData.push(rtData);
 			}
 			return realTimeData;
 		});
 		return promise;
+	}).then(function(realTimeData){
+		var promisesX = [];
+		promisesX.push(getServiceStatus(routeId, ssUID));		
+		return Parse.Promise.when(promisesX).then(function(serviceStatus) {
+			var promise = Parse.Promise.as();
+			promise = promise.then(function() {
+				// Find out the service status for the first station only.
+				realTimeData[0].serviceStatus = serviceStatus;
+				return realTimeData;
+			});
+			return promise;
+		});
 	});
 }
 
-function getStatus(routeId, stationId, direction, fetchScheduledData) {
+function getSettings() {
 	var promises = [];	
 	var Settings = Parse.Object.extend("Settings");
 	var querySettings = new Parse.Query(Settings);
@@ -76,50 +102,45 @@ function getStatus(routeId, stationId, direction, fetchScheduledData) {
 	return Parse.Promise.when(promises).then(function(settingsObjs) {
 		var promise = Parse.Promise.as();
 		promise = promise.then(function() {
-			var settings = [];
-
+			var settings = {};
+			
 			for (var i = 0; i < settingsObjs.length; i++) {
 				var settingsObj = settingsObjs[i];
 				
-				var settingsValues = settingsObj.get("settingsValues");;
-				if("staticTime" == settingsObj.settingsKey) {
+				var settingsValues = eval(JSON.stringify(settingsObj.get("settingsValues")));
+				var settingsKey = settingsObj.get("settingsKey");
+				if("realTime" == settingsKey) {
+					settings.realTimeFeedTime = settingsValues[0];
+					settings.gtfsFeedTime = settingsValues[1];
+				} else if ("staticTime" == settingsKey) {
 					settings.staticFeedTime = settingsValues[0];
 				} else {
-					settingsValues = settingsObj.get("settingsValues");
-					settings.realTimeFeedTime = settingsValues[1];
+					settings.serviceStatusFeedTime = settingsValues[0];
 				}
 			}
-
-			promises.push(getRealTimeData(routeId, stationId, direction, settings.realTimeFeedTime));
-			
-			if(fetchScheduledData) {
-				promises.push(getScheduledData(routeId, stationId, direction, settings.staticFeedTime));
-			}
-			
-			var status = {};
-			
-			Parse.Promise.when(promises).then(function(realTimeData, scheduledData) {
-				status = {
-					"realTime": {
-						"data": realTimeData,
-						"feedTime": settings.realTimeFeedTime
-					}
-				};
-				
-				if(fetchScheduledData && scheduledData) {
-					status.scheduled = {
-						"data": scheduledData,
-						"feedTime": settings.staticFeedTime
-					}
-				}
-			}, function(error) {
-				// Never called
-				response.error();
-			});
-			return status;
+			return settings;
 		});
 		return promise;
 	});
+}
+
+function getStatus(settings, realTimeData, scheduledData, fetchScheduledData) {
+	var status = {};
+
+	status = {
+		"realTime": {
+			"data": realTimeData,
+			"feedTime": settings.gtfsFeedTime
+		}
+	};
+
+	if(fetchScheduledData && scheduledData) {
+		status.scheduled = {
+			"data": scheduledData,
+			"feedTime": settings.staticFeedTime
+		}
+	}
+	return status;
 }
 
 // returns all routes' stations
@@ -160,32 +181,21 @@ Parse.Cloud.define("getStatus", function(request, response) {
         }
 
         if(bOK) {
-			var promises = [];
-
-			promises.push(getRealTimeData(routeId, stationId, direction, "20122014005608"));
+			var status = {};
+			var returns = [];
 			
-			if(request.params.fetchScheduledData) {
-				promises.push(getScheduledData(routeId, stationId, direction, "23122014005608"));
-			}
-			
-			Parse.Promise.when(promises).then(function(realTimeData, scheduledData) {
-				status = {
-					"realTime": {
-						"data": realTimeData,
-						"feedTime": "20122014005608"
-					}
-				};
-				
-				if(request.params.fetchScheduledData && scheduledData) {
-					status.scheduled = {
-						"data": scheduledData,
-						"feedTime": "23122014005608"
-					}
-				}
+			getSettings().then(function(settings){
+				returns.push(settings);
+				return getRealTimeDataX(routeId, stationId, direction, settings.realTimeFeedTime, settings.serviceStatusFeedTime);
+			}).then(function(realTimeData){
+				returns.push(realTimeData);
+				return request.params.fetchScheduledData ? getScheduledData(routeId, stationId, direction, returns[0].staticFeedTime) : null;
+			}).then(function(scheduledData){				
+				return getStatus(returns[0], returns[1], scheduledData, request.params.fetchScheduledData);
+			}).then(function(status){
 				response.success(status);
 			}, function(error) {
-				// Never called
-				response.error();
+				response.error(error);
 			});
         }
     } catch (e) {
@@ -193,6 +203,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
         response.error(e.message);
     }
 });
+
 
 function deleteObjects(objs) {
     var delCount = 0;
@@ -469,16 +480,6 @@ Parse.Cloud.define("getSettings", function(request, response) {
 	
     try
     {
-        if(bOK && null == request.params.line) {
-            response.error("Parameter 'line' is missing");
-            bOK = false;
-        }
-
-        /*if(bOK && null == request.params.category) {
-            response.error("Parameter 'category' is missing");
-            bOK = false;
-        }*/
-
         if(bOK) {
             var myResponse = 
 				{
@@ -546,7 +547,9 @@ Parse.Cloud.define("getSettings", function(request, response) {
 					  "about": "About This App",
 					  "rate": "Rate This App",
 					  "min": "Min",
-					  "hrs": "Hrs"
+					  "hrs": "Hrs",
+					  "liveData": "Live Data",
+					  "scheduledData": "Scheduled Data"
 					}
 				  }
 				};

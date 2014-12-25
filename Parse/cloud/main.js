@@ -204,6 +204,46 @@ Parse.Cloud.define("getStatus", function(request, response) {
     }
 });
 
+// returns all routes, stations
+Parse.Cloud.define("getStaticData", function(request, response) {
+    var bOK = true;
+	/*
+	{
+	  "appVersion": "10020",
+	  "updatedTime": "05122014140830"
+	}
+	*/	
+    try
+    {
+        if(bOK && null == request.params.appVersion) {
+            response.error("Parameter 'appVersion' is missing");
+            bOK = false;
+        }
+
+        if(bOK) {		
+			var promises = [];
+
+			promises.push(getSettings());
+			promises.push(addRouteList());
+			promises.push(addStationList());
+			
+			Parse.Promise.when(promises).then(function(settings, routes, stations) {
+				var myResponse = {
+					"feedTime": settings.staticFeedTime,
+					"routes": routes,
+					"stations": stations
+				};
+				response.success(myResponse);
+			}, function(error) {
+				// Never called
+				response.error();
+			});
+        }
+    } catch (e) {
+        console.log(e.message);
+        response.error(e.message);
+    }
+});
 
 function deleteObjects(objs) {
     var delCount = 0;
@@ -330,8 +370,8 @@ function addStationBoundsList(routeId, stationId, station) {
 	var RouteStationBounds = Parse.Object.extend("RouteStationBounds");
 	var queryRouteStationBounds = new Parse.Query(RouteStationBounds);
 	
-	queryRouteStationBounds.equalTo("routeId", route.id);
-	queryRouteStationBounds.equalTo("stationId", station.stationId);	
+	queryRouteStationBounds.equalTo("routeId", routeId);
+	queryRouteStationBounds.equalTo("stationId", stationId);
 					
 	promises.push(queryRouteStationBounds.first());
 	
@@ -348,7 +388,7 @@ function addStationBoundsList(routeId, stationId, station) {
 				station.northBound = bounds.north;
 				station.southBound = bounds.south;
 			}
-			return bounds;
+			return station;
 		});
 		return promise;
 	}, function(error) {
@@ -361,6 +401,7 @@ function addRouteList() {
 	var queryRoute = new Parse.Query(Route);
 	var routes = [];
 	var promises = [];
+	var promisesX = [];
 	
 	queryRoute.limit(1000);
 	promises.push(queryRoute.find());
@@ -369,10 +410,11 @@ function addRouteList() {
 		var promise = Parse.Promise.as();
 		promise = promise.then(function() {
 			for (var i = 0; i < routeObjs.length; i++) {			
-				var routeObj = routeObjs[i];				
+				var routeObj = routeObjs[i];
+				var routeId = routeObj.get("routeId");
 				var route = 
 				{
-				  "id": routeObj.get("routeId"),
+				  "id": routeId,
 				  "name": routeObj.get("shortName"),
 				  "northStationId": routeObj.get("northStationId"),
 				  "southStationId": routeObj.get("southStationId")
@@ -381,12 +423,12 @@ function addRouteList() {
 				var routeStations = routeObj.get("stations");
 				for (var j = 0; j < routeStations.length; j++) { 
 					var stationId = routeStations[j];
-					var promisesX = [];
 					var station = {
 						"stationId": stationId,
 						"northBound": "NorthBound",
 						"southBound": "SouthBound"
 					};
+					promisesX.push(addStationBoundsList(routeId, stationId, station));
 					route.stations.push(station);
 				}
 				routes.push(route);
@@ -394,6 +436,14 @@ function addRouteList() {
 			return routes;
 		});
 		return promise;
+	}).then(function(routes){
+		return Parse.Promise.when(promisesX).then(function(stations) {
+			var promise = Parse.Promise.as();
+			promise = promise.then(function() {
+				return routes;
+			});
+			return promise;
+		});
 	}, function(error) {
 		return Parse.Promise.error(error);
 	});
@@ -429,45 +479,6 @@ function addStationList() {
 		return Parse.Promise.error(error);
 	});
 }
-
-Parse.Cloud.define("getStaticData", function(request, response) {
-    var bOK = true;
-	/*
-	{
-	  "appVersion": "10020",
-	  "updatedTime": "05122014140830"
-	}
-	*/	
-    try
-    {
-        if(bOK && null == request.params.appVersion) {
-            response.error("Parameter 'appVersion' is missing");
-            bOK = false;
-        }
-
-        if(bOK) {		
-			var promises = [];
-
-			promises.push(addRouteList());
-			promises.push(addStationList());
-			
-			Parse.Promise.when(promises).then(function(routes, stations) {
-				var myResponse = {
-					"feedTime": "05122014140830",
-					"routes": routes,
-					"stations": stations
-				};
-				response.success(myResponse);
-			}, function(error) {
-				// Never called
-				response.error();
-			});
-        }
-    } catch (e) {
-        console.log(e.message);
-        response.error(e.message);
-    }
-});
 
 Parse.Cloud.define("getSettings", function(request, response) {
     var bOK = true;

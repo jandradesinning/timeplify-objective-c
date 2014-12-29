@@ -12,7 +12,11 @@ function getServiceStatus(routeId, uid) {
 	return Parse.Promise.when(promises).then(function(ssObj) {
 		var promise = Parse.Promise.as();
 		promise = promise.then(function() {
-			return ssObj.get("status");
+			var retSS = "";
+			if(ssObj){
+				retSS = ssObj.get("status");
+			}
+			return retSS;
 		});
 		return promise;
 	});
@@ -83,8 +87,10 @@ function getRealTimeData(routeId, stationId, direction, uid, ssUID) {
 		return Parse.Promise.when(promisesX).then(function(serviceStatus) {
 			var promise = Parse.Promise.as();
 			promise = promise.then(function() {
-				// Find out the service status for the first station only.
-				realTimeData[0].serviceStatus = serviceStatus;
+				if(null != realTimeData && null != realTimeData[0]) {
+					// Find out the service status for the first station only.
+					realTimeData[0].serviceStatus = serviceStatus;
+				}
 				return realTimeData;
 			});
 			return promise;
@@ -186,7 +192,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
 			
 			getSettings().then(function(settings){
 				returns.push(settings);
-				return getRealTimeDataX(routeId, stationId, direction, settings.realTimeFeedTime, settings.serviceStatusFeedTime);
+				return getRealTimeData(routeId, stationId, direction, settings.realTimeFeedTime, settings.serviceStatusFeedTime);
 			}).then(function(realTimeData){
 				returns.push(realTimeData);
 				return request.params.fetchScheduledData ? getScheduledData(routeId, stationId, direction, returns[0].staticFeedTime) : null;
@@ -279,7 +285,6 @@ function getObjects(className, skipCount, objCount, uid) {
 }
 
 function countObjects(className, uid) {
-	var count = 0;
 	var promises = [];  // Set up a list that will hold the promises being waited on.
 	try
 	{
@@ -296,6 +301,7 @@ function countObjects(className, uid) {
 			promise = promise.then(function() {
 			  // Return a promise that will be resolved when the delete is finished.
 			  steps += "countObjects - " + rowCount + "\r\n";
+			  getObjects(className, 0, rowCount, uid);
 			  return rowCount;
 			});
 			return promise;

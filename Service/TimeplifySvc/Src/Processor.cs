@@ -16,6 +16,7 @@ using GTFS.IO;
 using GTFS.Entities;
 using Parse;
 using nyct_subway;
+using System.Globalization;
 
 namespace Timeplify
 {
@@ -135,7 +136,8 @@ namespace Timeplify
                 
             try
             {
-                ParseClient.Initialize("zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i", "Bv8UkHYe1WhIiu86rK6boshd0LIXK54k1hC1HP05");
+                //ParseClient.Initialize("zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i", "Bv8UkHYe1WhIiu86rK6boshd0LIXK54k1hC1HP05");
+                ParseClient.Initialize("RbAVcTWNVSPFsEXu1xhfmehMhkeBlZqdeyEcXseS", "IHMBICp0kZiMCpVB57PY4x7tpvTSt87AjYvhPccr");
                 bRet = StartTimers();
             }
             catch(Exception e)
@@ -546,10 +548,104 @@ namespace Timeplify
             }
         }
 
-        private void ProcessStatusFeed(string statusFile)
-        { 
-            //TODO
-            File.Delete(statusFile);
+        private async void ProcessStatusFeed(string statusFile)
+        {
+            try
+            {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(statusFile);
+
+                string feedTime = xmlDoc.SelectSingleNode("//timestamp").InnerText;
+                DateTime dtfeed = DateTime.ParseExact(feedTime, "M/d/yyyy h:m:s tt", CultureInfo.InvariantCulture);
+                string statusFeedTime = dtfeed.ToString("ddMMyyyyHHmmss");
+
+                List<ParseObject> listPO = new List<ParseObject>();
+
+                XmlNodeList xmlNodes = xmlDoc.SelectNodes("//subway/line");
+
+                foreach (XmlNode xmlNode in xmlNodes)
+                {
+                    string name = xmlNode["name"].InnerText;
+                    string status = xmlNode["status"].InnerText;
+                    AddInterestedRouteStatus(name, status, statusFeedTime, ref listPO);
+                }
+
+                await ParseObject.SaveAllAsync<ParseObject>(listPO);
+                File.Delete(statusFile);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process status feed. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void AddInterestedRouteStatus(string routeId, string status, string statusFeedTime, ref List<ParseObject> listPO)
+        {
+            string[] arrRoutes = null;
+
+            try
+            {
+                arrRoutes = new string[] { "1", "2", "3", "4", "5", "6", "L", "S" };
+
+                foreach (string route in arrRoutes)
+                {
+                    if (routeId.Contains(route))
+                    {
+                        bool bOK = true;
+                        if ("S" == routeId)
+                        {
+                            bOK = !routeId.Contains("SIR");
+                        }
+
+                        if (bOK)
+                        {
+                            routeId = route;
+                            break;
+                        }
+                    }
+                }
+
+                AddRouteStatus(routeId, status, statusFeedTime, ref listPO);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add interested Route Status. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void AddRouteStatus(string routeId, string status, string statusFeedTime, ref List<ParseObject> listPO)
+        {
+            try
+            {
+                switch (status)
+                {
+                    case "GOOD SERVICE":
+                        status = "goodService";
+                        break;
+                    case "DELAYS":
+                        status = "delays";
+                        break;
+                    case "SUSPENDED":
+                        status = "suspended";
+                        break;
+                    case "PLANNED WORK":
+                        status = "plannedWork";
+                        break;
+                    case "SERVICE CHANGE":
+                        status = "serviceChange";
+                        break;
+                }
+
+                ParseObject poServiceStatus = new ParseObject("ServiceStatus");
+                poServiceStatus["routeId"] = routeId;
+                poServiceStatus["status"] = status;
+                poServiceStatus["uid"] = statusFeedTime;
+                listPO.Add(poServiceStatus);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add Route Status. [Error] {0}.", e.Message);
+            }
         }
 
         private void DownloadStaticFeed()

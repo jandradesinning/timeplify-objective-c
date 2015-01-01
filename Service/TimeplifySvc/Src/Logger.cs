@@ -256,7 +256,7 @@ namespace Timeplify
                 return false;
             }
 
-            string backupName = string.Format("{0}.bak", fileName);
+            string backupName = string.Format("{0}.bak", fileName  + "-" + DateTime.Now.ToString("ddMMyyyyHHmmss"));
             fileName = string.Format("{0}.txt", fileName);
             // Get the file size
             long fileSize = m_FileInfo.Length;

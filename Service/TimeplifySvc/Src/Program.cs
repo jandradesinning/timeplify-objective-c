@@ -30,11 +30,21 @@ namespace Timeplify
             }
             else
             {
-                ServicesToRun = new ServiceBase[] 
-			    { 
-				    new TimeplifySvc() 
-			    };
-                ServiceBase.Run(ServicesToRun);
+                #if (!DEBUG)
+                    ServicesToRun = new ServiceBase[] 
+			        { 
+				        new TimeplifySvc() 
+			        };
+                    ServiceBase.Run(ServicesToRun);
+                #else
+                    // Debug code: this allows the process to run as a non-service.
+                    // It will kick off the service start point, but never kill it.
+                    // Shut down the debugger to exit
+                    TimeplifySvc service = new TimeplifySvc();
+                    // Put a breakpoint on the following line to always catch
+                    // your service when it has finished its work
+                    System.Threading.Thread.Sleep(System.Threading.Timeout.Infinite);
+                #endif 
             }
         }
     }

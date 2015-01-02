@@ -379,11 +379,14 @@ namespace Timeplify
                             DateTime dtUTC = DateTime.UtcNow;
                             //TimeZoneInfo tziEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
                             //DateTime dtEST = TimeZoneInfo.ConvertTimeFromUtc(dtUTC, tziEST);
-                            DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
-                            TimeSpan tsNext = (dtUTC - dtArrival);
-                            poRealTimeData["arrivalTime"] = tsNext.ToString(@"hh\:mm\:ss");
-                            poRealTimeData["uid"] = _realTimeCounter;
-                            listPO.Add(poRealTimeData);
+                            if (null != stu.arrival)
+                            {
+                                DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
+                                TimeSpan tsNext = (dtUTC - dtArrival);
+                                poRealTimeData["arrivalTime"] = tsNext.ToString(@"hh\:mm\:ss");
+                                poRealTimeData["uid"] = _realTimeCounter;
+                                listPO.Add(poRealTimeData);
+                            }
                         }
                     }
                 }
@@ -391,7 +394,11 @@ namespace Timeplify
                 GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, SetRTSettings);
                 SaveSettings(_poRTSettings, ref listPO);
 
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listPO.Count);
+
                 await ParseObject.SaveAllAsync(listPO);
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listPO.Count);
 
                 DeleteOldRows(_realTimeCounter, new string[] { PT_RT_RTD });
             }

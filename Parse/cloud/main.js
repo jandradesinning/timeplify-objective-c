@@ -25,7 +25,7 @@ function getServiceStatus(routeId, uid) {
 function getScheduledData(routeId, stationId, direction, uid) {
 	var promises = [];
 	var scheduledData = [];
-	var ScheduledData = Parse.Object.extend("ScheduledDataX");
+	var ScheduledData = Parse.Object.extend("ScheduledData");
 	var querySData = new Parse.Query(ScheduledData);
 	
 	querySData.equalTo("routeId", routeId);
@@ -120,7 +120,7 @@ function getSettings() {
 					settings.gtfsFeedTime = settingsValues[1];
 				} else if ("staticTime" == settingsKey) {
 					settings.staticFeedTime = settingsValues[0];
-				} else {
+				} else if ("statusTime" == settingsKey) {
 					settings.serviceStatusFeedTime = settingsValues[0];
 				}
 			}
@@ -161,7 +161,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
 	  "appVersion": "10020",
 	  "route": "1",
 	  "station": "101",
-	  "direction": "North",
+	  "direction": "N",
 	  "fetchScheduledData": "true",
 	}
 	*/
@@ -248,126 +248,6 @@ Parse.Cloud.define("getStaticData", function(request, response) {
     } catch (e) {
         console.log(e.message);
         response.error(e.message);
-    }
-});
-
-function deleteObjects(objs) {
-    var delCount = 0;
-	
-	steps += "deleteObjects - " + objs.length + "\r\n";
-
-    try
-	{
-		Parse.Object.destroyAll(objs, {
-			success: function() {
-				delCount = objs.length;
-			},
-			error: function(error) {
-			}
-		});
-    } catch (e) {
-        console.log(e.message);
-    }
-    return delCount;
-}
-
-function getObjects(className, skipCount, objCount, uid) {
-	steps += "getObjects - " + className + ", " + skipCount + ", " + objCount + ", " + uid + "\r\n";
-    var Table = Parse.Object.extend(className);
-	var query = new Parse.Query(Table);
-	
-	// find all rows that doesn't match 
-	query.notEqualTo("uid", uid);
-	query.skip(skipCount);
-	query.limit(1000);
-	
-	queryObjects(query, className, skipCount, objCount, uid);
-}
-
-function countObjects(className, uid) {
-	var promises = [];  // Set up a list that will hold the promises being waited on.
-	try
-	{
-		steps += "countObjects - " + className + ", " + uid + "\r\n";
-		var Table = Parse.Object.extend(className);
-		var query = new Parse.Query(Table);	
-		// find all rows that doesn't match this uid
-		query.notEqualTo("uid", uid);
-		promises.push(query.count());
-		
-		return Parse.Promise.when(promises).then(function(rowCount) {
-			var promise = Parse.Promise.as();
-			// For each item, extend the promise with a function to delete it.
-			promise = promise.then(function() {
-			  // Return a promise that will be resolved when the delete is finished.
-			  steps += "countObjects - " + rowCount + "\r\n";
-			  getObjects(className, 0, rowCount, uid);
-			  return rowCount;
-			});
-			return promise;
-		}, function(error) {
-			return Parse.Promise.error(error);
-		});
-	} catch (e) {
-        console.log(e.message);
-    }
-}
-
-function queryObjects(query, className, skipCount, objCount, uid) {
-    try
-	{
-	    steps += "queryObjects - " + className + ", " + skipCount + ", " + objCount + ", " + uid + "\r\n";
-		query.find({
-		  success: function(objs) {
-			var delCnt = deleteObjects(objs);
-			skipCount += delCnt;
-			objCount -= delCnt;
-			if(0 < objCount) {
-				getObjects(className, skipCount, objCount, uid);
-			}
-		  },
-		  error: function(error) {
-		  }
-		});
-	} catch (e) {
-        console.log(e.message);
-    }
-    return skipCount;
-}
-
-var steps = "";
-
-Parse.Cloud.define("deleteAllRows", function(request, response) {
-	/*
-	{
-	  "tables": ["tableName1", "tableName2"],
-	  "uid": "unique id"
-	}
-	*/	
-	try
-    {
-		var myResponse = "";		
-		var uid = request.params.uid;
-		var promises = [];
-		
-		steps = "";
-		
-		for (var i = 0; i < request.params.tables.length; i++) {
-			var className = request.params.tables[i];
-			//var count = countObjects(className, uid);
-			promises.push(countObjects(className, uid));
-			//getObjects(className, 0, count, uid);
-		}
-		Parse.Promise.when(promises).then(function() {
-			// Calls to this function return "success/error not called" error
-			response.success("Deleted all rows " + steps);
-		}, function(error) {
-			// Never called
-			response.error();
-		});
-	} catch (e) {
-		console.log(e.message);
-		response.error(e.message);
     }
 });
 
@@ -577,3 +457,173 @@ Parse.Cloud.define("getSettings", function(request, response) {
         response.error(e.message);
     }
 });
+
+
+Parse.Cloud.job("deleteAllObsoleteRealTimeRows", function(request, response) {
+	/*
+	{
+	  "tables": ["tableName1", "tableName2"],
+	  "uid": "unique id"
+	}
+	*/	
+	try
+    {
+		var uid = request.params.uid;
+		var promises = [];
+		var count = 0;
+		var settings = {};
+		var returns = [];
+		
+		steps = "";
+		
+		Parse.Cloud.useMasterKey();
+		
+		promises.push(getSettings().then(function(settings){
+			console.log("GOT SETTINGS\r\n");
+			steps += "GOT SETTINGS\r\n";
+			returns.push(settings.serviceStatusFeedTime);
+			
+			return deleteAllRowsY("RealTimeData", settings.realTimeFeedTime);
+		}).then(function(){
+			return deleteAllRowsY("ServiceStatus", returns[0]);
+		}));
+		
+		return Parse.Promise.when(promises).then(function(rowCount) {
+			var promise = Parse.Promise.as();
+			// For each item, extend the promise with a function to delete it.
+			promise = promise.then(function() {
+			  // Return a promise that will be resolved when the delete is finished.
+			  console.log("finally deleted all static rows\r\n");
+			  steps += "finally deleted all static rows\r\n";
+			  response.success(steps);
+			});
+			return promise;
+		}, function(error) {
+			response.error(steps);
+		});
+	} catch (e) {
+		console.log(e.message);
+		response.error(steps);
+    }
+});
+
+Parse.Cloud.job("deleteAllObsoleteStaticRows", function(request, response) {
+	/*
+	{
+	  "tables": ["tableName1", "tableName2"],
+	  "uid": "unique id"
+	}
+	*/	
+	try
+    {
+		var uid = request.params.uid;
+		var promises = [];
+		var count = 0;
+		var settings = {};
+		var returns = [];
+		
+		steps = "";
+		
+		Parse.Cloud.useMasterKey();
+		
+		promises.push(getSettings().then(function(settings){
+			console.log("GOT SETTINGS\r\n");
+			steps += "GOT SETTINGS\r\n";
+			returns.push(settings.staticFeedTime);
+			
+			return deleteAllRowsY("Route", settings.staticFeedTime);
+		}).then(function(){
+			return deleteAllRowsY("RouteStationBounds", returns[0]);
+		}).then(function(){
+			return deleteAllRowsY("StationX", returns[0]);
+		}).then(function(){
+			return deleteAllRowsY("ScheduledData", returns[0]);
+		}));
+		
+		return Parse.Promise.when(promises).then(function(rowCount) {
+			var promise = Parse.Promise.as();
+			// For each item, extend the promise with a function to delete it.
+			promise = promise.then(function() {
+			  // Return a promise that will be resolved when the delete is finished.
+			  console.log("finally deleted all static rows\r\n");
+			  steps += "finally deleted all static rows\r\n";
+			  response.success(steps);
+			});
+			return promise;
+		}, function(error) {
+			response.error(steps);
+		});
+	} catch (e) {
+		console.log(e.message);
+		response.error(steps);
+    }
+});
+
+function deleteAllRowsYY(className, uid, limit) {
+	console.log("deleteAllRowsYY - " + className + ", " + uid + "\r\n");
+	steps += "deleteAllRowsYY - " + className + ", " + uid + "\r\n";
+	var promises = [];
+	var Table = Parse.Object.extend(className);
+	var query = new Parse.Query(Table);
+	
+	// find all rows that doesn't match 
+	query.notEqualTo("uid", uid);
+	query.limit(limit);
+	promises.push(query.find());
+	
+	return Parse.Promise.when(promises).then(function(objs) {
+		steps += "GOT OBJS " + objs.length + " for " + className + ", " + uid + "\r\n";
+		var promise = Parse.Promise.as();
+		promise = promise.then(function() {
+			for (var i = 0; i < objs.length; i++) {
+				objs[i].destroy();
+			}
+			console.log(" DONE DELETING " + objs.length + " for " + className + ", " + uid + "\r\n");
+			steps += " DONE DELETING " + objs.length + " for " + className + ", " + uid + "\r\n";
+			return objs.length;
+		});
+		return promise;
+	});
+}
+
+function deleteAllRowsY(className, uid) {
+	console.log("deleteAllRowsY - " + className + ", " + uid + "\r\n");
+	var promises = [];
+	var Table = Parse.Object.extend(className);
+	var query = new Parse.Query(Table);
+	var limit = 1000;
+	
+	// find all rows that doesn't match 
+	query.notEqualTo("uid", uid);
+	query.limit(limit);
+	
+	promises.push(query.count());
+	
+	return Parse.Promise.when(promises).then(function(objCount) {
+		steps += "GOT COUNT " + objCount + " for " + className + ", " + uid + "\r\n";
+		var promise = Parse.Promise.as();
+		promise = promise.then(function() {
+			var loop = objCount/limit;
+			console.log("FOUND " + objCount + " for " + className + ", " + uid + "\r\n");
+			steps += "FOUND " + objCount + " for " + className + ", " + uid + "\r\n";
+			for (var i = 0; i < loop; i++) {
+				var promisesX = [];
+				promisesX.push(deleteAllRowsYY(className, uid, limit));
+				return Parse.Promise.when(promisesX).then(function(delCount) {
+					var promiseX = Parse.Promise.as();
+					promiseX = promiseX.then(function() {
+						console.log("LOOP " + i + ":" + " DELETED " + delCount + " for " + className + ", " + uid + "\r\n");
+						steps += "LOOP " + i + ":" + " DELETED " + delCount + " for " + className + ", " + uid + "\r\n";
+						return delCount;
+					});
+					return promiseX;
+				});
+			}
+			console.log("DOME deleteAllRowsY - " + className + ", " + uid + "\r\n");
+			steps += "DOME deleteAllRowsY - " + className + ", " + uid + "\r\n";
+
+			return objCount;
+		});
+		return promise;
+	});
+}

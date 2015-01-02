@@ -1,8 +1,8 @@
 {
     "applications": {
         "Timeplify": {
-            "applicationId": "zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i", 
-            "masterKey": "apai84JvVJ5vmdcDp6VIWZAiQ4n1Uoz6mQXEpQPE"
+            "applicationId": "RbAVcTWNVSPFsEXu1xhfmehMhkeBlZqdeyEcXseS", 
+            "masterKey": "aA6rVGIoByqiS4J0HVAcJqcJrMHIYsejcKrMA95l"
         }, 
         "_default": {
             "link": "Timeplify"

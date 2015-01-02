@@ -99,6 +99,10 @@ namespace Timeplify
 
         private string _staticCounter = "";
         private string _realTimeCounter = "";
+
+        private ParseObject _poSTSettings = null;
+        private ParseObject _poRTSettings = null;
+        private ParseObject _poSTSSettings = null;
             
         #endregion //Private Members
 
@@ -384,7 +388,8 @@ namespace Timeplify
                     }
                 }
 
-                SaveSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, ref listPO);
+                GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, SetRTSettings);
+                SaveSettings(_poRTSettings, ref listPO);
 
                 await ParseObject.SaveAllAsync(listPO);
 
@@ -396,22 +401,89 @@ namespace Timeplify
             }
         }
 
-        private void SaveSettings(string settingsKey, string[] settingsValues, ref List<ParseObject> listPO)
+        private async void GetSettings(string settingsKey, string[] settingsValues, SetSettingsCallback ssCallback)
         {
+            ParseObject poSettings = null;
+
             try
             {
-                ParseObject poSettings = new ParseObject("Settings");
-                poSettings["settingsKey"] = settingsKey;
+                const string TBL_SETTINGS        = "Settings";
+                const string COL_SETTINGS_VALUES = "settingsValues";
+                const string COL_SETTINGS_KEY    = "settingsKey";
+
+                var query = ParseObject.GetQuery(TBL_SETTINGS);
+                poSettings = await query.WhereEqualTo(COL_SETTINGS_KEY, settingsKey).FirstOrDefaultAsync();
+
+                if (null != poSettings)
+                {
+                    poSettings.Remove(COL_SETTINGS_VALUES);
+                }
+                else
+                {
+                    poSettings = new ParseObject(TBL_SETTINGS);
+                }
+                poSettings[COL_SETTINGS_KEY] = settingsKey;
 
                 foreach (var settingsValue in settingsValues)
                 {
-                    poSettings.AddToList("settingsValues", settingsValue);
+                    poSettings.AddToList(COL_SETTINGS_VALUES, settingsValue);
                 }
+
+                ssCallback(poSettings);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to get settings for {1}. [Error] {0}.", e.Message, settingsKey);
+            }
+        }
+
+        private void SaveSettings(ParseObject poSettings, ref List<ParseObject> listPO)
+        {
+            try
+            {
                 listPO.Add(poSettings);
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to save settings for {1}. [Error] {0}.", e.Message, settingsKey);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to save settings. [Error] {0}.", e.Message);
+            }
+        }
+
+        private delegate void SetSettingsCallback(ParseObject poSettings);
+
+        private void SetSTSettings(ParseObject poSettings)
+        {
+            try
+            {
+                _poRTSettings = poSettings;
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set static feed settings. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void SetSTSSettings(ParseObject poSettings)
+        {
+            try
+            {
+                _poSTSSettings = poSettings;
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set status feed settings. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void SetRTSettings(ParseObject poSettings)
+        {
+            try
+            {
+                _poRTSettings = poSettings;
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set real time feed settings. [Error] {0}.", e.Message);
             }
         }
 
@@ -570,7 +642,8 @@ namespace Timeplify
                     AddInterestedRouteStatus(name, status, statusFeedTime, ref listPO);
                 }
 
-                SaveSettings("statusTime", new string[] { statusFeedTime }, ref listPO);
+                GetSettings("statusTime", new string[] { statusFeedTime }, SetSTSSettings);
+                SaveSettings(_poSTSSettings, ref listPO);
 
                 await ParseObject.SaveAllAsync<ParseObject>(listPO);
                 File.Delete(statusFile);
@@ -1827,7 +1900,8 @@ namespace Timeplify
                     listStaticPO.Clear();
                 }
 
-                SaveSettings("staticTime", new string[] { _staticCounter }, ref listStaticPO);
+                GetSettings("staticTime", new string[] { _staticCounter }, SetSTSettings);
+                SaveSettings(_poSTSettings, ref listStaticPO);
 
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
 
@@ -1987,7 +2061,6 @@ namespace Timeplify
         private void GTFSRTFTimerProc(object state)
         {
             // Locals
-            bool bOK = false;
             string url = null;
             string folder = null;
 
@@ -2019,9 +2092,6 @@ namespace Timeplify
 
         private void GTFSSFTimerProc(object state)
         {
-            // Locals
-            bool bOK = false;
-
             // For better memory performance.
             GC.Collect();
 
@@ -2038,9 +2108,6 @@ namespace Timeplify
 
         private void ServiceStatusTimerProc(object state)
         {
-            // Locals
-            bool bOK = false;
-
             // For better memory performance.
             GC.Collect();
 

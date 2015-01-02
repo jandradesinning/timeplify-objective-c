@@ -125,14 +125,14 @@ namespace Timeplify
 
                 if (null != _appLogger)
                 {
-                    _appLogger.LogMessage(LogPriorityLevel.Informational, "Successfully started CSS Export Service.");
+                    _appLogger.LogMessage(LogPriorityLevel.Informational, "Successfully started Timeplify Service.");
                 }
             }
             catch (Exception ex)
             {
                 if (null != _appLogger)
                 {
-                    _appLogger.LogMessage(LogPriorityLevel.FatalError, "Failed to start CSS Export Service {0}", ex.Message);
+                    _appLogger.LogMessage(LogPriorityLevel.FatalError, "Failed to start Timeplify Service {0}", ex.Message);
 
                 }
             }

@@ -10,13 +10,10 @@ namespace Timeplify
         /// </summary>
         static void Main(string[] args)
         {
-            // Locals
-            ServiceBase[] ServicesToRun = null;
-            TimeplifySvcInstaller projInstaller = null;
-
             // Handle command line arguments.
             if (null != args && 0 != args.Length)
             {
+                TimeplifySvcInstaller projInstaller = null;
                 if ("-i" == args[0])
                 {
                     projInstaller = new TimeplifySvcInstaller();
@@ -31,6 +28,7 @@ namespace Timeplify
             else
             {
                 #if (!DEBUG)
+                    ServiceBase[] ServicesToRun = null;
                     ServicesToRun = new ServiceBase[] 
 			        { 
 				        new TimeplifySvc() 

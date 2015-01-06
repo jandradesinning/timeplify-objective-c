@@ -399,8 +399,6 @@ namespace Timeplify
                 await ParseObject.SaveAllAsync(listPO);
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listPO.Count);
-
-                DeleteOldRows(_realTimeCounter, new string[] { PT_RT_RTD });
             }
             catch (Exception e)
             {
@@ -491,31 +489,6 @@ namespace Timeplify
             catch (Exception e)
             {
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set real time feed settings. [Error] {0}.", e.Message);
-            }
-        }
-
-        private async void DeleteOldRows(string uid, string[] tablesToDelete)
-        {
-            try
-            {
-                if (null != uid && 0 < uid.Length)
-                {
-                    Dictionary<string, object> parameters = new Dictionary<string, object>();
-                    List<string> tables = new List<string>();
-
-                    foreach (var table in tablesToDelete)
-                    {
-                        tables.Add(table);
-                    }
-                    parameters.Add("tables", tables);
-                    parameters.Add("uid", uid);
-
-                    await ParseCloud.CallFunctionAsync<Dictionary<string, object>>("deleteAllRows", parameters);
-                }
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to delete old rows. [Error] {0}.", e.Message);
             }
         }
 
@@ -652,7 +625,13 @@ namespace Timeplify
                 GetSettings("statusTime", new string[] { statusFeedTime }, SetSTSSettings);
                 SaveSettings(_poSTSSettings, ref listPO);
 
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listPO.Count);
+
                 await ParseObject.SaveAllAsync<ParseObject>(listPO);
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listPO.Count);
+                listPO.Clear();
+                
                 File.Delete(statusFile);
             }
             catch (Exception e)
@@ -1853,7 +1832,11 @@ namespace Timeplify
                     AddStation(stop, i, ref listStaticPO);
                 }
 
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
+
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STATIONS****************");
@@ -1891,8 +1874,12 @@ namespace Timeplify
                         Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\trouteId\t" + route.Id + "\tZERO STOPS");
                     }
                 }
+                
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
 
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL ROUTES****************");
@@ -1903,16 +1890,23 @@ namespace Timeplify
                     ProcessStationTimes(stopTimes, parentStop.Id, "S", trips, ref listStaticPO);
                     ProcessStationTimes(stopTimes, parentStop.Id, "N", trips, ref listStaticPO);
 
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
+
                     await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
+
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
                     listStaticPO.Clear();
                 }
 
                 GetSettings("staticTime", new string[] { _staticCounter }, SetSTSettings);
                 SaveSettings(_poSTSettings, ref listStaticPO);
 
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
+
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
 
-                DeleteOldRows(_staticCounter, new string[] { PT_S_RSB, PT_S_S, PT_S_SD, PT_S_R });
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
+                listStaticPO.Clear();
 
                 Directory.Delete(dataFolder, true);
 

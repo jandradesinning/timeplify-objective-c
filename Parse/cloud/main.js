@@ -457,9 +457,8 @@ Parse.Cloud.define("getSettings", function(request, response) {
         response.error(e.message);
     }
 });
- 
- 
-Parse.Cloud.job("deleteAllObsoleteRealTimeRows", function(request, response) {
+
+Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
     /*
     {
       "tables": ["tableName1", "tableName2"],
@@ -482,10 +481,20 @@ Parse.Cloud.job("deleteAllObsoleteRealTimeRows", function(request, response) {
             console.log("GOT SETTINGS\r\n");
             steps += "GOT SETTINGS\r\n";
             returns.push(settings.serviceStatusFeedTime);
-             
+			returns.push(settings.staticFeedTime);
+        // delete real time rows     
             return deleteAllRows("RealTimeData", settings.realTimeFeedTime);
         }).then(function(){
             return deleteAllRows("ServiceStatus", returns[0]);
+        }).then(function(){
+		// delete static rows
+			return deleteAllRows("Route", returns[1]);
+        }).then(function(){
+            return deleteAllRows("RouteStationBounds", returns[1]);
+        }).then(function(){
+            return deleteAllRows("Station", returns[1]);
+        }).then(function(){
+            return deleteAllRows("ScheduledData", returns[1]);
         }));
          
         return Parse.Promise.when(promises).then(function(rowCount) {
@@ -493,8 +502,8 @@ Parse.Cloud.job("deleteAllObsoleteRealTimeRows", function(request, response) {
             // For each item, extend the promise with a function to delete it.
             promise = promise.then(function() {
               // Return a promise that will be resolved when the delete is finished.
-              console.log("finally deleted all realTime rows\r\n");
-              steps += "finally deleted all realTime rows\r\n";
+              console.log("finally deleted all static & realTime rows\r\n");
+              steps += "finally deleted all static & realTime rows\r\n";
               response.success(steps);
             });
             return promise;
@@ -506,59 +515,26 @@ Parse.Cloud.job("deleteAllObsoleteRealTimeRows", function(request, response) {
         response.error(steps);
     }
 });
- 
-Parse.Cloud.job("deleteAllObsoleteStaticRows", function(request, response) {
-    /*
-    {
-      "tables": ["tableName1", "tableName2"],
-      "uid": "unique id"
-    }
-    */ 
-    try
-    {
-        var uid = request.params.uid;
-        var promises = [];
-        var count = 0;
-        var settings = {};
-        var returns = [];
-         
-        steps = "";
-         
-        Parse.Cloud.useMasterKey();
-         
-        promises.push(getSettings().then(function(settings){
-            console.log("GOT SETTINGS\r\n");
-            steps += "GOT SETTINGS\r\n";
-            returns.push(settings.staticFeedTime);
-             
-            return deleteAllRows("Route", settings.staticFeedTime);
-        }).then(function(){
-            return deleteAllRows("RouteStationBounds", returns[0]);
-        }).then(function(){
-            return deleteAllRows("Station", returns[0]);
-        }).then(function(){
-            return deleteAllRows("ScheduledData", returns[0]);
-        }));
-         
-        return Parse.Promise.when(promises).then(function(rowCount) {
-            var promise = Parse.Promise.as();
-            // For each item, extend the promise with a function to delete it.
-            promise = promise.then(function() {
-              // Return a promise that will be resolved when the delete is finished.
-              console.log("finally deleted all static rows\r\n");
-              steps += "finally deleted all static rows\r\n";
-              response.success(steps);
-            });
-            return promise;
-        }, function(error) {
-            response.error(steps);
+
+function deleteAllObjects(className, uid, objs) {
+    console.log("deleteAllObjects - " + className + ", " + uid + "\r\n");
+    steps += "deleteAllObjects - " + className + ", " + uid + "\r\n";
+    var promises = [];
+
+    promises.push(Parse.Object.destroyAll(objs));
+     
+    return Parse.Promise.when(promises).then(function() {
+        steps += "DELETED ALL OBJS " + objs.length + " for " + className + ", " + uid + "\r\n";
+        var promise = Parse.Promise.as();
+        promise = promise.then(function() {
+            console.log(" SUCCESS DELETING " + objs.length + " for " + className + ", " + uid + "\r\n");
+            steps += " SUCCESS DELETING " + objs.length + " for " + className + ", " + uid + "\r\n";
+            return objs.length;
         });
-    } catch (e) {
-        console.log(e.message);
-        response.error(steps);
-    }
-});
- 
+        return promise;
+    });
+}
+
 function deleteAllRowsEx(className, uid, limit) {
     console.log("deleteAllRowsYY - " + className + ", " + uid + "\r\n");
     steps += "deleteAllRowsYY - " + className + ", " + uid + "\r\n";
@@ -578,9 +554,10 @@ function deleteAllRowsEx(className, uid, limit) {
             for (var i = 0; i < objs.length; i++) {
                 objs[i].destroy();
             }
+			//deleteAllObjects(className, uid, objs);
             console.log(" DONE DELETING " + objs.length + " for " + className + ", " + uid + "\r\n");
             steps += " DONE DELETING " + objs.length + " for " + className + ", " + uid + "\r\n";
-            return objs.length;
+            return deleteAllObjects(className, uid, objs);//objs.length;
         });
         return promise;
     });

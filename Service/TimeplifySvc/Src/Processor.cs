@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define SKIP_PARSE_LIMIT_BURST_ISSUE
+
+using System;
 using System.Xml;
 using System.IO;
 using System.IO.Compression;
@@ -370,22 +372,27 @@ namespace Timeplify
                     {
                         foreach(TripUpdate.StopTimeUpdate stu in tu.stop_time_update)
                         {
-                            ParseObject poRealTimeData = new ParseObject("RealTimeData");
-                            // Last character denoting direction not needed, as we store parent stationid
-                            poRealTimeData["stationId"] = stu.stop_id.Remove(stu.stop_id.Length-1, 1);
-                            poRealTimeData["routeId"] = tu.trip.route_id;
-                            poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "S" : "N";
-                            poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
-                            DateTime dtUTC = DateTime.UtcNow;
-                            //TimeZoneInfo tziEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-                            //DateTime dtEST = TimeZoneInfo.ConvertTimeFromUtc(dtUTC, tziEST);
-                            if (null != stu.arrival)
+                        #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                            if ("6" == tu.trip.route_id)//TO AVOID BURST LIMIT ISSUE FOR TESTING
+                        #endif
                             {
-                                DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
-                                TimeSpan tsNext = (dtUTC - dtArrival);
-                                poRealTimeData["arrivalTime"] = tsNext.ToString(@"hh\:mm\:ss");
-                                poRealTimeData["uid"] = _realTimeCounter;
-                                listPO.Add(poRealTimeData);
+                                ParseObject poRealTimeData = new ParseObject("RealTimeData");
+                                // Last character denoting direction not needed, as we store parent stationid
+                                poRealTimeData["stationId"] = stu.stop_id.Remove(stu.stop_id.Length - 1, 1);
+                                poRealTimeData["routeId"] = tu.trip.route_id;
+                                poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "S" : "N";
+                                poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
+                                DateTime dtUTC = DateTime.UtcNow;
+                                //TimeZoneInfo tziEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+                                //DateTime dtEST = TimeZoneInfo.ConvertTimeFromUtc(dtUTC, tziEST);
+                                if (null != stu.arrival)
+                                {
+                                    DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
+                                    TimeSpan tsNext = (dtUTC - dtArrival);
+                                    poRealTimeData["arrivalTime"] = tsNext.ToString(@"hh\:mm\:ss");
+                                    poRealTimeData["uid"] = _realTimeCounter;
+                                    listPO.Add(poRealTimeData);
+                                }
                             }
                         }
                     }
@@ -394,11 +401,11 @@ namespace Timeplify
                 GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, SetRTSettings);
                 SaveSettings(_poRTSettings, ref listPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} real time objects to parse.", listPO.Count);
 
                 await ParseObject.SaveAllAsync(listPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} real time objects to parse.", listPO.Count);
             }
             catch (Exception e)
             {
@@ -421,12 +428,16 @@ namespace Timeplify
 
                 if (null != poSettings)
                 {
-                    poSettings.Remove(COL_SETTINGS_VALUES);
+                    try
+                    {
+                        await poSettings.DeleteAsync();
+                    }
+                    catch
+                    { 
+                    }
                 }
-                else
-                {
-                    poSettings = new ParseObject(TBL_SETTINGS);
-                }
+
+                poSettings = new ParseObject(TBL_SETTINGS);
                 poSettings[COL_SETTINGS_KEY] = settingsKey;
 
                 foreach (var settingsValue in settingsValues)
@@ -619,17 +630,22 @@ namespace Timeplify
                 {
                     string name = xmlNode["name"].InnerText;
                     string status = xmlNode["status"].InnerText;
-                    AddInterestedRouteStatus(name, status, statusFeedTime, ref listPO);
+                #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                    if ("R" == name || "6" == name)//TO AVOID BURST LIMIT ISSUE FOR TESTING
+                #endif
+                    {
+                        AddInterestedRouteStatus(name, status, statusFeedTime, ref listPO);
+                    }
                 }
 
                 GetSettings("statusTime", new string[] { statusFeedTime }, SetSTSSettings);
                 SaveSettings(_poSTSSettings, ref listPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} service status objects to parse.", listPO.Count);
 
                 await ParseObject.SaveAllAsync<ParseObject>(listPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} service status objects to parse.", listPO.Count);
                 listPO.Clear();
                 
                 File.Delete(statusFile);
@@ -642,15 +658,18 @@ namespace Timeplify
 
         private void AddInterestedRouteStatus(string routeId, string status, string statusFeedTime, ref List<ParseObject> listPO)
         {
-            string[] arrRoutes = null;
+            string[] arrInterestedRoutes = null;
 
             try
             {
                 if (routeId != "SIR")
                 {
-                    arrRoutes = new string[] { "1", "2", "3", "4", "5", "6", "L", "S" };
-
-                    foreach (string route in arrRoutes)
+                #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                    arrInterestedRoutes = new string[] { "6" }; //TO AVOID BURST LIMIT ISSUE FOR TESTING
+                #else
+                    arrInterestedRoutes = new string[] { "1", "2", "3", "4", "5", "6", "L", "S" };
+                #endif
+                    foreach (string route in arrInterestedRoutes)
                     {
                         if (routeId.Contains(route))
                         {
@@ -1822,6 +1841,11 @@ namespace Timeplify
 
                 List<ParseObject> listStaticPO = new List<ParseObject>();
 
+            #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                List<string> interestedRoutes = new List<string>();
+                interestedRoutes.Add("R");
+                interestedRoutes.Add("6");
+            #endif
                 int i = 0;
 
                 var parentStops = stops.Where(stop => ((0 == stop.ParentStation.Length) || (null == stop.ParentStation))).ToList();
@@ -1832,11 +1856,11 @@ namespace Timeplify
                     AddStation(stop, i, ref listStaticPO);
                 }
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static station objects to parse.", listStaticPO.Count);
 
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static station objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STATIONS****************");
@@ -1846,40 +1870,50 @@ namespace Timeplify
                 foreach (var route in routes)
                 {
                     i++;
-                    var routeStops = (from stop in stops
-                                      join stopTime in stopTimes on stop.Id equals stopTime.StopId
-                                      join trip in trips on stopTime.TripId equals trip.Id
-                                      where trip.Direction == GTFS.Entities.Enumerations.DirectionType.OneDirection//North to south
-                                      join myroute in routes on trip.RouteId equals myroute.Id
-                                      where myroute.Id == route.Id
-                                      select stop).Distinct().ToList();
-
-                    if (0 < routeStops.Count)
+                #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                    if (0 == interestedRoutes.Count)
                     {
-                        ParseObject poRoute = AddRoute(route, routeStops, i);
-
-                        Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "*********RouteStationMap***************");
-
-                        int j = 0;
-
-                        foreach (var routeStop in routeStops)
-                        {
-                            j++;                            
-                            AddRouteStationBounds(route.Id, routeStop.ParentStation, routeStop.Name, j, ref poRoute, ref listStaticPO);
-                        }
-                        listStaticPO.Add(poRoute);
+                        break;
                     }
-                    else
-                    {
-                        Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\trouteId\t" + route.Id + "\tZERO STOPS");
+                    if ("R" == route.Id || "6" == route.Id)//TO AVOID BURST LIMIT ISSUE FOR TESTING
+                #endif
+                    {                        
+                        var routeStops = (from stop in stops
+                                          join stopTime in stopTimes on stop.Id equals stopTime.StopId
+                                          join trip in trips on stopTime.TripId equals trip.Id
+                                          where trip.Direction == GTFS.Entities.Enumerations.DirectionType.OneDirection//North to south
+                                          join myroute in routes on trip.RouteId equals myroute.Id
+                                          where myroute.Id == route.Id
+                                          select stop).Distinct().ToList();
+
+                        if (0 < routeStops.Count)
+                        {
+                            ParseObject poRoute = AddRoute(route, routeStops, i);
+
+                            Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "*********RouteStationMap***************");
+
+                            int j = 0;
+
+                            foreach (var routeStop in routeStops)
+                            {
+                                j++;
+                                AddRouteStationBounds(route.Id, routeStop.ParentStation, routeStop.Name, j, ref poRoute, ref listStaticPO);
+                            }
+                            listStaticPO.Add(poRoute);
+                        }
+                        else
+                        {
+                            Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\trouteId\t" + route.Id + "\tZERO STOPS");
+                        }
+                        interestedRoutes.Remove(route.Id);
                     }
                 }
                 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static routestationbounds objects to parse.", listStaticPO.Count);
 
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static routestationbounds objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL ROUTES****************");
@@ -1890,22 +1924,22 @@ namespace Timeplify
                     ProcessStationTimes(stopTimes, parentStop.Id, "S", trips, ref listStaticPO);
                     ProcessStationTimes(stopTimes, parentStop.Id, "N", trips, ref listStaticPO);
 
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static scheduleddata objects to parse.", listStaticPO.Count);
 
                     await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
 
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static scheduleddata objects to parse.", listStaticPO.Count);
                     listStaticPO.Clear();
                 }
 
                 GetSettings("staticTime", new string[] { _staticCounter }, SetSTSettings);
                 SaveSettings(_poSTSettings, ref listStaticPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} objects to parse.", listStaticPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static settings objects to parse.", listStaticPO.Count);
 
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} objects to parse.", listStaticPO.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static settings objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
                 Directory.Delete(dataFolder, true);
@@ -2040,7 +2074,13 @@ namespace Timeplify
                     var curTrip = trips.Where(trip => trip.Id == stationTime.TripId).FirstOrDefault();
 
                     i++;
-                    AddScheduleData(stopId, curTrip.RouteId, stationTime.ArrivalTime, direction, i, ref listStaticPO);
+                    
+                #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                    if ("R" == curTrip.RouteId || "6" == curTrip.RouteId)//TO AVOID BURST LIMIT ISSUE FOR TESTING
+                #endif
+                    {
+                        AddScheduleData(stopId, curTrip.RouteId, stationTime.ArrivalTime, direction, i, ref listStaticPO);
+                    }
                 }
             }
             catch (Exception e)

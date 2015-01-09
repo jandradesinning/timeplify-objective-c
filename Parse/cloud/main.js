@@ -28,7 +28,7 @@ function getScheduledData(routeId, stationId, direction, uid) {
     var ScheduledData = Parse.Object.extend("ScheduledData");
     var querySData = new Parse.Query(ScheduledData);
      
-    querySData.equalTo("routeId", routeId);
+    //querySData.equalTo("routeId", routeId);
     querySData.equalTo("stationId", stationId);
     querySData.equalTo("direction", direction);
     querySData.equalTo("uid", uid); 
@@ -42,6 +42,7 @@ function getScheduledData(routeId, stationId, direction, uid) {
             for (var i = 0; i < sdObjs.length; i++) {
                 var sdObj = sdObjs[i];
                 var sData = {
+                    "routeId": sdObj.get("routeId"),
                     "arrivalTime": sdObj.get("arrivalTime")
                 }
  
@@ -59,7 +60,7 @@ function getRealTimeData(routeId, stationId, direction, uid, ssUID) {
     var RealTimeData = Parse.Object.extend("RealTimeData");
     var queryRTData = new Parse.Query(RealTimeData);
      
-    queryRTData.equalTo("routeId", routeId);
+    //queryRTData.equalTo("routeId", routeId);
     queryRTData.equalTo("stationId", stationId);
     queryRTData.equalTo("direction", direction);
     queryRTData.equalTo("uid", uid);
@@ -73,6 +74,7 @@ function getRealTimeData(routeId, stationId, direction, uid, ssUID) {
             for (var i = 0; i < rtdObjs.length; i++) {
                 var rtdObj = rtdObjs[i];
                 var rtData = {
+                    "routeId": rtdObj.get("routeId"),
                     "arrivalTime": rtdObj.get("arrivalTime"),
                     "tripAssignment": rtdObj.get("assigned")
                 }
@@ -168,11 +170,11 @@ Parse.Cloud.define("getStatus", function(request, response) {
  
     try
     {
-        routeId = request.params.route;
+        /*routeId = request.params.route;
         if(bOK && null == routeId) {
             response.error("Parameter 'route' is missing");
             bOK = false;
-        }
+        }*/
  
         stationId = request.params.station;
         if(bOK && null == stationId) {
@@ -196,7 +198,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
             }).then(function(realTimeData){
                 returns.push(realTimeData);
                 return request.params.fetchScheduledData ? getScheduledData(routeId, stationId, direction, returns[0].staticFeedTime) : null;
-            }).then(function(scheduledData){                
+            }).then(function(scheduledData){
                 return getStatus(returns[0], returns[1], scheduledData, request.params.fetchScheduledData);
             }).then(function(status){
                 response.success(status);

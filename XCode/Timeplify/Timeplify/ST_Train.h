@@ -14,7 +14,8 @@
     int m_iIndex;
     NSString* m_strName;
     NSString* m_strImage;
-    NSArray* m_arrStations;
+    NSString* m_strNorthStationId;
+    NSString* m_strSouthStationId;
     BOOL m_bSelected;
 }
 
@@ -22,7 +23,8 @@
 @property (readwrite, assign) int m_iIndex;
 @property (strong, nonatomic) NSString* m_strName;
 @property (strong, nonatomic) NSString* m_strImage;
-@property (strong, nonatomic) NSArray* m_arrStations;
+@property (strong, nonatomic) NSString* m_strNorthStationId;
+@property (strong, nonatomic) NSString* m_strSouthStationId;
 @property (readwrite, assign) BOOL m_bSelected;
 
 

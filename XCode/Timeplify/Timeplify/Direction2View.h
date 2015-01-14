@@ -1,5 +1,5 @@
 //
-//  DirectionView.h
+//  Direction2View.h
 //  Timeplify
 //
 //  Created by Anil on 07/12/14.
@@ -10,7 +10,7 @@
 
 @class ST_Station;
 
-@interface DirectionView : UIView
+@interface Direction2View : UIView
 {
     IBOutlet UIView* m_WhiteView;
     IBOutlet UILabel* m_ctrlLblTitle;
@@ -23,7 +23,6 @@
 @property (nonatomic, strong) ST_Station* m_Station;
 -(IBAction) btnNorthClicked:(id)sender;
 -(IBAction) btnSouthClicked:(id)sender;
--(IBAction) btnEitherClicked:(id)sender;
 -(void) setValues;
 -(void) initCtrl;
 @end

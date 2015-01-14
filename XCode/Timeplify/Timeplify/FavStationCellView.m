@@ -19,7 +19,7 @@
 
 -(void) setValues
 {
-    m_ctrlLblStation.text = m_Station.m_strName;
+    m_ctrlLblStation.text = m_Station.m_strStationName;
 
     m_ctrlLblDirection.text = @"";
     

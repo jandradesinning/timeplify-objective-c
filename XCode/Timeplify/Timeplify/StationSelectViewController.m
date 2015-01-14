@@ -18,6 +18,8 @@
 #import "GlobalCaller.h"
 #import "DirectionView.h"
 
+#import "DataManager.h"
+
 #import "Utility.h"
 
 @interface StationSelectViewController ()
@@ -53,23 +55,12 @@
     
     ST_Train* oTrain = [m_arrTrains objectAtIndex:m_iTrainIndex];
     
-    for (int i = 0; i <[oTrain.m_arrStations count]; i++) {
-        NSDictionary* oD2 = [oTrain.m_arrStations objectAtIndex:i];
-        NSString* strId = [oD2 objectForKey:@"stationId"];
-        
-        NSString* strKey = [NSString stringWithFormat:@"STATION_INFO_%@", strId];
-        NSDictionary* oDictStation = (NSDictionary*)[Utility getObjectFromDefault:strKey];
-        
-        NSString* strStationName= [oDictStation objectForKey:@"name"];
-        
-        
-        ST_Station* oStation = [[ST_Station alloc] init];
-        oStation.m_iIndex = i;
-        oStation.m_strRouteId = oTrain.m_strId;
-        oStation.m_strStationId = [oDictStation objectForKey:@"id"];
-        oStation.m_strName = strStationName;
-        oStation.m_strNorthDirection = [oD2 objectForKey:@"northBound"];
-        oStation.m_strSouthDirection = [oD2 objectForKey:@"southBound"];
+    NSMutableArray* oArrStations = [DataManager getStationsOfTrain:oTrain.m_strId];
+    
+    
+    for (int i = 0; i <[oArrStations count]; i++) {
+        ST_Station* oStation =  [oArrStations objectAtIndex:i];
+      
         oStation.m_iSelectedDirection = 0;
         
         
@@ -77,9 +68,6 @@
         if (oDirection != nil) {
             oStation.m_iSelectedDirection = [oDirection intValue];
         }
-        
-        
-        
         [m_arrAllValues addObject:oStation];
 
     }
@@ -149,8 +137,7 @@
 }
 
 - (void)animationToHideDirectionViewStopped:(NSString *)animationID finished:(NSNumber *) finished context:(void *) context {
-    
-    m_viewDim.hidden = YES;
+
     m_DirectionView.hidden = YES;
 }
 
@@ -160,20 +147,17 @@
     m_DirectionView.m_Station = IN_Station;
     [m_DirectionView setValues];
     
-    m_viewDim.hidden = NO;
     m_DirectionView.hidden = NO;
     m_DirectionView.alpha = 0.0;
-    m_viewDim.alpha = 0.0;
     m_DirectionView.center = self.view.center;
     
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationBeginsFromCurrentState:YES];
     [UIView setAnimationDuration:0.3];
     [UIView setAnimationDelegate:self];
-    [UIView setAnimationDidStopSelector:@selector(animationToShowDotMenuStopped:finished:context:)];
+    [UIView setAnimationDidStopSelector:@selector(animationToShowDirectionViewStopped:finished:context:)];
     
     m_DirectionView.alpha = 1.0;
-    m_viewDim.alpha = 0.7;
     
     [UIView commitAnimations];
     
@@ -190,7 +174,6 @@
     [UIView setAnimationDidStopSelector:@selector(animationToHideDirectionViewStopped:finished:context:)];
     
     m_DirectionView.alpha = 0.0;
-    m_viewDim.alpha = 0.0;
     
     [UIView commitAnimations];
     
@@ -288,7 +271,7 @@
     
     [m_searchDisplayController setActive:NO animated:YES];
     [self showDirectionView:oStation];
-    NSLog(@"Selected '%@'", oStation.m_strName);
+    NSLog(@"Selected '%@'", oStation.m_strStationName);
 }
 
 
@@ -364,7 +347,7 @@
     {
         ST_Station* oStation = [m_arrAllValues objectAtIndex:i];
         
-        NSString* strTxt = oStation.m_strName;
+        NSString* strTxt = oStation.m_strStationName;
         NSString* strUp1 = [searchString uppercaseString];
         NSString* strUp2 = [strTxt uppercaseString];
         
@@ -458,7 +441,7 @@
 
 -(void) viewWillAppear:(BOOL)animated
 {
-    m_viewDim.frame = self.view.frame;
+    m_DirectionView.frame = self.view.frame;
     
     [self applyMode];
 }
@@ -546,9 +529,6 @@
     m_DirectionView.hidden = YES;
     m_DirectionView.alpha = 0.0;
     [self.view addSubview:m_DirectionView];
-    m_viewDim.backgroundColor = [UIColor blackColor];
-    m_viewDim.hidden = YES;
-    m_viewDim.alpha = 0.0;
 
     
     m_ctrlFlowCover.m_IMAGE_SIZE = INT_FLOW_COVER_SIZE;

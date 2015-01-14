@@ -32,7 +32,6 @@
     UISearchDisplayController *m_searchDisplayController;
     IBOutlet UISearchBar * m_ctrlSearchBar;
     
-    IBOutlet UIView* m_viewDim;
 
     DirectionView* m_DirectionView;
     int m_iScreenMode;

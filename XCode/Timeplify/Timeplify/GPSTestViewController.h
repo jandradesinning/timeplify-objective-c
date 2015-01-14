@@ -17,4 +17,5 @@
 }
 
 -(IBAction) btnBackClicked:(id)sender;
+-(IBAction) btnDefClicked:(id)sender;
 @end

@@ -7,18 +7,18 @@
 //
 
 #import "LeftMenuCellView.h"
-#import "ST_Train.h"
+#import "StatusUtility.h"
 
 @implementation LeftMenuCellView
 
-@synthesize m_Train;
+@synthesize m_dict;
 @synthesize m_iIndex;
 
 
 -(void) setValues
 {
    
-    if (m_Train == nil) {
+    if (m_dict == nil) {
         
         m_ctrlImgView.hidden = YES;
         m_ctrlLblTime.hidden = YES;
@@ -47,8 +47,17 @@
     self.selectionStyle = UITableViewCellSelectionStyleNone;
 
 
-    NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", m_Train.m_strImage];
-    m_ctrlImgView.image = [UIImage imageNamed:strNormalImage];
+    
+    
+    NSString* strRoute = [m_dict objectForKey:@"routeId"];
+    if (strRoute != nil) {
+        NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", strRoute];
+        m_ctrlImgView.image = [UIImage imageNamed:strNormalImage];;
+    }
+    
+    StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
+    NSString* strTime = [oStatusUtil getTimeRemaining:m_dict];
+    m_ctrlLblTime.text = strTime;
 }
 
 

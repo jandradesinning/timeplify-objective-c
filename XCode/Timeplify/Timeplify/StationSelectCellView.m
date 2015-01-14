@@ -18,7 +18,7 @@
 
 -(void) setValues
 {
-    m_ctrlLblStation.text = m_Station.m_strName;
+    m_ctrlLblStation.text = m_Station.m_strStationName;
     
     m_ctrlImgViewStar.image = [UIImage imageNamed:@"favorties-star-clear.png"];
     m_ctrlLblDirection.text = @"";

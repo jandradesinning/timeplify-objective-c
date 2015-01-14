@@ -15,6 +15,7 @@
 #import "GlobalCaller.h"
 #import "ST_Train.h"
 #import "Utility.h"
+#import "DataManager.h"
 
 #import <Parse/Parse.h>
 
@@ -120,6 +121,7 @@
 -(IBAction) btnNextClicked:(id)sender
 {
     
+    
     NSMutableArray* oArrFav = [GlobalCaller getFavTrainsArray];
     [oArrFav removeAllObjects];
     for (int i= 0; i < [m_arrRecords count]; i++) {
@@ -129,6 +131,10 @@
         }
     }
     
+    if ([oArrFav count] < 1) {
+        return;
+    }
+
     
     
     StationSelectViewController* viewController = [[StationSelectViewController alloc] initWithNibName:@"StationSelectViewController" bundle:nil];
@@ -182,25 +188,19 @@
         return;
     }
     
-    [Utility saveObjectInDefault:@"SERVER_STATIC_DATA" :IN_Dict];
+    NSLog(@"parseServerResponse '%@'", IN_Dict);
     
-     NSArray* arrStations = [IN_Dict objectForKey:@"stations"];
+    [DataManager insertServerData:IN_Dict];
     
-    for (int i = 0; i <[arrStations count]; i++) {
-        NSDictionary* oDict = [arrStations objectAtIndex:i];
-        NSString* strId = [oDict objectForKey:@"id"];
-        NSString* strKey = [NSString stringWithFormat:@"STATION_INFO_%@", strId];
-        [Utility saveObjectInDefault:strKey :oDict];
-    }
-
+    [Utility saveStringInDefault:@"DATA_COPIED" :@"YES"];
     
     [self readTrainList];
   
 }
 -(void) getServerStaticData
 {
-    NSDictionary* oDict = (NSDictionary*)[Utility getObjectFromDefault:@"SERVER_STATIC_DATA"];
-    if (oDict != nil) {
+    NSString* strSaved = [Utility getStringFromDefault:@"DATA_COPIED"];
+    if ([strSaved isEqualToString:@"YES"]) {
         [self readTrainList];
         return;
     }
@@ -211,6 +211,14 @@
     NSMutableDictionary* oDictParam= [[NSMutableDictionary alloc] init];
     [oDictParam setObject:@"1.0" forKey:@"appVersion"];
     [oDictParam setObject:@"" forKey:@"updatedTime"];
+    
+    
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:oDictParam
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:nil];
+    NSString* strPostParam = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    NSLog(@"JSON '%@'", strPostParam);
+
     
     [PFCloud callFunctionInBackground:@"getStaticData" withParameters:oDictParam
                                 block:^(id result, NSError *error)

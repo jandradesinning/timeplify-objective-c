@@ -34,12 +34,46 @@
 
 #define INT_LEFT_NAV_MOVE_DISTANCE      258
 
+#define INT_UPDATE_STATUS_TIMER_DELAY       2.0// TEST_CODE 30.0
+#define INT_UPDATE_WALK_DIST_TIMER_DELAY    10.0// TEST_CODE 30.0
+
 
 #define INT_ALERT_TAG_RETRY             1
 
+#define STR_FOLDER_DATA_FILES           @"DataFiles"
 
-#define STR_PARSE_APP_ID                @"zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i"
-#define STR_PARSE_CLIENT_KEY            @"pI4IVkAUE5qSym9wmzur0Nn6OhlS1a7p0cqz5s0t"
+
+//#define STR_PARSE_APP_ID                @"zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i"
+//#define STR_PARSE_CLIENT_KEY            @"pI4IVkAUE5qSym9wmzur0Nn6OhlS1a7p0cqz5s0t"
+
+#define STR_PARSE_APP_ID                @"RbAVcTWNVSPFsEXu1xhfmehMhkeBlZqdeyEcXseS"
+#define STR_PARSE_CLIENT_KEY            @"h24351TKlXm2NXeQHUley8dvHyfLEJVAKBWA147e"
+
+
+#define INT_MAX_STATION_DISTANCE        (3*1609.34)// 3 Miles
+
+
+#define INT_MAX_SCHEDULED_RECS          10
+
+
+
+
+#define INT_TESTING_LATITUDE            40.821
+#define INT_TESTING_LONGITUDE           -73.874
+
+
+// TEST_CODE
+
+/*
+ 
+If countdownNext becomes >= walkingEstimate then
+• vibrate 4 times
+• animate the walkingEstimate number
+• and display the following notification:
+You must start walking now to catch the next train.
+
+
+*/
 
 
 @protocol Defines <NSObject>

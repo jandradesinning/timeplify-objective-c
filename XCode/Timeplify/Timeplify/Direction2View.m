@@ -1,17 +1,16 @@
 //
-//  DirectionView.m
+//  Direction2View.m
 //  Timeplify
 //
 //  Created by Anil on 07/12/14.
 //  Copyright (c) 2014 Anil. All rights reserved.
 //
 
-#import "DirectionView.h"
+#import "Direction2View.h"
 #import "ST_Station.h"
 #import "Defines.h"
-#import "GlobalCaller.h"
 
-@implementation DirectionView
+@implementation Direction2View
 
 @synthesize m_Station;
 
@@ -19,8 +18,7 @@
 
 -(void) doClose
 {
-    [GlobalCaller updateFavStation:m_Station];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_HIDE_DIRECTION_VIEW" object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_DIRECTION_2_SELECTED" object:self];
 }
 
 
@@ -38,26 +36,12 @@
 
 -(IBAction) btnNorthClicked:(id)sender
 {
-    if ([m_Station.m_strNorthDirection length] < 1) {
-        return;
-    }
-    
-    
     m_Station.m_iSelectedDirection = INT_DIRECTION_NORTH;
     [self doClose];
 }
 -(IBAction) btnSouthClicked:(id)sender
 {
-    if ([m_Station.m_strSouthDirection length] < 1) {
-        return;
-    }
-    
     m_Station.m_iSelectedDirection = INT_DIRECTION_SOUTH;
-    [self doClose];
-}
--(IBAction) btnEitherClicked:(id)sender
-{
-    m_Station.m_iSelectedDirection = INT_DIRECTION_EITHER;
     [self doClose];
 }
 

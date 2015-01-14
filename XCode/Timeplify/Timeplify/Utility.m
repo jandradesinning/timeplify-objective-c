@@ -7,6 +7,7 @@
 //
 
 #import "Utility.h"
+#import "Defines.h"
 
 @implementation Utility
 
@@ -46,17 +47,33 @@
     
 }
 
++(NSString*) getFilePathForKey:(NSString*) IN_strKey
+{
+    NSString* strFolder = [Utility createAndGetAFolder:STR_FOLDER_DATA_FILES];
+    NSString* strFile = [NSString stringWithFormat:@"%@.plist", IN_strKey];
+    NSString* strFullPath = [strFolder stringByAppendingPathComponent:strFile];
+    return strFullPath;
+    
+}
+
 +(void) saveObjectInDefault:(NSString*)IN_strKey :(NSObject*) IN_oData
 {
     NSData *archivedObject = [NSKeyedArchiver archivedDataWithRootObject:IN_oData];
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setObject:archivedObject forKey:IN_strKey];
-    [defaults synchronize];
+    
+    NSString* strPath = [Utility getFilePathForKey:IN_strKey];
+    NSLog(@"Path '%@'", strPath);
+    
+    [[NSFileManager defaultManager] removeItemAtPath:strPath error:nil];
+    [archivedObject writeToFile:strPath atomically:YES];
+
+    
 }
 +(NSObject*) getObjectFromDefault:(NSString*)IN_strKey
 {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSData *archivedObject = [defaults objectForKey:IN_strKey];
+    NSString* strPath = [Utility getFilePathForKey:IN_strKey];
+    NSLog(@"Path '%@'", strPath);
+    
+    NSData *archivedObject = [NSData dataWithContentsOfFile:strPath];
     if (archivedObject == nil) {
         return nil;
     }

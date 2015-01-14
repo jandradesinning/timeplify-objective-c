@@ -9,10 +9,15 @@
 #import <UIKit/UIKit.h>
 
 @class LeftMenuView;
+@class Direction2View;
+@class ST_Station;
 
 @interface ViewController : UIViewController
 {
     IBOutlet UIView* m_ctrlViewHide;
+    
+    IBOutlet UIActivityIndicatorView* m_ctrlActivity;
+    IBOutlet UIView* m_viewDim;
     
     IBOutlet UILabel* m_ctrlLblService;
     IBOutlet UILabel* m_ctrlLblDataType;
@@ -28,7 +33,16 @@
     LeftMenuView* m_LeftMenuView;
     double m_dbLeftNavMovedDist;
     
+    Direction2View* m_Direction2View;
+    
     NSMutableArray* m_arrNextTrains;
+    int m_iCurrentTrainPos;
+    ST_Station* m_curStation;
+    
+    NSTimer* m_timerVibrate;
+    int m_iVibrateCalls;
+    int m_iWalkingDistance;
+    
 }
 -(IBAction) btnMenuClicked:(id)sender;
 -(IBAction) btnGPSClicked:(id)sender;

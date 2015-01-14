@@ -71,13 +71,13 @@
     
     if (tableView.tag == 0) {
     
-        ST_Train* oTrain = [m_arrNextTrains objectAtIndex:indexPath.row];
-        cell.m_Train = oTrain;
+        NSMutableDictionary* oDict = [m_arrNextTrains objectAtIndex:indexPath.row];
+        cell.m_dict = oDict;
 
     }
     else
     {
-        cell.m_Train = nil;
+        cell.m_dict = nil;
 
     }
     

@@ -12,6 +12,8 @@
 
 #import "Defines.h"
 
+#import "DataManager.h"
+
 @implementation AppDelegate
 
 @synthesize m_arrFavoriteTrains;
@@ -35,7 +37,7 @@
         return;
     }
     
-	//NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
+//	NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
 	   
     
 	m_GPSCoordinate = newLocation.coordinate;
@@ -52,8 +54,16 @@
 {
 	NSLog(@"locationManager failed");
     
-	m_iGPSStatus = 1;
-	
+    m_iGPSStatus = 1;
+    
+      
+    // TEST_CODE
+    CLLocationCoordinate2D oLoc = CLLocationCoordinate2DMake(INT_TESTING_LATITUDE, INT_TESTING_LONGITUDE); // Near 6   610 - morrison AV Sound View
+    m_GPSCoordinate=oLoc;
+    m_iGPSStatus = 2;
+    // TEST_CODE
+
+   	
 }
 
 -(void) startGPS
@@ -86,6 +96,7 @@
     // Override point for customization after application launch.
     self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
     
+    [DataManager checkAndCopyDatabase];
     
     [Parse setApplicationId:STR_PARSE_APP_ID  clientKey:STR_PARSE_CLIENT_KEY];
     

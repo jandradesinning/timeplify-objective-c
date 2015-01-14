@@ -8,6 +8,7 @@
 
 #import "GPSTestViewController.h"
 #import "AppDelegate.h"
+#import "Defines.h"
 
 @interface GPSTestViewController ()
 
@@ -45,6 +46,20 @@
         // Custom initialization
     }
     return self;
+}
+
+-(IBAction) btnDefClicked:(id)sender
+{
+    CLLocationCoordinate2D oLoc = CLLocationCoordinate2DMake(INT_TESTING_LATITUDE, INT_TESTING_LONGITUDE);
+    AppDelegate* appDel= (AppDelegate*) [[UIApplication sharedApplication] delegate];
+    appDel.m_GPSCoordinate = oLoc;
+    
+    MKCoordinateRegion region = MKCoordinateRegionMakeWithDistance(appDel.m_GPSCoordinate, 1000, 1000);
+    [m_ctrlMap setRegion:region animated:YES];
+    
+    [self setTitleLabel];
+
+    
 }
 
 - (void)viewDidLoad

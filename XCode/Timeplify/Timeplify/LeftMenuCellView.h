@@ -8,17 +8,16 @@
 
 #import <UIKit/UIKit.h>
 
-@class ST_Train;
 
 @interface LeftMenuCellView : UITableViewCell
 {
     IBOutlet UILabel* m_ctrlLblTime;
     IBOutlet UILabel* m_ctrlLblMenu;
-    ST_Train* m_Train;
+    NSMutableDictionary* m_dict;
     int m_iIndex;
     IBOutlet UIImageView* m_ctrlImgView;
 }
-@property (strong, nonatomic) ST_Train* m_Train;
+@property (strong, nonatomic) NSMutableDictionary* m_dict;
 @property (readwrite, assign) int m_iIndex;
 -(void) setValues;
 @end

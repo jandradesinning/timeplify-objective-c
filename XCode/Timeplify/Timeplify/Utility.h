@@ -16,6 +16,7 @@
 +(void) saveStringInDefault:(NSString*)IN_strKey :(NSString*) IN_strValue;
 +(NSString*) getStringFromDefault:(NSString*)IN_strKey;
 +(void) saveObjectInDefault:(NSString*)IN_strKey :(NSObject*) IN_oData;
++(NSString*) getFilePathForKey:(NSString*) IN_strKey;
 +(NSObject*) getObjectFromDefault:(NSString*)IN_strKey;
 +(NSString*) createAndGetAFolder:(NSString*) IN_strFolder;
 @end

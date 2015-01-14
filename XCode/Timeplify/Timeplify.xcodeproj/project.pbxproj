@@ -30,6 +30,9 @@
 		044E65BC1A34A22C0078F839 /* FavStationCellView.m in Sources */ = {isa = PBXBuildFile; fileRef = 044E65BA1A34A22C0078F839 /* FavStationCellView.m */; };
 		044E65BD1A34A22C0078F839 /* FavStationCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 044E65BB1A34A22C0078F839 /* FavStationCellView.xib */; };
 		0454BEE41A346B0000459B32 /* DirectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0454BEE31A346B0000459B32 /* DirectionView.m */; };
+		046952421A61661C0095990A /* Direction2View.m in Sources */ = {isa = PBXBuildFile; fileRef = 046952401A61661C0095990A /* Direction2View.m */; };
+		046952431A61661C0095990A /* Direction2View.xib in Resources */ = {isa = PBXBuildFile; fileRef = 046952411A61661C0095990A /* Direction2View.xib */; };
+		046952471A61752A0095990A /* StatusUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 046952461A61752A0095990A /* StatusUtility.m */; };
 		046A402A1A306FAB0011C1A1 /* check-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 046A40201A306FAB0011C1A1 /* check-icon.png */; };
 		046A402B1A306FAB0011C1A1 /* exit-icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 046A40211A306FAB0011C1A1 /* exit-icon.png */; };
 		046A402C1A306FAB0011C1A1 /* favorites-star-filled.png in Resources */ = {isa = PBXBuildFile; fileRef = 046A40221A306FAB0011C1A1 /* favorites-star-filled.png */; };
@@ -97,7 +100,11 @@
 		04701FC01A459775002C004C /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04701FB91A459775002C004C /* CFNetwork.framework */; };
 		04701FC11A459775002C004C /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04701FBA1A459775002C004C /* AudioToolbox.framework */; };
 		0472FADA1A346B2D00936CB7 /* DirectionView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0472FAD91A346B2D00936CB7 /* DirectionView.xib */; };
+		047396B31A4FBD1F00BAC5CD /* DataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 047396B21A4FBD1F00BAC5CD /* DataManager.m */; };
+		047396B61A4FBDBB00BAC5CD /* Data.sqlite3 in Resources */ = {isa = PBXBuildFile; fileRef = 047396B51A4FBDBB00BAC5CD /* Data.sqlite3 */; };
+		047396B91A4FBF1200BAC5CD /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 047396B81A4FBF1200BAC5CD /* libsqlite3.dylib */; };
 		04823C101A30749200050964 /* ST_Train.m in Sources */ = {isa = PBXBuildFile; fileRef = 04823C0F1A30749200050964 /* ST_Train.m */; };
+		048BAC351A4D7DEE006E6BAC /* NearestStation.m in Sources */ = {isa = PBXBuildFile; fileRef = 048BAC341A4D7DEE006E6BAC /* NearestStation.m */; };
 		048CD70F1A3454AF00D8A33B /* StationSelectViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 048CD70D1A3454AF00D8A33B /* StationSelectViewController.m */; };
 		048CD7101A3454AF00D8A33B /* StationSelectViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 048CD70E1A3454AF00D8A33B /* StationSelectViewController.xib */; };
 		048CD7141A34555F00D8A33B /* StationSelectCellView.m in Sources */ = {isa = PBXBuildFile; fileRef = 048CD7121A34555F00D8A33B /* StationSelectCellView.m */; };
@@ -156,6 +163,11 @@
 		044E65BB1A34A22C0078F839 /* FavStationCellView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FavStationCellView.xib; sourceTree = "<group>"; };
 		0454BEE21A346B0000459B32 /* DirectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectionView.h; sourceTree = "<group>"; };
 		0454BEE31A346B0000459B32 /* DirectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectionView.m; sourceTree = "<group>"; };
+		0469523F1A61661C0095990A /* Direction2View.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Direction2View.h; sourceTree = "<group>"; };
+		046952401A61661C0095990A /* Direction2View.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Direction2View.m; sourceTree = "<group>"; };
+		046952411A61661C0095990A /* Direction2View.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Direction2View.xib; sourceTree = "<group>"; };
+		046952451A61752A0095990A /* StatusUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StatusUtility.h; sourceTree = "<group>"; };
+		046952461A61752A0095990A /* StatusUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StatusUtility.m; sourceTree = "<group>"; };
 		046A40201A306FAB0011C1A1 /* check-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "check-icon.png"; sourceTree = "<group>"; };
 		046A40211A306FAB0011C1A1 /* exit-icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "exit-icon.png"; sourceTree = "<group>"; };
 		046A40221A306FAB0011C1A1 /* favorites-star-filled.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "favorites-star-filled.png"; sourceTree = "<group>"; };
@@ -225,8 +237,14 @@
 		04701FB91A459775002C004C /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		04701FBA1A459775002C004C /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		0472FAD91A346B2D00936CB7 /* DirectionView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DirectionView.xib; sourceTree = "<group>"; };
+		047396B11A4FBD1F00BAC5CD /* DataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataManager.h; sourceTree = "<group>"; };
+		047396B21A4FBD1F00BAC5CD /* DataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataManager.m; sourceTree = "<group>"; };
+		047396B51A4FBDBB00BAC5CD /* Data.sqlite3 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Data.sqlite3; sourceTree = "<group>"; };
+		047396B81A4FBF1200BAC5CD /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		04823C0E1A30749200050964 /* ST_Train.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ST_Train.h; sourceTree = "<group>"; };
 		04823C0F1A30749200050964 /* ST_Train.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ST_Train.m; sourceTree = "<group>"; };
+		048BAC331A4D7DEE006E6BAC /* NearestStation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NearestStation.h; sourceTree = "<group>"; };
+		048BAC341A4D7DEE006E6BAC /* NearestStation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NearestStation.m; sourceTree = "<group>"; };
 		048CD70C1A3454AF00D8A33B /* StationSelectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StationSelectViewController.h; sourceTree = "<group>"; };
 		048CD70D1A3454AF00D8A33B /* StationSelectViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StationSelectViewController.m; sourceTree = "<group>"; };
 		048CD70E1A3454AF00D8A33B /* StationSelectViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = StationSelectViewController.xib; sourceTree = "<group>"; };
@@ -278,6 +296,7 @@
 				04701FBC1A459775002C004C /* StoreKit.framework in Frameworks */,
 				04701FBE1A459775002C004C /* MobileCoreServices.framework in Frameworks */,
 				04701FB31A459748002C004C /* Parse.framework in Frameworks */,
+				047396B91A4FBF1200BAC5CD /* libsqlite3.dylib in Frameworks */,
 				04CE82821A300F600033D5A0 /* CoreGraphics.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -341,6 +360,21 @@
 				044E65BB1A34A22C0078F839 /* FavStationCellView.xib */,
 			);
 			name = Favorites;
+			sourceTree = "<group>";
+		};
+		046952441A6174FF0095990A /* TrainStatus */ = {
+			isa = PBXGroup;
+			children = (
+				0469523F1A61661C0095990A /* Direction2View.h */,
+				046952401A61661C0095990A /* Direction2View.m */,
+				046952411A61661C0095990A /* Direction2View.xib */,
+				04CE82951A300F600033D5A0 /* ViewController.h */,
+				04CE82961A300F600033D5A0 /* ViewController.m */,
+				04CE82981A300F600033D5A0 /* ViewController.xib */,
+				046952451A61752A0095990A /* StatusUtility.h */,
+				046952461A61752A0095990A /* StatusUtility.m */,
+			);
+			name = TrainStatus;
 			sourceTree = "<group>";
 		};
 		046A40341A306FB30011C1A1 /* VehicleLogo */ = {
@@ -432,6 +466,14 @@
 			path = Common;
 			sourceTree = "<group>";
 		};
+		047396B41A4FBDBB00BAC5CD /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				047396B51A4FBDBB00BAC5CD /* Data.sqlite3 */,
+			);
+			path = Data;
+			sourceTree = SOURCE_ROOT;
+		};
 		048CD70A1A34546400D8A33B /* TrainSelect */ = {
 			isa = PBXGroup;
 			children = (
@@ -492,6 +534,7 @@
 		04CE827C1A300F600033D5A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				047396B81A4FBF1200BAC5CD /* libsqlite3.dylib */,
 				04701FB41A459775002C004C /* SystemConfiguration.framework */,
 				04701FB51A459775002C004C /* StoreKit.framework */,
 				04701FB61A459775002C004C /* Security.framework */,
@@ -514,6 +557,7 @@
 		04CE82831A300F600033D5A0 /* Timeplify */ = {
 			isa = PBXGroup;
 			children = (
+				046952441A6174FF0095990A /* TrainStatus */,
 				04B8CF871A3C4C9B00DF7BDB /* GPSTest */,
 				04DB9D511A35BB2C00EA5D17 /* About */,
 				0416710D1A35719A002F7F41 /* LeftMenu */,
@@ -527,15 +571,16 @@
 				048CD7171A3456AF00D8A33B /* ST_Station.m */,
 				04CE828C1A300F600033D5A0 /* AppDelegate.h */,
 				04CE828D1A300F600033D5A0 /* AppDelegate.m */,
-				04CE82951A300F600033D5A0 /* ViewController.h */,
-				04CE82961A300F600033D5A0 /* ViewController.m */,
-				04CE82981A300F600033D5A0 /* ViewController.xib */,
 				04CE82841A300F600033D5A0 /* Supporting Files */,
 				046A408E1A3072060011C1A1 /* Defines.h */,
 				046AF6821A35851A00439ED5 /* Utility.h */,
 				046AF6831A35851A00439ED5 /* Utility.m */,
 				0420DF021A35C4320086577C /* GlobalCaller.h */,
 				0420DF031A35C4320086577C /* GlobalCaller.m */,
+				048BAC331A4D7DEE006E6BAC /* NearestStation.h */,
+				048BAC341A4D7DEE006E6BAC /* NearestStation.m */,
+				047396B11A4FBD1F00BAC5CD /* DataManager.h */,
+				047396B21A4FBD1F00BAC5CD /* DataManager.m */,
 			);
 			path = Timeplify;
 			sourceTree = "<group>";
@@ -543,6 +588,7 @@
 		04CE82841A300F600033D5A0 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				047396B41A4FBDBB00BAC5CD /* Data */,
 				04DB9D571A35BC4C00EA5D17 /* Html */,
 				046D9F7C1A301070007765BB /* Images */,
 				04CE82851A300F600033D5A0 /* Timeplify-Info.plist */,
@@ -623,6 +669,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				046A40751A306FB40011C1A1 /* vehicle-logo-e-gray.png in Resources */,
+				046952431A61661C0095990A /* Direction2View.xib in Resources */,
 				046A40331A306FAB0011C1A1 /* walking-man.png in Resources */,
 				044E65B31A34A0500078F839 /* FavoritesViewController.xib in Resources */,
 				046A407F1A306FB40011C1A1 /* vehicle-logo-m-gray.png in Resources */,
@@ -663,6 +710,7 @@
 				046D9F891A301070007765BB /* icon120.png in Resources */,
 				046A402A1A306FAB0011C1A1 /* check-icon.png in Resources */,
 				046A40871A306FB40011C1A1 /* vehicle-logo-s-gray.png in Resources */,
+				047396B61A4FBDBB00BAC5CD /* Data.sqlite3 in Resources */,
 				046A406D1A306FB40011C1A1 /* vehicle-logo-a-gray.png in Resources */,
 				046D9F871A301070007765BB /* Default@2x.png in Resources */,
 				046A40791A306FB40011C1A1 /* vehicle-logo-g-gray.png in Resources */,
@@ -719,12 +767,16 @@
 				048CD70F1A3454AF00D8A33B /* StationSelectViewController.m in Sources */,
 				04823C101A30749200050964 /* ST_Train.m in Sources */,
 				044E65BC1A34A22C0078F839 /* FavStationCellView.m in Sources */,
+				047396B31A4FBD1F00BAC5CD /* DataManager.m in Sources */,
 				04CE828A1A300F600033D5A0 /* main.m in Sources */,
 				041671141A35720D002F7F41 /* LeftMenuCellView.m in Sources */,
 				04B8CF8B1A3C4CB600DF7BDB /* GPSTestViewController.m in Sources */,
 				043C759A1A348BEA00E657CE /* DataCache.m in Sources */,
+				046952471A61752A0095990A /* StatusUtility.m in Sources */,
 				04CE828E1A300F600033D5A0 /* AppDelegate.m in Sources */,
+				048BAC351A4D7DEE006E6BAC /* NearestStation.m in Sources */,
 				0420DF041A35C4320086577C /* GlobalCaller.m in Sources */,
+				046952421A61661C0095990A /* Direction2View.m in Sources */,
 				04CE82971A300F600033D5A0 /* ViewController.m in Sources */,
 				041D658B1A3011D500E1823B /* TrainSelectViewController.m in Sources */,
 				048CD7141A34555F00D8A33B /* StationSelectCellView.m in Sources */,

@@ -14,7 +14,8 @@
 @synthesize m_iIndex;
 @synthesize m_strName;
 @synthesize m_strImage;
-@synthesize m_arrStations;
+@synthesize m_strNorthStationId;
+@synthesize m_strSouthStationId;
 @synthesize m_bSelected;
 
 
@@ -24,7 +25,8 @@
     [aCoder encodeObject:[NSNumber numberWithInteger:m_iIndex] forKey:@"KEY_INDEX"];
     [aCoder encodeObject:m_strName forKey:@"KEY_NAME"];
     [aCoder encodeObject:m_strImage forKey:@"KEY_IMAGE"];
-    [aCoder encodeObject:m_arrStations forKey:@"KEY_STATIONS"];
+    [aCoder encodeObject:m_strNorthStationId forKey:@"KEY_NORTH_STATION_ID"];
+    [aCoder encodeObject:m_strSouthStationId forKey:@"KEY_SOUTH_STATION_ID"];
     [aCoder encodeObject:[NSNumber numberWithBool:m_bSelected] forKey:@"KEY_SELECTED"];
    
 }
@@ -36,7 +38,8 @@
         m_iIndex = [[aDecoder decodeObjectForKey:@"KEY_INDEX"] intValue];
         m_strName = [aDecoder decodeObjectForKey:@"KEY_NAME"];
         m_strImage = [aDecoder decodeObjectForKey:@"KEY_IMAGE"];
-        m_arrStations = [aDecoder decodeObjectForKey:@"KEY_STATIONS"];
+        m_strNorthStationId = [aDecoder decodeObjectForKey:@"KEY_NORTH_STATION_ID"];
+        m_strSouthStationId = [aDecoder decodeObjectForKey:@"KEY_SOUTH_STATION_ID"];
         m_bSelected = [[aDecoder decodeObjectForKey:@"KEY_SELECTED"] boolValue];
 
         

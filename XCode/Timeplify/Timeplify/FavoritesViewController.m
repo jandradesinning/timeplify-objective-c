@@ -257,6 +257,13 @@
 
 -(IBAction) btnAddClicked:(id)sender
 {
+    
+    NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
+    if ([oArrFavTrains count] < 1) {
+        return;
+    }
+
+    
     StationSelectViewController* viewController = [[StationSelectViewController alloc] initWithNibName:@"StationSelectViewController" bundle:nil];
     
     viewController.m_iScreenMode = INT_STATION_SEL_FROM_FAV;

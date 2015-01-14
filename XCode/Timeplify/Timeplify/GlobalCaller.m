@@ -11,29 +11,18 @@
 #import "ST_Station.h"
 #import "Utility.h"
 #import "ST_Train.h"
+#import "DataManager.h"
 
 @implementation GlobalCaller
 
 
 +(NSMutableArray*) getAllTrainsArray
 {
-    NSDictionary* oDict = (NSDictionary*)[Utility getObjectFromDefault:@"SERVER_STATIC_DATA"];
-    NSArray* arrRoutes = [oDict objectForKey:@"routes"];
     
-    NSMutableArray* oArr = [[NSMutableArray alloc] init];
+    NSMutableArray* oArr = [DataManager getAllTrains];
     
-    for (int i=0; i <[arrRoutes count]; i++) {
-        NSDictionary* oDict = [arrRoutes objectAtIndex:i];
-        ST_Train* oTrain = [[ST_Train alloc] init];
-        oTrain.m_iIndex = i;
-        oTrain.m_strId  = [oDict objectForKey:@"id"];
-        oTrain.m_strName = [oDict objectForKey:@"name"];
-        oTrain.m_strImage = [oDict objectForKey:@"id"];
-        oTrain.m_bSelected = NO;
-        oTrain.m_arrStations = [oDict objectForKey:@"stations"];
-        [oArr addObject:oTrain];
-    }
-
+    
+    
     return oArr;
 }
 

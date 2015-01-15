@@ -675,7 +675,7 @@ namespace Timeplify
                         {
                             routeId = route;
                             AddRouteStatus(routeId, status, statusFeedTime, ref listPO);
-                            break;
+                            //break;
                         }
                     }
                 }

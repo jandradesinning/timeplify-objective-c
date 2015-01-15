@@ -631,12 +631,7 @@ namespace Timeplify
                 {
                     string name = xmlNode["name"].InnerText;
                     string status = xmlNode["status"].InnerText;
-                #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                    if ("R" == name || "6" == name)//TO AVOID BURST LIMIT ISSUE FOR TESTING
-                #endif
-                    {
-                        AddInterestedRouteStatus(name, status, statusFeedTime, ref listPO);
-                    }
+                    AddInterestedRouteStatus(name, status, statusFeedTime, ref listPO);
                 }
 
                 GetSettings("statusTime", new string[] { statusFeedTime }, SetSTSSettings);

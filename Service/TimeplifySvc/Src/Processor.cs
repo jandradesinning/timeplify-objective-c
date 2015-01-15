@@ -382,14 +382,15 @@ namespace Timeplify
                                 poRealTimeData["routeId"] = tu.trip.route_id;
                                 poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "S" : "N";
                                 poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
-                                //DateTime dtUTC = DateTime.UtcNow;
-                                //TimeZoneInfo tziEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-                                //DateTime dtEST = TimeZoneInfo.ConvertTimeFromUtc(dtUTC, tziEST);
-                                if (null != stu.arrival)
+                                if (null != stu.departure && 0 != stu.departure.time)
                                 {
-                                    //DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
-                                    //TimeSpan tsNext = (dtUTC - dtArrival);
-                                    poRealTimeData["arrivalTime"] = (ulong)stu.arrival.time;//dtArrival.ToString(@"hh\:mm\:ss");
+                                    poRealTimeData["arrivalTime"] = (ulong)stu.departure.time;
+                                    poRealTimeData["uid"] = _realTimeCounter;
+                                    listPO.Add(poRealTimeData);
+                                }
+                                else if (null != stu.arrival && 0 != stu.arrival.time)
+                                {
+                                    poRealTimeData["arrivalTime"] = (ulong)stu.arrival.time;
                                     poRealTimeData["uid"] = _realTimeCounter;
                                     listPO.Add(poRealTimeData);
                                 }
@@ -2031,7 +2032,7 @@ namespace Timeplify
             }
         }
 
-        private void AddScheduleData(string stopId, string routeId, TimeOfDay arrivalTime, string direction, int iIndex, ref List<ParseObject> listStaticPO)
+        private void AddScheduleData(string stopId, string routeId, TimeOfDay departureTime, string direction, int iIndex, ref List<ParseObject> listStaticPO)
         {
             try
             {
@@ -2039,12 +2040,12 @@ namespace Timeplify
 
                 poSData["stationId"] = stopId;
                 poSData["routeId"] = routeId;
-                poSData["arrivalTime"] = arrivalTime.Hours + ":" + arrivalTime.Minutes + ":" + arrivalTime.Seconds;
+                poSData["arrivalTime"] = departureTime.Hours + ":" + departureTime.Minutes + ":" + departureTime.Seconds;
                 poSData["direction"] = direction;
                 poSData["uid"] = _staticCounter;
                 listStaticPO.Add(poSData);
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stopId
-                    + "\tarrivalTime\t" + poSData["arrivalTime"] + "\tdirection\t" + direction
+                    + "\tdepartureTime\t" + poSData["arrivalTime"] + "\tdirection\t" + direction
                     );
             }
             catch (Exception e)
@@ -2059,14 +2060,14 @@ namespace Timeplify
             {
                 string routeChildStop = stopId + direction;
                 var stationTimes = stopTimes.Where(stopTime => (stopTime.StopId == routeChildStop)).
-                    OrderBy(stopTime => stopTime.ArrivalTime.Hours).
-                    ThenBy(stopTime => stopTime.ArrivalTime.Minutes).
-                    ThenBy(stopTime => stopTime.ArrivalTime.Seconds).
+                    OrderBy(stopTime => stopTime.DepartureTime.Hours).
+                    ThenBy(stopTime => stopTime.DepartureTime.Minutes).
+                    ThenBy(stopTime => stopTime.DepartureTime.Seconds).
                     ToList();
 
-                var stationTimesD = DistinctBy(stationTimes, stopTime => stopTime.ArrivalTime).ToList();
+                var stationTimesD = DistinctBy(stationTimes, stopTime => stopTime.DepartureTime).ToList();
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Total station arrival times count" + stationTimesD.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Total station departure times count" + stationTimesD.Count);
 
                 int i = 0;
                 foreach (var stationTime in stationTimesD)
@@ -2079,13 +2080,13 @@ namespace Timeplify
                     if ("R" == curTrip.RouteId || "6" == curTrip.RouteId)//TO AVOID BURST LIMIT ISSUE FOR TESTING
                 #endif
                     {
-                        AddScheduleData(stopId, curTrip.RouteId, stationTime.ArrivalTime, direction, i, ref listStaticPO);
+                        AddScheduleData(stopId, curTrip.RouteId, stationTime.DepartureTime, direction, i, ref listStaticPO);
                     }
                 }
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process station arrival times. [Error] {0}.", e.Message);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process station departure times. [Error] {0}.", e.Message);
             }
         }
 

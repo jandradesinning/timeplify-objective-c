@@ -382,14 +382,14 @@ namespace Timeplify
                                 poRealTimeData["routeId"] = tu.trip.route_id;
                                 poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "S" : "N";
                                 poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
-                                DateTime dtUTC = DateTime.UtcNow;
+                                //DateTime dtUTC = DateTime.UtcNow;
                                 //TimeZoneInfo tziEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
                                 //DateTime dtEST = TimeZoneInfo.ConvertTimeFromUtc(dtUTC, tziEST);
                                 if (null != stu.arrival)
                                 {
-                                    DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
-                                    TimeSpan tsNext = (dtUTC - dtArrival);
-                                    poRealTimeData["arrivalTime"] = tsNext.ToString(@"hh\:mm\:ss");
+                                    //DateTime dtArrival = DateTimeFromUnixTimestampSeconds((ulong)stu.arrival.time);
+                                    //TimeSpan tsNext = (dtUTC - dtArrival);
+                                    poRealTimeData["arrivalTime"] = (ulong)stu.arrival.time;//dtArrival.ToString(@"hh\:mm\:ss");
                                     poRealTimeData["uid"] = _realTimeCounter;
                                     listPO.Add(poRealTimeData);
                                 }

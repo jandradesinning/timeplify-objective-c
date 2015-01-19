@@ -9,7 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>${EXECUTABLE_NAME}</string>
 	<key>CFBundleIdentifier</key>
-	<string>A.${PRODUCT_NAME:rfc1034identifier}</string>
+	<string>com.Liam.Voiceover</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -40,5 +40,7 @@
 		<string>icon@2x.png</string>
 		<string>icon120.png</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Used only when active</string>
 </dict>
 </plist>

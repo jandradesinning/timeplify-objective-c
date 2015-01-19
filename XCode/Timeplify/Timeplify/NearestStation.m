@@ -36,7 +36,7 @@
         iLast++;
     }
     
-    for (int i= ([oArrStations count]-1); i >= iLast; i--) {
+    for (int i= ((int)[oArrStations count]-1); i >= iLast; i--) {
         ST_Station* oStation =  [oArrStations objectAtIndex:i];
         if (oStation.m_iOrder < IN_Station.m_iOrder) {
             return oStation;
@@ -57,7 +57,7 @@
     
     NSMutableArray* oArrStations = [DataManager getStationsOfTrain:IN_Station.m_strRouteId];
     
-    int iCount = [oArrStations count];
+    int iCount = (int)[oArrStations count];
     if (IN_iDirection == INT_DIRECTION_SOUTH) {
         iCount--;
     }

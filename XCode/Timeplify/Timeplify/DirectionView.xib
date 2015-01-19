@@ -13,7 +13,7 @@
             <subviews>
                 <view contentMode="scaleToFill" id="0VI-QP-yFA">
                     <rect key="frame" x="12" y="103" width="296" height="273"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                     <subviews>
                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="4zv-Cv-fAV">
                             <rect key="frame" x="18" y="95" width="260" height="38"/>

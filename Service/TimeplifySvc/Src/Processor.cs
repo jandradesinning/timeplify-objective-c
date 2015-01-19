@@ -380,7 +380,7 @@ namespace Timeplify
                                 // Last character denoting direction not needed, as we store parent stationid
                                 poRealTimeData["stationId"] = stu.stop_id.Remove(stu.stop_id.Length - 1, 1);
                                 poRealTimeData["routeId"] = tu.trip.route_id;
-                                poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "S" : "N";
+                                poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "N" : "S";
                                 poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
                                 if (null != stu.departure && 0 != stu.departure.time)
                                 {

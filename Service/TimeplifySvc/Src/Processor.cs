@@ -105,6 +105,8 @@ namespace Timeplify
         private ParseObject _poSTSettings = null;
         private ParseObject _poRTSettings = null;
         private ParseObject _poSTSSettings = null;
+
+        private uint _rtCounter = 0;
             
         #endregion //Private Members
 
@@ -361,8 +363,6 @@ namespace Timeplify
 
             try
             {
-                _realTimeCounter = GetCurrentTimeString();
-
                 listPO = new List<ParseObject>();
 
                 foreach(FeedEntity fe in fm.entity)
@@ -2107,6 +2107,15 @@ namespace Timeplify
             if(!_disposed && !_bStopping)
             {
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Invoked GTFSTimerProc callback.", "");
+
+                if (0 == _rtCounter)
+                {
+                    // live data is not available for a given set of stations by only using scheduled data when the previously retrieved live data is older than 5 minutes. 
+                    _rtCounter = ((uint)(5 * 60) / Worker.Instance.Configuration.GTFSRealTimeFeedInterval);
+                    _realTimeCounter = GetCurrentTimeString();
+                }
+
+                _rtCounter++;
                 
                 url = Worker.Instance.Configuration.GTFSRealTimeFeedURL;
                 folder = Worker.Instance.Configuration.GTFSRealTimeDataFolder;
@@ -2121,6 +2130,11 @@ namespace Timeplify
 
                 // Real-Time Subway Locations - L Line
                 DownloadRTFeed(url + "&feed_id=2", folder + "gtfs_L_");
+
+                if (10 <= _rtCounter)
+                {
+                    _rtCounter = 0;
+                }
             }
 
             // For better memory performance.

@@ -26,7 +26,6 @@
 -(void) saveScheduledData:(NSDictionary*)IN_Dict :(ST_Station*) IN_Station;
 -(NSMutableDictionary*) getScheduledData:(ST_Station*) IN_Station;
 
--(BOOL) isWalkingDistLess:(NSDictionary*)IN_Dict;
 -(int) getTimeRemainingInSecs:(NSDictionary*)IN_Dict;
 -(int) getWalkingDistanceInSecs:(NSDictionary*)IN_Dict;
 @end

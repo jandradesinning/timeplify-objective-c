@@ -16,9 +16,9 @@
 {
     NSDate* oDateNow = [NSDate date];
     NSDateComponents *components = [[NSCalendar currentCalendar] components:NSCalendarUnitDay | NSCalendarUnitMonth | NSCalendarUnitYear | NSCalendarUnitHour |NSCalendarUnitMinute | NSCalendarUnitSecond  fromDate:oDateNow];
-    NSInteger hour = [components hour];
-    NSInteger min = [components minute];
-    NSInteger sec = [components second];
+    int hour = (int)[components hour];
+    int min = (int)[components minute];
+    int sec = (int)[components second];
     int iNowTotalSecs = (hour*60*60) + (min*60) + sec;
 
     return iNowTotalSecs;
@@ -246,7 +246,6 @@ NSInteger sortScheduledDateComparer(id num1, id num2, void *context)
             iTrainTotalSecs = iTrainTotalSecs - (24*60*60);
         }
         
-        NSLog(@"iTrainTotalSecs %d", iTrainTotalSecs);
         
         [oDict setObject:[NSNumber numberWithInt:iTrainTotalSecs] forKey:@"TRAIN_SECS_FROM_MIDNIGHT"];
     }
@@ -316,11 +315,27 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
     {
         oArrRecs = [self getRealTimeRecs:IN_Dict];
         
-        [self prepareRealtimeRecs:oArrRecs];
+        if ([oArrRecs count] > 0) {
+            [self prepareRealtimeRecs:oArrRecs];
+            
+            [oArrRecs sortUsingFunction:sortRealtimeDateComparer context:(__bridge void *)(self)];
+            
+            return oArrRecs;
+        }
+        else
+        {
+            oArrRecs = [self getScheduledRecs:IN_Dict];
+            
+            [self prepareScheduledRecs:oArrRecs];
+            
+            [oArrRecs sortUsingFunction:sortScheduledDateComparer context:(__bridge void *)(self)];
+            
+            oArrRecs = [self removeExtraScheduledRecs:oArrRecs];
+            
+            return oArrRecs;
+        }
         
-        [oArrRecs sortUsingFunction:sortRealtimeDateComparer context:(__bridge void *)(self)];
         
-        return oArrRecs;
     }
     else
     {
@@ -331,7 +346,6 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
         [oArrRecs sortUsingFunction:sortScheduledDateComparer context:(__bridge void *)(self)];
         
         oArrRecs = [self removeExtraScheduledRecs:oArrRecs];
-        
         
         return oArrRecs;
     }

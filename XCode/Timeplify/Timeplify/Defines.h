@@ -64,18 +64,6 @@
 
 // TEST_CODE
 
-/*
- 
-If countdownNext becomes >= walkingEstimate then
-• vibrate 4 times
-• animate the walkingEstimate number
-• and display the following notification:
-You must start walking now to catch the next train.
-
-
-*/
-
-
 @protocol Defines <NSObject>
 
 @end

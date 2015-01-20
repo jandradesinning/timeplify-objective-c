@@ -86,6 +86,11 @@
 
 -(void) doVibrateAlert
 {
+    if (m_bTimerChanged == NO) {
+        return;
+    }
+    
+    
     if (m_timerVibrate != nil) {
         [m_timerVibrate invalidate];
         m_timerVibrate = nil;
@@ -112,6 +117,8 @@
 -(void) timerUpdationCalled
 {
     [self setStatusValues];
+    
+    m_bTimerChanged = YES;
 }
 
 -(void) timerWalkDistanceCalled
@@ -385,6 +392,37 @@
     m_ctrlImgViewTrain.image = nil;
 }
 
+-(void) setServiceStatus:(NSMutableDictionary*)IN_Dict
+{
+    NSString* strTxt = [IN_Dict objectForKey:@"serviceStatus"];
+    m_ctrlLblService.text = strTxt;
+    
+    UIColor* oClr = [UIColor whiteColor];
+    
+    NSString* strLower = [strTxt lowercaseString];
+    if ([strLower isEqualToString:@"suspended"]) {
+        oClr = [UIColor colorWithRed:(153.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
+    }
+    
+    if ([strLower isEqualToString:@"delays"]) {
+        oClr = [UIColor colorWithRed:(153.0/255.0) green:(0.0/255.0) blue:(51.0/255.0) alpha:1.0];
+    }
+
+    if ([strLower isEqualToString:@"goodservice"]) {
+        oClr = [UIColor colorWithRed:(0.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
+    }
+
+    if ([strLower isEqualToString:@"plannedwork"]) {
+        oClr = [UIColor colorWithRed:(153.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
+    }
+
+    if ([strLower isEqualToString:@"servicechange"]) {
+        oClr = [UIColor colorWithRed:(153.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
+    }
+
+    m_ctrlLblService.textColor = oClr;
+}
+
 -(void) setStatusValues
 {
     
@@ -395,10 +433,6 @@
     if ([m_arrNextTrains count] < 1) {
         return;
     }
-    
-    
-    
-    
     
     NSMutableDictionary* oDict = [m_arrNextTrains objectAtIndex:m_iCurrentTrainPos];
     NSString* strRoute = [oDict objectForKey:@"routeId"];
@@ -423,14 +457,13 @@
     NSString* strReal = [oDict objectForKey:@"REAL_TIME"];
     if ([strReal isEqualToString:@"YES"]) {
         m_ctrlLblDataType.text = @"Realtime Data";
-        m_ctrlLblService.text = @"Good Service";
     }
     else
     {
         m_ctrlLblDataType.text = @"Scheduled Data";
-        m_ctrlLblService.text = @"Good Service";
     }
     
+    [self setServiceStatus:oDict];
     
     StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
     
@@ -441,10 +474,6 @@
         }
         
     }
-    
-    
-    
-    
     
     
     NSString* strTime = [oStatusUtil getTimeRemaining:oDict];
@@ -802,21 +831,27 @@
 
 -(IBAction) btnGPSClicked:(id)sender
 {
-    BOOL locationAllowed = [CLLocationManager locationServicesEnabled];
-    if (locationAllowed ==NO)
+    
+    AppDelegate* appDel = (AppDelegate* )[[UIApplication sharedApplication] delegate];
+    if (appDel.m_iGPSStatus != 2)
     {
-        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"LOCATION NOT FOUND"
-                                                        message:@"Go to settings and enable location services if you wish to see the nearest stations to you."
-                                                       delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles: nil];
-        
-        [alert show];
-        return;
-        
-    }
+        BOOL locationAllowed = [CLLocationManager locationServicesEnabled];
+        if (locationAllowed ==NO)
+        {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"LOCATION NOT FOUND"
+                                                            message:@"Go to settings and enable location services if you wish to see the nearest stations to you."
+                                                           delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles: nil];
+            
+            [alert show];
+            
+            
+        }
 
-        
+        return;
+    }
     
     
+    m_bTimerChanged = NO;
     [self getNearestStation];
 }
 
@@ -917,6 +952,7 @@
 -(void) viewWillAppear:(BOOL)animated
 {
     m_viewDim.frame = self.view.frame;
+    m_Direction2View.frame = self.view.frame;
     
     CGRect oRct = m_LeftMenuView.frame;
     oRct.size.height = self.view.frame.size.height;

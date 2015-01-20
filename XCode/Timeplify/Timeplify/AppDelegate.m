@@ -85,6 +85,13 @@
 	m_LocationManager.desiredAccuracy = kCLLocationAccuracyBest;
     m_LocationManager.activityType = CLActivityTypeFitness;
 	m_LocationManager.delegate = self;
+    
+    if ([m_LocationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {        
+        // TEST_CODE
+        //[m_LocationManager requestWhenInUseAuthorization];
+    }
+    
+
 }
 
 #pragma mark - Others

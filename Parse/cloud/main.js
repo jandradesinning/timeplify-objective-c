@@ -3,12 +3,12 @@ function getServiceStatus(trainData, uid) {
     var serviceStatus = null;
     var ServiceStatus = Parse.Object.extend("ServiceStatus");
     var querySStatus = new Parse.Query(ServiceStatus);
-       
+        
     querySStatus.equalTo("routeId", trainData.routeId);
     querySStatus.equalTo("uid", uid);
-  
+   
     promises.push(querySStatus.first());
-  
+   
     return Parse.Promise.when(promises).then(function(ssObj) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -24,32 +24,32 @@ function getServiceStatus(trainData, uid) {
         return promise;
     });
 }
-  
+   
 function getScheduledData(routeId, stationId, direction, uid, ssUID) {
     var promises = [];
     var scheduledData = [];
     var ScheduledData = Parse.Object.extend("ScheduledData");
     var querySData = new Parse.Query(ScheduledData);
-       
+        
     //querySData.equalTo("routeId", routeId);
     querySData.equalTo("stationId", stationId);
     querySData.equalTo("direction", direction);
     querySData.equalTo("uid", uid); 
     querySData.limit(1000);
-       
+        
     promises.push(querySData.find());
-   
+    
     return Parse.Promise.when(promises).then(function(sdObjs) {
         var promise = Parse.Promise.as();
         var curTime = new Date().getTime();
         promise = promise.then(function() {
             for (var i = 0; i < sdObjs.length; i++) {
-  
+   
                 var sdObj = sdObjs[i];
                 var arrTime = sdObj.get("arrivalTime");
                 var diff =  (getUTCToday() + convertToMilliSeconds(arrTime)) - curTime;
                 var diffStr = getTimeString(diff);
-                  
+                   
                 if((null != diffStr) && 0 < diff) {
                     var sData = {
                         "routeId": sdObj.get("routeId"),
@@ -68,31 +68,32 @@ function getScheduledData(routeId, stationId, direction, uid, ssUID) {
         return scheduledData;
     });
 }
-  
+   
 function getRealTimeData(routeId, stationId, direction, uid, ssUID) {
     var promises = [];
     var realTimeData = [];
     var RealTimeData = Parse.Object.extend("RealTimeData");
     var queryRTData = new Parse.Query(RealTimeData);
-       
+        
     //queryRTData.equalTo("routeId", routeId);
     queryRTData.equalTo("stationId", stationId);
     queryRTData.equalTo("direction", direction);
     queryRTData.equalTo("uid", uid);
     queryRTData.limit(1000);    
-       
+        
     promises.push(queryRTData.find());
-   
+    
     return Parse.Promise.when(promises).then(function(rtdObjs) {
         var promise = Parse.Promise.as();
         var curTime = new Date().getTime();     
         promise = promise.then(function() {
+            var rtMap = {};
             for (var i = 0; i < rtdObjs.length; i++) {
                 var rtdObj = rtdObjs[i];
                 var arrTime = rtdObj.get("arrivalTime") * 1000;
                 var diff = arrTime - curTime;
                 var diffStr = getTimeString(diff);
-  
+   
                 if((null != diffStr) && (0 < diff)) {
                     var rtData = {
                         "routeId": rtdObj.get("routeId"),
@@ -100,7 +101,24 @@ function getRealTimeData(routeId, stationId, direction, uid, ssUID) {
                         "tripAssignment": rtdObj.get("assigned"),
                         "serviceStatus": ""
                     }
-                    realTimeData.push(rtData);
+                    var rtKey = rtData.routeId + rtData.arrTime + rtData.tripAssignment;
+                    // to avoid duplicates
+                    var found = rtKey in rtMap;
+                    if(!found) {                    
+                        realTimeData.push(rtData);
+                        rtMap[rtKey] = {
+                            "diff": diff,
+                            "rtData": rtData,
+                            "index": (realTimeData.length - 1)
+                        };
+                    } else {
+                        if(rtMap[rtKey].diff > diff) {
+                            // update if we found latest data
+                            rtMap[rtKey].rtData = rtData;
+                            rtMap[rtKey].diff = diff;
+                            realTimeData[rtMap[rtKey].index] = rtData;
+                        }
+                    }
                 }
             }
             return realTimeData;
@@ -112,7 +130,7 @@ function getRealTimeData(routeId, stationId, direction, uid, ssUID) {
         return realTimeData;
     });
 }
-  
+   
 function getTimeString(milliSeconds) {
     var x = milliSeconds / 1000;
     var seconds = x % 60;
@@ -122,14 +140,14 @@ function getTimeString(milliSeconds) {
     var hours = x % 24;
     x /= 24;
     var days = x;
-      
+       
     if(Math.floor(days) == 0) {
         return Math.floor(hours) + ":" + Math.floor(minutes) + ":" + Math.floor(seconds)
     } else {
         return null;
     }
 }
-  
+   
 function convertToMilliSeconds(timeString) {
     var str = timeString.split(":");
     var milliSeconds = 0;
@@ -139,7 +157,7 @@ function convertToMilliSeconds(timeString) {
     milliSeconds = ((hours * 60 * 60) + (minutes * 60) + seconds) * 1000;
     return milliSeconds;
 }
-  
+   
  function getUTCToday() {
     var curDate = new Date();
     var year = curDate.getUTCFullYear();
@@ -148,11 +166,11 @@ function convertToMilliSeconds(timeString) {
     var utcToday = new Date(year, month, day).getTime();    
     return utcToday;
 }
-  
+   
 function setServiceStatus(trainData, ssUID) {
     var promises = [];
     var routeMap = {};
-  
+   
     for (var i = 0; i < trainData.length; i++) {
         var tD = trainData[i];
         var found = tD.routeId in routeMap;
@@ -165,7 +183,7 @@ function setServiceStatus(trainData, ssUID) {
             tD.serviceStatus = routeMap[tD.routeId];
         }
     }
-  
+   
     return Parse.Promise.when(promises).then(function() {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -175,22 +193,22 @@ function setServiceStatus(trainData, ssUID) {
         return promise;
     });
 }
-  
+   
 function getSettings() {
     var promises = [];  
     var Settings = Parse.Object.extend("Settings");
     var querySettings = new Parse.Query(Settings);
-       
+        
     promises.push(querySettings.find());
-   
+    
     return Parse.Promise.when(promises).then(function(settingsObjs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
             var settings = {};
-               
+                
             for (var i = 0; i < settingsObjs.length; i++) {
                 var settingsObj = settingsObjs[i];
-                   
+                    
                 var settingsValues = eval(JSON.stringify(settingsObj.get("settingsValues")));
                 var settingsKey = settingsObj.get("settingsKey");
                 if("realTime" == settingsKey) {
@@ -207,17 +225,17 @@ function getSettings() {
         return promise;
     });
 }
-   
+    
 function getStatus(settings, realTimeData, scheduledData, fetchScheduledData) {
     var status = {};
-   
+    
     status = {
         "realTime": {
             "data": realTimeData,
             "feedTime": settings.gtfsFeedTime
         }
     };
-   
+    
     if(fetchScheduledData && scheduledData) {
         status.scheduled = {
             "data": scheduledData,
@@ -226,14 +244,14 @@ function getStatus(settings, realTimeData, scheduledData, fetchScheduledData) {
     }
     return status;
 }
-  
+   
 // returns all routes' stations
 Parse.Cloud.define("getStatus", function(request, response) {
     var bOK = true;
     var routeId = null;
     var stationId = null;
     var direction = null;
-       
+        
     /*  
     {
       "appVersion": "10020",
@@ -242,7 +260,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
       "fetchScheduledData": "true",
     }
     */
-   
+    
     try
     {
         stationId = request.params.station;
@@ -250,17 +268,17 @@ Parse.Cloud.define("getStatus", function(request, response) {
             response.error("Parameter 'station' is missing");
             bOK = false;
         }
-           
+            
         direction = request.params.direction;
         if(bOK && null == direction) {
             response.error("Parameter 'direction' is missing");
             bOK = false;
         }
-   
+    
         if(bOK) {
             var status = {};
             var returns = [];
-               
+                
             getSettings().then(function(settings){
                 returns.push(settings);
                 return getRealTimeData(routeId, stationId, direction, settings.realTimeFeedTime, settings.serviceStatusFeedTime);
@@ -270,6 +288,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
             }).then(function(scheduledData){                
                 return getStatus(returns[0], returns[1], scheduledData, request.params.fetchScheduledData);
             }).then(function(status){
+                console.log(status);
                 response.success(status);
             }, function(error) {
                 response.error(error);
@@ -280,7 +299,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
         response.error(e.message);
     }
 });
-   
+    
 // returns all routes, stations
 Parse.Cloud.define("getStaticData", function(request, response) {
     var bOK = true;
@@ -296,14 +315,14 @@ Parse.Cloud.define("getStaticData", function(request, response) {
             response.error("Parameter 'appVersion' is missing");
             bOK = false;
         }
-   
+    
         if(bOK) {       
             var promises = [];
-   
+    
             promises.push(getSettings());
             promises.push(addRouteList());
             promises.push(addStationList());
-               
+                
             Parse.Promise.when(promises).then(function(settings, routes, stations) {
                 var myResponse = {
                     "feedTime": settings.staticFeedTime,
@@ -321,17 +340,17 @@ Parse.Cloud.define("getStaticData", function(request, response) {
         response.error(e.message);
     }
 });
-   
+    
 function addStationBoundsList(routeId, stationId, station) {
     var promises = [];
     var RouteStationBounds = Parse.Object.extend("RouteStationBounds");
     var queryRouteStationBounds = new Parse.Query(RouteStationBounds);
-       
+        
     queryRouteStationBounds.equalTo("routeId", routeId);
     queryRouteStationBounds.equalTo("stationId", stationId);
-                       
+                        
     promises.push(queryRouteStationBounds.first());
-       
+        
     return Parse.Promise.when(promises).then(function(routeStationBoundsObj) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -352,17 +371,17 @@ function addStationBoundsList(routeId, stationId, station) {
         return Parse.Promise.error(error);
     });
 }
-   
+    
 function addRouteList() {
     var Route = Parse.Object.extend("Route");
     var queryRoute = new Parse.Query(Route);
     var routes = [];
     var promises = [];
     var promisesX = [];
-       
+        
     queryRoute.limit(1000);
     promises.push(queryRoute.find());
-   
+    
     return Parse.Promise.when(promises).then(function(routeObjs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -405,16 +424,16 @@ function addRouteList() {
         return Parse.Promise.error(error);
     });
 }
-   
+    
 function addStationList() { 
     var Station = Parse.Object.extend("Station");
     var queryStation = new Parse.Query(Station);
     var stations = [];
     var promises = [];
-       
+        
     queryStation.limit(1000);
     promises.push(queryStation.find());
-   
+    
     return Parse.Promise.when(promises).then(function(stationObjs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -436,7 +455,7 @@ function addStationList() {
         return Parse.Promise.error(error);
     });
 }
-   
+    
 Parse.Cloud.define("getSettings", function(request, response) {
     var bOK = true;
     /*
@@ -445,7 +464,7 @@ Parse.Cloud.define("getSettings", function(request, response) {
       "updatedTime": "05122014140830"
     }
     */
-       
+        
     try
     {
         if(bOK) {
@@ -528,7 +547,7 @@ Parse.Cloud.define("getSettings", function(request, response) {
         response.error(e.message);
     }
 });
-  
+   
 Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
     /*
     {
@@ -543,11 +562,11 @@ Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
         var count = 0;
         var settings = {};
         var returns = [];
-           
+            
         steps = "";
-           
+            
         Parse.Cloud.useMasterKey();
-           
+            
         promises.push(getSettings().then(function(settings){
             console.log("GOT SETTINGS\r\n");
             steps += "GOT SETTINGS\r\n";
@@ -567,7 +586,7 @@ Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
         }).then(function(){
             return deleteAllRows("ScheduledData", returns[1]);
         }));
-           
+            
         return Parse.Promise.when(promises).then(function(rowCount) {
             var promise = Parse.Promise.as();
             // For each item, extend the promise with a function to delete it.
@@ -586,14 +605,14 @@ Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
         response.error(steps);
     }
 });
-  
+   
 function deleteAllObjects(className, uid, objs) {
     console.log("deleteAllObjects - " + className + ", " + uid + "\r\n");
     steps += "deleteAllObjects - " + className + ", " + uid + "\r\n";
     var promises = [];
-  
+   
     promises.push(Parse.Object.destroyAll(objs));
-       
+        
     return Parse.Promise.when(promises).then(function() {
         steps += "DELETED ALL OBJS " + objs.length + " for " + className + ", " + uid + "\r\n";
         var promise = Parse.Promise.as();
@@ -605,19 +624,19 @@ function deleteAllObjects(className, uid, objs) {
         return promise;
     });
 }
-  
+   
 function deleteAllRowsEx(className, uid, limit) {
     console.log("deleteAllRowsYY - " + className + ", " + uid + "\r\n");
     steps += "deleteAllRowsYY - " + className + ", " + uid + "\r\n";
     var promises = [];
     var Table = Parse.Object.extend(className);
     var query = new Parse.Query(Table);
-       
+        
     // find all rows that doesn't match 
     query.notEqualTo("uid", uid);
     query.limit(limit);
     promises.push(query.find());
-       
+        
     return Parse.Promise.when(promises).then(function(objs) {
         steps += "GOT OBJS " + objs.length + " for " + className + ", " + uid + "\r\n";
         var promise = Parse.Promise.as();
@@ -629,20 +648,20 @@ function deleteAllRowsEx(className, uid, limit) {
         return promise;
     });
 }
-   
+    
 function deleteAllRows(className, uid) {
     console.log("deleteAllRowsY - " + className + ", " + uid + "\r\n");
     var promises = [];
     var Table = Parse.Object.extend(className);
     var query = new Parse.Query(Table);
     var limit = 1000;
-       
+        
     // find all rows that doesn't match 
     query.notEqualTo("uid", uid);
     query.limit(limit);
-       
+        
     promises.push(query.count());
-       
+        
     return Parse.Promise.when(promises).then(function(objCount) {
         steps += "GOT COUNT " + objCount + " for " + className + ", " + uid + "\r\n";
         var loop = objCount/limit;

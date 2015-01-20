@@ -106,6 +106,7 @@ namespace Timeplify
         private ParseObject _poRTSettings = null;
         private ParseObject _poSTSSettings = null;
 
+        private uint _rtMaxCounter = 0;
         private uint _rtCounter = 0;
             
         #endregion //Private Members
@@ -196,6 +197,9 @@ namespace Timeplify
                 
             try
             {
+                // live data is not available for a given set of stations by only using scheduled data when the previously retrieved live data is older than 5 minutes.
+                _rtMaxCounter = ((uint)(5 * 60) / Worker.Instance.Configuration.GTFSRealTimeFeedInterval);
+
                 StartTimer(ref _gtfsRTFTimer, Worker.Instance.Configuration.GTFSRealTimeFeedInterval, GTFSRTFTimerProc, "GTFS Real Time");
                 StartTimer(ref _gtfsSFTimer, Worker.Instance.Configuration.GTFSStaticFeedInterval, GTFSSFTimerProc, "GTFS Static");
                 StartTimer(ref _serviceStatusTimer, Worker.Instance.Configuration.ServiceStatusInterval, ServiceStatusTimerProc, "ServiceStatus");
@@ -2110,8 +2114,7 @@ namespace Timeplify
 
                 if (0 == _rtCounter)
                 {
-                    // live data is not available for a given set of stations by only using scheduled data when the previously retrieved live data is older than 5 minutes. 
-                    _rtCounter = ((uint)(5 * 60) / Worker.Instance.Configuration.GTFSRealTimeFeedInterval);
+                    // live data is not available for a given set of stations by only using scheduled data when the previously retrieved live data is older than 5 minutes.
                     _realTimeCounter = GetCurrentTimeString();
                 }
 
@@ -2131,7 +2134,7 @@ namespace Timeplify
                 // Real-Time Subway Locations - L Line
                 DownloadRTFeed(url + "&feed_id=2", folder + "gtfs_L_");
 
-                if (10 <= _rtCounter)
+                if (_rtMaxCounter <= _rtCounter)
                 {
                     _rtCounter = 0;
                 }

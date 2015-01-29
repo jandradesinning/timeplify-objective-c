@@ -188,8 +188,6 @@
         return;
     }
     
-    NSLog(@"parseServerResponse '%@'", IN_Dict);
-    
     [DataManager insertServerData:IN_Dict];
     
     [Utility saveStringInDefault:@"DATA_COPIED" :@"YES"];

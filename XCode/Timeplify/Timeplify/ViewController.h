@@ -43,8 +43,8 @@
     int m_iVibrateCalls;
     int m_iWalkingDistance;
     
-    BOOL  m_bTimerChanged;
-    
+    BOOL m_bRemainingWasUp;
+        
 }
 -(IBAction) btnMenuClicked:(id)sender;
 -(IBAction) btnGPSClicked:(id)sender;

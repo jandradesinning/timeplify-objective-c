@@ -89,6 +89,7 @@
 {
     ST_Train* oTrain = [m_arrTrains objectAtIndex:image];
     NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", oTrain.m_strImage];
+    strNormalImage = [strNormalImage lowercaseString];
     UIImage* oImage = [UIImage imageNamed:strNormalImage];
     return oImage;
     

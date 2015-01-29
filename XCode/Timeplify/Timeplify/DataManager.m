@@ -18,12 +18,16 @@
 
 +(void)insertServerData:(NSDictionary*)IN_Dict{
     
+    NSDictionary* oDictData = [IN_Dict objectForKey:@"data"];
+    
+    NSLog(@"insertServerData '%@'", oDictData);
+    
     
     [DataManager executeSQL:@"DELETE FROM TrainStop"];
     [DataManager executeSQL:@"DELETE FROM Station"];
     [DataManager executeSQL:@"DELETE FROM Train"];
 
-    NSArray* arrRoutes = [IN_Dict objectForKey:@"routes"];
+    NSArray* arrRoutes = [oDictData objectForKey:@"routes"];
    
     for (int i=0; i <[arrRoutes count]; i++) {
         
@@ -65,7 +69,7 @@
     }
     
     
-    NSArray* arrStations = [IN_Dict objectForKey:@"stations"];
+    NSArray* arrStations = [oDictData objectForKey:@"stations"];
     
     for (int i=0; i <[arrStations count]; i++) {
         

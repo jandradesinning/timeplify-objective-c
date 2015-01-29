@@ -52,6 +52,8 @@
     NSString* strRoute = [m_dict objectForKey:@"routeId"];
     if (strRoute != nil) {
         NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", strRoute];
+        
+        strNormalImage = [strNormalImage lowercaseString];
         m_ctrlImgView.image = [UIImage imageNamed:strNormalImage];;
     }
     

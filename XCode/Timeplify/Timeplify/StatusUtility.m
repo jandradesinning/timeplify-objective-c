@@ -350,7 +350,6 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
         return oArrRecs;
     }
     
-    
     return nil;
     
 }
@@ -383,13 +382,13 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
     int iMin = IN_iSecs /60.0;
     
     if (iMin <= 60) {
-        // TEST_CODE
-       // NSString* strRet = [NSString stringWithFormat:@"%d min", IN_iSecs];
-        
         
         if (iMin < 1) {
             iMin = 1;
         }
+        
+        // TEST_CODE
+       // NSString* strRet = [NSString stringWithFormat:@"%d min", IN_iSecs];
         
         NSString* strRet = [NSString stringWithFormat:@"%d min", iMin];
         return strRet;

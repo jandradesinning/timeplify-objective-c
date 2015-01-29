@@ -11,14 +11,15 @@ using System.Net;
 using System.Xml.Serialization;
 using System.Text;
 using System.Linq;
-using ProtoBuf;
-using transit_realtime;
+using System.Globalization;
 using GTFS;
 using GTFS.IO;
 using GTFS.Entities;
-using Parse;
+using GTFS.Entities.Enumerations;
+using ProtoBuf;
+using transit_realtime;
 using nyct_subway;
-using System.Globalization;
+using Parse;
 
 namespace Timeplify
 {
@@ -198,7 +199,7 @@ namespace Timeplify
             try
             {
                 // live data is not available for a given set of stations by only using scheduled data when the previously retrieved live data is older than 5 minutes.
-                _rtMaxCounter = ((uint)(5 * 60) / Worker.Instance.Configuration.GTFSRealTimeFeedInterval);
+                _rtMaxCounter = 1;//((uint)(5 * 60) / Worker.Instance.Configuration.GTFSRealTimeFeedInterval);
 
                 StartTimer(ref _gtfsRTFTimer, Worker.Instance.Configuration.GTFSRealTimeFeedInterval, GTFSRTFTimerProc, "GTFS Real Time");
                 StartTimer(ref _gtfsSFTimer, Worker.Instance.Configuration.GTFSStaticFeedInterval, GTFSSFTimerProc, "GTFS Static");
@@ -380,10 +381,17 @@ namespace Timeplify
                             if ("6" == tu.trip.route_id)//TO AVOID BURST LIMIT ISSUE FOR TESTING
                         #endif
                             {
+                                string rId = tu.trip.route_id;
+
+                                if (1 < tu.trip.route_id.Length)
+                                {
+                                    rId = tu.trip.route_id.Remove(1);
+                                }
+                                
                                 ParseObject poRealTimeData = new ParseObject("RealTimeData");
                                 // Last character denoting direction not needed, as we store parent stationid
                                 poRealTimeData["stationId"] = stu.stop_id.Remove(stu.stop_id.Length - 1, 1);
-                                poRealTimeData["routeId"] = tu.trip.route_id;
+                                poRealTimeData["routeId"] = rId;
                                 poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "N" : "S";
                                 poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
                                 if (null != stu.departure && 0 != stu.departure.time)
@@ -1836,17 +1844,52 @@ namespace Timeplify
                 var trips = new List<Trip>(feed.GetTrips());
                 var stopTimes = new List<StopTime>(feed.GetStopTimes());
                 var stops = new List<Stop>(feed.GetStops());
+                var calendarDates = new List<CalendarDate>(feed.GetCalendarDates());
+                var calendars = new List<GTFS.Entities.Calendar>(feed.GetCalendars());
 
                 _staticCounter = GetCurrentTimeString();
 
                 List<ParseObject> listStaticPO = new List<ParseObject>();
 
+                int i = 0;
+
+                var exceptionDates = calendarDates.Where(calendarDate => (ExceptionType.Removed == calendarDate.ExceptionType)).ToList();
+
+                foreach (var exceptionDate in exceptionDates)
+                {
+                    i++;
+                    AddExceptionDate(exceptionDate, i, ref listStaticPO);
+                }
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static calendar dates to parse.", listStaticPO.Count);
+
+                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static calendar dates objects to parse.", listStaticPO.Count);
+                listStaticPO.Clear();
+
+                i = 0;
+
+                foreach (var calendar in calendars)
+                {
+                    i++;
+                    AddCalendar(calendar, i, ref listStaticPO);
+                }
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static calendars to parse.", listStaticPO.Count);
+
+                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static calendar calendars objects to parse.", listStaticPO.Count);
+                listStaticPO.Clear();
+
+                i = 0;
+
             #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
                 List<string> interestedRoutes = new List<string>();
                 interestedRoutes.Add("R");
                 interestedRoutes.Add("6");
-            #endif
-                int i = 0;
+            #endif                
 
                 var parentStops = stops.Where(stop => ((0 == stop.ParentStation.Length) || (null == stop.ParentStation))).ToList();
 
@@ -1993,6 +2036,46 @@ namespace Timeplify
             }
         }
 
+        private void AddExceptionDate(CalendarDate calenderDate, int iIndex, ref List<ParseObject> listStaticPO)
+        {
+            try
+            {
+                ParseObject poExceptionDate = new ParseObject("ExceptionDate");
+                poExceptionDate["serviceId"] = calenderDate.ServiceId;
+                poExceptionDate["date"] = calenderDate.Date.ToString("yyyyMMdd");
+                poExceptionDate["uid"] = _staticCounter;
+                listStaticPO.Add(poExceptionDate);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\tserviceId\t" + calenderDate.ServiceId + "\tdate\t" + calenderDate.Date);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add an Exception date. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void AddCalendar(GTFS.Entities.Calendar calender, int iIndex, ref List<ParseObject> listStaticPO)
+        {
+            try
+            {
+                ParseObject poCalendar = new ParseObject("Calendar");
+                poCalendar["serviceId"] = calender.ServiceId;
+                poCalendar["monDay"] = calender.Monday;
+                poCalendar["tuesDay"] = calender.Tuesday;
+                poCalendar["wednesDay"] = calender.Wednesday;
+                poCalendar["thursDay"] = calender.Thursday;
+                poCalendar["friDay"] = calender.Friday;
+                poCalendar["saturDay"] = calender.Saturday;
+                poCalendar["sunDay"] = calender.Sunday;
+                poCalendar["uid"] = _staticCounter;
+                listStaticPO.Add(poCalendar);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\tserviceId\t" + calender.ServiceId);
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Calendar. [Error] {0}.", e.Message);
+            }
+        }
+
         private ParseObject AddRoute(Route route, List<Stop> routeStops, int iIndex)
         {
             ParseObject poRoute = null;
@@ -2031,7 +2114,7 @@ namespace Timeplify
             }
         }
 
-        private void AddScheduleData(string stopId, string routeId, TimeOfDay departureTime, string direction, int iIndex, ref List<ParseObject> listStaticPO)
+        private void AddScheduleData(string stopId, string serviceId, string routeId, TimeOfDay departureTime, string direction, int iIndex, ref List<ParseObject> listStaticPO)
         {
             try
             {
@@ -2039,12 +2122,13 @@ namespace Timeplify
 
                 poSData["stationId"] = stopId;
                 poSData["routeId"] = routeId;
+                poSData["serviceId"] = serviceId;
                 poSData["arrivalTime"] = departureTime.Hours + ":" + departureTime.Minutes + ":" + departureTime.Seconds;
                 poSData["direction"] = direction;
                 poSData["uid"] = _staticCounter;
                 listStaticPO.Add(poSData);
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stopId
-                    + "\tdepartureTime\t" + poSData["arrivalTime"] + "\tdirection\t" + direction
+                    + "\tserviceId\t" + serviceId + "\tdepartureTime\t" + poSData["arrivalTime"] + "\tdirection\t" + direction
                     );
             }
             catch (Exception e)
@@ -2079,7 +2163,7 @@ namespace Timeplify
                     if ("R" == curTrip.RouteId || "6" == curTrip.RouteId)//TO AVOID BURST LIMIT ISSUE FOR TESTING
                 #endif
                     {
-                        AddScheduleData(stopId, curTrip.RouteId, stationTime.DepartureTime, direction, i, ref listStaticPO);
+                        AddScheduleData(stopId, curTrip.ServiceId, curTrip.RouteId, stationTime.DepartureTime, direction, i, ref listStaticPO);
                     }
                 }
             }

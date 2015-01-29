@@ -13,9 +13,9 @@ namespace Timeplify
     {
         #region Constants
 
-        private const ushort DEF_RTF_REFRESH = 30;
+        private const ushort DEF_RTF_REFRESH = 25;//30 seconds by default but to reduce network latency, some buffer (-5).
         private const ushort DEF_SF_REFRESH = 120;
-        private const ushort DEF_SS_REFRESH = 60;
+        private const ushort DEF_SS_REFRESH = 55;//60 seconds by default but to reduce network latency, some buffer (-5).
         private const ushort DEF_LOG_SIZE = 6000;
         private const string DEF_RTF_URL = "http://datamine.mta.info/mta_esi.php?key=";
         private const string DEF_SF_URL = "http://web.mta.info/developers/data/nyct/subway/google_transit.zip";

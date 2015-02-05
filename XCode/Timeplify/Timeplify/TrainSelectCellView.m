@@ -81,6 +81,9 @@
         
         NSLog(@"Image '%@'", strNormalImage);
         
+        strNormalImage = [strNormalImage lowercaseString];
+        strGrayImage = [strGrayImage lowercaseString];
+        
         
         if (oTrain.m_bSelected == YES) {
             [oBtn setBackgroundImage:[UIImage imageNamed:strNormalImage] forState:UIControlStateNormal];

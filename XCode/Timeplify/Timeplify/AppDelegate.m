@@ -7,11 +7,8 @@
 //
 
 #import "AppDelegate.h"
-
 #import "ViewController.h"
-
 #import "Defines.h"
-
 #import "DataManager.h"
 
 @implementation AppDelegate
@@ -42,11 +39,8 @@
     
 	m_GPSCoordinate = newLocation.coordinate;
 	m_iGPSStatus = 2;
-	
-    
-    
+	   
 }
-
 
 
 - (void)locationManager: (CLLocationManager *)manager
@@ -56,13 +50,11 @@
     
     m_iGPSStatus = 1;
     
-      
     // TEST_CODE
     CLLocationCoordinate2D oLoc = CLLocationCoordinate2DMake(INT_TESTING_LATITUDE, INT_TESTING_LONGITUDE); // Near 6   610 - morrison AV Sound View
     m_GPSCoordinate=oLoc;
     m_iGPSStatus = 2;
     // TEST_CODE
-
    	
 }
 
@@ -106,7 +98,6 @@
     [DataManager checkAndCopyDatabase];
     
     [Parse setApplicationId:STR_PARSE_APP_ID  clientKey:STR_PARSE_CLIENT_KEY];
-    
     
     m_arrFavoriteTrains = [[NSMutableArray alloc] init];
     m_arrFavoriteStations = [[NSMutableArray alloc] init];

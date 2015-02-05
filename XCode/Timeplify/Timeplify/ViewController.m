@@ -86,10 +86,6 @@
 
 -(void) doVibrateAlert
 {
-    if (m_bTimerChanged == NO) {
-        return;
-    }
-    
     
     if (m_timerVibrate != nil) {
         [m_timerVibrate invalidate];
@@ -117,8 +113,7 @@
 -(void) timerUpdationCalled
 {
     [self setStatusValues];
-    
-    m_bTimerChanged = YES;
+
 }
 
 -(void) timerWalkDistanceCalled
@@ -441,6 +436,8 @@
     }
     
     NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", strRoute];
+    strNormalImage = [strNormalImage lowercaseString];
+    
     m_ctrlImgViewTrain.image = [UIImage imageNamed:strNormalImage];
     
     m_ctrlLblStation.text = m_curStation.m_strStationName;
@@ -468,14 +465,21 @@
     StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
     
     int iTimeRemaining = [oStatusUtil getTimeRemainingInSecs:oDict];
+    
     if (iTimeRemaining < m_iWalkingDistance) {
         if (m_iVibrateCalls < 1) {
-            [self doVibrateAlert];
+            
+            if (m_bRemainingWasUp == YES) {
+                [self doVibrateAlert];
+            }
+            
         }
-        
     }
-    
-    
+    else
+    {
+        m_bRemainingWasUp = YES;
+    }
+        
     NSString* strTime = [oStatusUtil getTimeRemaining:oDict];
     
     if ([strTime length] < 1) {
@@ -552,10 +556,7 @@
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Timeplify"
 													message:IN_strMsg
 												   delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles: nil];
-	
 	[alert show];
-    
-    
 }
 
 
@@ -563,10 +564,22 @@
 
 -(void)parseStatusServerResponse:(NSDictionary*)IN_Dict :(BOOL) IN_bUsingLocal
 {
+    m_bRemainingWasUp = NO;
+
+    if (IN_Dict == nil) {
+        [self displayError:@"Invalid response from server"];
+        return;
+    }
+
+    NSDictionary* oDictData = [IN_Dict objectForKey:@"data"];
+    if (oDictData == nil) {
+        [self displayError:@"Invalid response from server"];
+        return;
+    }
 
     
     
-    NSDictionary* oDict = IN_Dict;
+    NSDictionary* oDict = oDictData;
     
     StatusUtility* oUtil = [[StatusUtility alloc]   init];
     if (IN_bUsingLocal == NO) {
@@ -642,7 +655,6 @@
     [PFCloud callFunctionInBackground:@"getStatus" withParameters:oDictParam
                                 block:^(id result, NSError *error)
      {
-         
          
          if (error) {
              
@@ -850,8 +862,7 @@
         return;
     }
     
-    
-    m_bTimerChanged = NO;
+
     [self getNearestStation];
 }
 

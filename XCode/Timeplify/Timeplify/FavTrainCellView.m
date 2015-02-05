@@ -81,6 +81,8 @@
         NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", oTrain.m_strImage];
         NSString* strGrayImage = [NSString stringWithFormat:@"vehicle-logo-%@-gray.png", oTrain.m_strImage];
         
+        strNormalImage = [strNormalImage lowercaseString];
+        strGrayImage = [strGrayImage lowercaseString];
         
         if (oTrain.m_bSelected == YES) {
             [oBtn setBackgroundImage:[UIImage imageNamed:strNormalImage] forState:UIControlStateNormal];

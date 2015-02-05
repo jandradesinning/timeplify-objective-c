@@ -1,4 +1,4 @@
-﻿#define SKIP_PARSE_LIMIT_BURST_ISSUE
+﻿//#define SKIP_PARSE_LIMIT_BURST_ISSUE
 
 using System;
 using System.Xml;
@@ -7,11 +7,17 @@ using System.IO.Compression;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Net;
 using System.Xml.Serialization;
+using System.Xml.Linq;
 using System.Text;
 using System.Linq;
 using System.Globalization;
+using System.Runtime.Serialization;
+using System.Web.Script.Serialization;
+using System.Collections.ObjectModel;
+using System.Runtime.Serialization.Json;
 using GTFS;
 using GTFS.IO;
 using GTFS.Entities;
@@ -32,12 +38,164 @@ namespace Timeplify
     /// </summary>
     public class Processor : CDisposableObj
     {
+        #region Internal Classes
+
+        #region RealTimeData
+
+        protected internal class RealTimeData : Dictionary<string, RTStationData>
+        {
+        }
+
+        #endregion RealTimeData
+
+        #region ScheduledData
+
+        protected internal class ScheduledData : Dictionary<string, ScheduledStationData>
+        {
+        }
+
+        #endregion ScheduledData
+
+        #region ServiceStatusData
+
+        protected internal class ServiceStatusData : Dictionary<string, string>
+        {
+        }
+
+        #endregion ServiceStatusData
+
+        #region RouteStationBoundsData
+
+        protected internal class RouteStationBoundDataList : List<RouteStationBoundData>
+        {   
+        }
+
+        #endregion RouteStationBoundsData
+
+        #region RouteStationBoundData
+
+        [DataContract]
+        protected internal class RouteStationBoundData
+        {
+            [DataMember(Name = "i")]
+            public string StationId;
+
+            [DataMember(Name = "n")]
+            public string NorthBound;
+
+            [DataMember(Name = "s")]
+            public string SouthBound;
+        }
+
+        #endregion RouteStationBoundData
+
+        #region StationData
+
+        [DataContract]
+        protected internal class RTStationData
+        {
+            public RTStationData()
+            {
+                South = new List<RTStopData>();
+                North = new List<RTStopData>();
+            }
+
+            [DataMember(Name = "S")]
+            public List<RTStopData> South;
+
+            [DataMember(Name = "N")]
+            public List<RTStopData> North;
+        }
+
+        [DataContract]
+        protected internal class ScheduledStationData
+        {
+            public ScheduledStationData()
+            {
+                South = new List<ScheduledStopData>();
+                North = new List<ScheduledStopData>();
+            }
+
+            [DataMember(Name = "S")]
+            public List<ScheduledStopData> South;
+
+            [DataMember(Name = "N")]
+            public List<ScheduledStopData> North;
+        }
+
+        #endregion StationData
+
+        #region StopData
+
+        [DataContract]
+        protected internal class RTStopData : StopData
+        {
+            [DataMember(Name = "s")]
+            public string ServiceId;
+
+            [DataMember(Name = "t")]
+            public ulong ArrivalTime;
+        }
+
+        [DataContract]
+        protected internal class ScheduledStopData : StopData
+        {
+            [DataMember(Name = "s")]
+            public string ServiceId;
+
+            [DataMember(Name = "t")]
+            public string ArrivalTime;
+        }
+
+        [DataContract]
+        protected internal class StopData
+        {
+            [DataMember(Name = "r")]
+            public string RouteId;
+        }
+
+        #endregion StopData
+
+        #region Serialize
+
+        protected internal static class Serialize
+        {
+            public static string SerializeJson<T>(object data)
+            {
+                string jsonTxt = null;
+
+                try
+                {
+                    //Create a stream to serialize the object to.
+                    MemoryStream ms = new MemoryStream();
+                    // Serializer the User object to the stream.
+                    DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings();
+                    settings.UseSimpleDictionaryFormat = true;
+                    DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(T), settings);
+                    ser.WriteObject(ms, data);
+                    byte[] json = ms.ToArray();
+                    ms.Close();
+                    jsonTxt = Encoding.UTF8.GetString(json, 0, json.Length);
+                }
+                catch(Exception e)
+                {
+                    jsonTxt = e.Message;
+                }
+
+                return jsonTxt;
+            }
+        }
+
+        #endregion Serialize
+
+        #endregion //Internal Classes
+
         #region Enumerations
-            
+
         #endregion //Enumerations
-            
+
         #region Constants
-            
+
         private const string XPATH_ROOT      = "//";
         private const string XPATH_SEP       = "/";
 
@@ -109,7 +267,9 @@ namespace Timeplify
 
         private uint _rtMaxCounter = 0;
         private uint _rtCounter = 0;
-            
+
+        private List<string> _arrInterestedRoutes = null;
+
         #endregion //Private Members
 
         #region Private Properties
@@ -146,7 +306,11 @@ namespace Timeplify
                 
             try
             {
+                //AFQ
                 //ParseClient.Initialize("zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i", "Bv8UkHYe1WhIiu86rK6boshd0LIXK54k1hC1HP05");
+                //Nimi
+                //ParseClient.Initialize("7OSoOE1pxwdcRPC0da76wl18XzwsfF8a9fIDFxgI", "pHynJyUGufWbFxgZNjQjrniSsxHrdYlw4DoBjlfj");
+                //Jose
                 ParseClient.Initialize("RbAVcTWNVSPFsEXu1xhfmehMhkeBlZqdeyEcXseS", "IHMBICp0kZiMCpVB57PY4x7tpvTSt87AjYvhPccr");
                 bRet = StartTimers();
             }
@@ -370,6 +534,8 @@ namespace Timeplify
             {
                 listPO = new List<ParseObject>();
 
+                RealTimeData rtData = new RealTimeData();
+
                 foreach(FeedEntity fe in fm.entity)
                 {
                     TripUpdate tu = fe.trip_update;
@@ -378,47 +544,71 @@ namespace Timeplify
                         foreach(TripUpdate.StopTimeUpdate stu in tu.stop_time_update)
                         {
                         #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                            if ("6" == tu.trip.route_id)//TO AVOID BURST LIMIT ISSUE FOR TESTING
+                            if ("6" == tu.trip.route_id /*|| "6X" == tu.trip.route_id*/)//TO AVOID BURST LIMIT ISSUE FOR TESTING
                         #endif
                             {
-                                string rId = tu.trip.route_id;
+                                if (tu.trip.nyct_trip_descriptor.is_assigned)
+                                {
+                                    string rId = GetRouteId(tu.trip.route_id);
 
-                                if (1 < tu.trip.route_id.Length)
-                                {
-                                    rId = tu.trip.route_id.Remove(1);
-                                }
-                                
-                                ParseObject poRealTimeData = new ParseObject("RealTimeData");
-                                // Last character denoting direction not needed, as we store parent stationid
-                                poRealTimeData["stationId"] = stu.stop_id.Remove(stu.stop_id.Length - 1, 1);
-                                poRealTimeData["routeId"] = rId;
-                                poRealTimeData["direction"] = (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction) ? "N" : "S";
-                                poRealTimeData["assigned"] = tu.trip.nyct_trip_descriptor.is_assigned;
-                                if (null != stu.departure && 0 != stu.departure.time)
-                                {
-                                    poRealTimeData["arrivalTime"] = (ulong)stu.departure.time;
-                                    poRealTimeData["uid"] = _realTimeCounter;
-                                    listPO.Add(poRealTimeData);
-                                }
-                                else if (null != stu.arrival && 0 != stu.arrival.time)
-                                {
-                                    poRealTimeData["arrivalTime"] = (ulong)stu.arrival.time;
-                                    poRealTimeData["uid"] = _realTimeCounter;
-                                    listPO.Add(poRealTimeData);
+                                    RTStationData stationData = null;
+                                    // Last character denoting direction not needed, as we store parent stationid
+                                    string stopId = stu.stop_id.Remove(stu.stop_id.Length - 1, 1);
+
+                                    rtData.TryGetValue(stopId, out stationData);
+
+                                    if (null == stationData)
+                                    {
+                                        stationData = new RTStationData();
+                                        rtData.Add(stopId, stationData);
+                                    }
+                                    else 
+                                    {
+                                        stationData = rtData[stopId];
+                                    }
+
+                                    RTStopData stopData = new RTStopData();
+                                    stopData.RouteId = rId;
+
+                                    if (null != stu.departure && 0 != stu.departure.time)
+                                    {
+                                        stopData.ArrivalTime = (ulong)stu.departure.time;
+                                    }
+                                    else if (null != stu.arrival && 0 != stu.arrival.time)
+                                    {
+                                        stopData.ArrivalTime = (ulong)stu.arrival.time;
+                                    }
+
+                                    if (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction)
+                                    {
+                                        stationData.North.Add(stopData);
+                                    }
+                                    else 
+                                    {
+                                        stationData.South.Add(stopData);
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, SetRTSettings);
-                SaveSettings(_poRTSettings, ref listPO);
+                if (0 < rtData.Count)
+                {
+                    ParseObject poRealTimeData = new ParseObject("RealTimeData");
+                    poRealTimeData["stationTimeMap"] = Serialize.SerializeJson<RealTimeData>(rtData);
+                    poRealTimeData["uid"] = _realTimeCounter;
+                    listPO.Add(poRealTimeData);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} real time objects to parse.", listPO.Count);
+                    GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, SetRTSettings);
+                    SaveSettings(_poRTSettings, ref listPO);
 
-                await ParseObject.SaveAllAsync(listPO);
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} real time objects to parse.", listPO.Count);
 
+                    await ParseObject.SaveAllAsync<ParseObject>(listPO);
+                }
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} real time objects to parse.", listPO.Count);
+                listPO.Clear();
             }
             catch (Exception e)
             {
@@ -636,6 +826,7 @@ namespace Timeplify
                 string statusFeedTime = dtfeed.ToString("ddMMyyyyHHmmss");
 
                 List<ParseObject> listPO = new List<ParseObject>();
+                ServiceStatusData ssData = new ServiceStatusData();
 
                 XmlNodeList xmlNodes = xmlDoc.SelectNodes("//subway/line");
 
@@ -643,15 +834,20 @@ namespace Timeplify
                 {
                     string name = xmlNode["name"].InnerText;
                     string status = xmlNode["status"].InnerText;
-                    AddInterestedRouteStatus(name, status, statusFeedTime, ref listPO);
+                    AddInterestedRouteStatus(name, status, statusFeedTime, ref ssData);
                 }
+
+                ParseObject poServiceStatus = new ParseObject("ServiceStatus");
+                poServiceStatus["ssMap"] = Serialize.SerializeJson<ServiceStatusData>(ssData);
+                poServiceStatus["uid"] = statusFeedTime;
+                listPO.Add(poServiceStatus);
 
                 GetSettings("statusTime", new string[] { statusFeedTime }, SetSTSSettings);
                 SaveSettings(_poSTSSettings, ref listPO);
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} service status objects to parse.", listPO.Count);
 
-                await ParseObject.SaveAllAsync<ParseObject>(listPO);
+                await ParseObject.SaveAllAsync<ParseObject>(listPO);                
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} service status objects to parse.", listPO.Count);
                 listPO.Clear();
@@ -664,26 +860,27 @@ namespace Timeplify
             }
         }
 
-        private void AddInterestedRouteStatus(string routeId, string status, string statusFeedTime, ref List<ParseObject> listPO)
+        private void AddInterestedRouteStatus(string routeId, string status, string statusFeedTime, ref ServiceStatusData ssData)
         {
-            string[] arrInterestedRoutes = null;
+            List<string> arrInterestedRoutes = null;
 
             try
             {
-                if (routeId != "SIR")
+                if (IsInterestedRoute(routeId))
                 {
+                    arrInterestedRoutes = new List<string>();
                 #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                    arrInterestedRoutes = new string[] { "6" }; //TO AVOID BURST LIMIT ISSUE FOR TESTING
+                    arrInterestedRoutes.Add("6"); //TO AVOID BURST LIMIT ISSUE FOR TESTING                    
                 #else
-                    arrInterestedRoutes = new string[] { "1", "2", "3", "4", "5", "6", "L", "S" };
+                    arrInterestedRoutes = _arrInterestedRoutes;                    
                 #endif
+
                     foreach (string route in arrInterestedRoutes)
                     {
                         if (routeId.Contains(route))
                         {
                             routeId = route;
-                            AddRouteStatus(routeId, status, statusFeedTime, ref listPO);
-                            //break;
+                            AddRouteStatus(routeId, status, statusFeedTime, ref ssData);
                         }
                     }
                 }
@@ -694,7 +891,7 @@ namespace Timeplify
             }
         }
 
-        private void AddRouteStatus(string routeId, string status, string statusFeedTime, ref List<ParseObject> listPO)
+        private void AddRouteStatus(string routeId, string status, string statusFeedTime, ref ServiceStatusData ssData)
         {
             try
             {
@@ -717,11 +914,7 @@ namespace Timeplify
                         break;
                 }
 
-                ParseObject poServiceStatus = new ParseObject("ServiceStatus");
-                poServiceStatus["routeId"] = routeId;
-                poServiceStatus["status"] = status;
-                poServiceStatus["uid"] = statusFeedTime;
-                listPO.Add(poServiceStatus);
+                ssData.Add(routeId, status);
             }
             catch (Exception e)
             {
@@ -1827,6 +2020,16 @@ namespace Timeplify
             return displayName;
         }
 
+        private bool IsInterestedRoute(string route)
+        {
+            return "SIR" != route;
+        }
+
+        private bool IsNotExpressTrains(string route)
+        {
+            return 'X' != route[route.Length - 1];
+        }
+
         private async void ProcessStaticFeed(string dataFolder)
         {
             try
@@ -1850,6 +2053,10 @@ namespace Timeplify
                 _staticCounter = GetCurrentTimeString();
 
                 List<ParseObject> listStaticPO = new List<ParseObject>();
+                if (null == _arrInterestedRoutes)
+                {
+                    _arrInterestedRoutes = new List<string>();
+                }
 
                 int i = 0;
 
@@ -1862,9 +2069,7 @@ namespace Timeplify
                 }
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static calendar dates to parse.", listStaticPO.Count);
-
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static calendar dates objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
@@ -1877,9 +2082,7 @@ namespace Timeplify
                 }
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static calendars to parse.", listStaticPO.Count);
-
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static calendar calendars objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
@@ -1900,9 +2103,7 @@ namespace Timeplify
                 }
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static station objects to parse.", listStaticPO.Count);
-
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static station objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
@@ -1931,31 +2132,38 @@ namespace Timeplify
 
                         if (0 < routeStops.Count)
                         {
-                            ParseObject poRoute = AddRoute(route, routeStops, i);
+                            ParseObject poRoute = null;
 
-                            Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "*********RouteStationMap***************");
-
-                            int j = 0;
-
-                            foreach (var routeStop in routeStops)
+                            if (IsInterestedRoute(route.ShortName) && IsNotExpressTrains(route.Id))
                             {
-                                j++;
-                                AddRouteStationBounds(route.Id, routeStop.ParentStation, routeStop.Name, j, ref poRoute, ref listStaticPO);
+                                poRoute = AddRoute(route, routeStops, i);
+
+                                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "*********RouteStationMap***************");
+
+                                int j = 0;
+                                RouteStationBoundDataList rsbdList = new RouteStationBoundDataList();
+
+                                foreach (var routeStop in routeStops)
+                                {
+                                    j++;
+                                    AddRouteStationBounds(route.Id, routeStop.ParentStation, routeStop.Name, j, ref rsbdList);
+                                }
+                                poRoute["stations"] = Serialize.SerializeJson<RouteStationBoundDataList>(rsbdList);
+                                listStaticPO.Add(poRoute);
                             }
-                            listStaticPO.Add(poRoute);
                         }
                         else
                         {
                             Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\trouteId\t" + route.Id + "\tZERO STOPS");
                         }
-                        interestedRoutes.Remove(route.Id);
+                        #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                            interestedRoutes.Remove(route.Id);
+                        #endif
                     }
                 }
                 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static routestationbounds objects to parse.", listStaticPO.Count);
-
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static routestationbounds objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
@@ -1963,32 +2171,34 @@ namespace Timeplify
 
                 // this is what we need
                 foreach (var parentStop in parentStops)
-                {
-                    ProcessStationTimes(stopTimes, parentStop.Id, "S", trips, ref listStaticPO);
-                    ProcessStationTimes(stopTimes, parentStop.Id, "N", trips, ref listStaticPO);
+                {                    
+                    ScheduledStationData stationData = new ScheduledStationData();
+                    ProcessStationTimes(stopTimes, parentStop.Id, "S", trips, ref stationData.South);
+                    ProcessStationTimes(stopTimes, parentStop.Id, "N", trips, ref stationData.North);                                        
 
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static scheduleddata objects to parse.", listStaticPO.Count);
-
-                    await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static scheduleddata objects to parse.", listStaticPO.Count);
-                    listStaticPO.Clear();
+                    ParseObject poScheduledData = new ParseObject(PT_S_SD);
+                    poScheduledData["stationTimeMap"] = Serialize.SerializeJson<ScheduledStationData>(stationData);
+                    poScheduledData["stationId"] = parentStop.Id;
+                    poScheduledData["uid"] = _staticCounter;
+                    listStaticPO.Add(poScheduledData);                    
                 }
+
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static scheduleddata objects to parse.", listStaticPO.Count);
+                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static scheduleddata objects to parse.", listStaticPO.Count);
+                listStaticPO.Clear();
 
                 GetSettings("staticTime", new string[] { _staticCounter }, SetSTSettings);
                 SaveSettings(_poSTSettings, ref listStaticPO);
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static settings objects to parse.", listStaticPO.Count);
-
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static settings objects to parse.", listStaticPO.Count);
                 listStaticPO.Clear();
 
                 Directory.Delete(dataFolder, true);
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STOP TIMES****************");
-
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "ProcessStaticFeed END: " + GetCurrentTimeString());
             }
             catch (Exception e)
@@ -1997,18 +2207,16 @@ namespace Timeplify
             }
         }
 
-        private void AddRouteStationBounds(string routeId, string stationId, string stopName, int iIndex, ref ParseObject poRoute, ref List<ParseObject> listStaticPO)
+        private void AddRouteStationBounds(string routeId, string stationId, string stopName, int iIndex, ref RouteStationBoundDataList rsbdList)
         {
             try
             {
-                poRoute.AddToList("stations", stationId);
-                ParseObject poRouteStationBounds = new ParseObject("RouteStationBounds");
-                poRouteStationBounds["routeId"] = routeId;
-                poRouteStationBounds["stationId"] = stationId;
-                poRouteStationBounds["northBound"] = GetDisplayName(routeId, stationId, true);
-                poRouteStationBounds["southBound"] = GetDisplayName(routeId, stationId, false);
-                poRouteStationBounds["uid"] = _staticCounter;
-                listStaticPO.Add(poRouteStationBounds);
+                RouteStationBoundData rsbData = new RouteStationBoundData();
+                rsbData.StationId = stationId;
+                rsbData.NorthBound = GetDisplayName(routeId, stationId, true);
+                rsbData.SouthBound = GetDisplayName(routeId, stationId, false);
+                rsbdList.Add(rsbData);
+                
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stationId + "\tstationName\t" + stopName);
             }
             catch (Exception e)
@@ -2076,20 +2284,41 @@ namespace Timeplify
             }
         }
 
+        private string GetRouteId(string routeId)
+        {
+            string rId = routeId;
+
+            if (2 == routeId.Length && 'X' == routeId[1])
+            {
+                rId = routeId.Remove(1);
+            }
+
+            return rId;
+        }
+
         private ParseObject AddRoute(Route route, List<Stop> routeStops, int iIndex)
         {
             ParseObject poRoute = null;
+            string routeId = null;
 
             try
             {
+                routeId = GetRouteId(route.Id);
                 poRoute = new ParseObject("Route");
-                poRoute["routeId"] = route.Id;
+                poRoute["routeId"] = routeId;
                 poRoute["shortName"] = route.ShortName;
                 poRoute["backgroundColor"] = route.Color;
                 poRoute["textColor"] = route.TextColor;
                 poRoute["northStationId"] = routeStops[0].ParentStation;
                 poRoute["southStationId"] = routeStops[routeStops.Count - 1].ParentStation;
                 poRoute["uid"] = _staticCounter;
+
+                if (null == (from interestedRoute in _arrInterestedRoutes
+                             where interestedRoute == routeId
+                             select interestedRoute).FirstOrDefault())
+                {
+                    _arrInterestedRoutes.Add(routeId);
+                }
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + route.Id + "\tnorthStationId\t" + routeStops[0].ParentStation
                     + "\tsouthStationId\t" + routeStops[routeStops.Count - 1].ParentStation);
@@ -2114,21 +2343,18 @@ namespace Timeplify
             }
         }
 
-        private void AddScheduleData(string stopId, string serviceId, string routeId, TimeOfDay departureTime, string direction, int iIndex, ref List<ParseObject> listStaticPO)
+        private void AddScheduleData(string stopId, string serviceId, string routeId, TimeOfDay departureTime, string direction, int iIndex, ref List<ScheduledStopData> stopDataList)
         {
             try
             {
-                ParseObject poSData = new ParseObject("ScheduledData");
+                ScheduledStopData stopData = new ScheduledStopData();
+                stopData.RouteId = GetRouteId(routeId);
+                stopData.ServiceId = serviceId;
+                stopData.ArrivalTime = departureTime.Hours + ":" + departureTime.Minutes + ":" + departureTime.Seconds;
+                stopDataList.Add(stopData);
 
-                poSData["stationId"] = stopId;
-                poSData["routeId"] = routeId;
-                poSData["serviceId"] = serviceId;
-                poSData["arrivalTime"] = departureTime.Hours + ":" + departureTime.Minutes + ":" + departureTime.Seconds;
-                poSData["direction"] = direction;
-                poSData["uid"] = _staticCounter;
-                listStaticPO.Add(poSData);
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stopId
-                    + "\tserviceId\t" + serviceId + "\tdepartureTime\t" + poSData["arrivalTime"] + "\tdirection\t" + direction
+                    + "\tserviceId\t" + serviceId + "\tdepartureTime\t" + stopData.ArrivalTime + "\tdirection\t" + direction
                     );
             }
             catch (Exception e)
@@ -2137,7 +2363,7 @@ namespace Timeplify
             }
         }
 
-        private void ProcessStationTimes(List<StopTime> stopTimes, String stopId, string direction, List<Trip> trips, ref List<ParseObject> listStaticPO)
+        private void ProcessStationTimes(List<StopTime> stopTimes, String stopId, string direction, List<Trip> trips, ref List<ScheduledStopData> stopDataList)
         {
             try
             {
@@ -2163,7 +2389,7 @@ namespace Timeplify
                     if ("R" == curTrip.RouteId || "6" == curTrip.RouteId)//TO AVOID BURST LIMIT ISSUE FOR TESTING
                 #endif
                     {
-                        AddScheduleData(stopId, curTrip.ServiceId, curTrip.RouteId, stationTime.DepartureTime, direction, i, ref listStaticPO);
+                        AddScheduleData(stopId, curTrip.ServiceId, curTrip.RouteId, stationTime.DepartureTime, direction, i, ref stopDataList);
                     }
                 }
             }

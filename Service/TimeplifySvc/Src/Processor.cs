@@ -458,24 +458,28 @@ namespace Timeplify
             return DateTime.Now.ToString(FND_FMT);
         }
 
-        private void DownloadRTFeed(string url, string folder)
+        private ulong DownloadRTFeed(string url, string folder, ref RealTimeData rtData)
         {
             // Locals
             FeedMessage fm = null;
             string file = null;
+            ulong ulTimeStamp = 0;
 
             try
             {
                 file = folder + GetCurrentTimeString();
                 fm = DownloadRTFile(url, file);
                 SaveRTFeed(file, fm);
-                ProcessRTFeed(fm);
+                ProcessRTFeed(fm, ref rtData);
                 File.Delete(file);
+                ulTimeStamp = fm.header.timestamp;
             }
             catch (Exception e)
             {
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to download feed. [Error] {0}.", e.Message);
             }
+
+            return ulTimeStamp;
         }
 
         private FeedMessage DownloadRTFile(string url, string toLocalPath)
@@ -525,17 +529,10 @@ namespace Timeplify
             return fm;
         }
 
-        private async void ProcessRTFeed(FeedMessage fm)
+        private void ProcessRTFeed(FeedMessage fm, ref RealTimeData rtData)
         {
-            // Locals
-            List<ParseObject> listPO = null;
-
             try
             {
-                listPO = new List<ParseObject>();
-
-                RealTimeData rtData = new RealTimeData();
-
                 foreach(FeedEntity fe in fm.entity)
                 {
                     TripUpdate tu = fe.trip_update;
@@ -569,14 +566,14 @@ namespace Timeplify
 
                                     RTStopData stopData = new RTStopData();
                                     stopData.RouteId = rId;
-
-                                    if (null != stu.departure && 0 != stu.departure.time)
-                                    {
-                                        stopData.ArrivalTime = (ulong)stu.departure.time;
-                                    }
-                                    else if (null != stu.arrival && 0 != stu.arrival.time)
+                                    
+                                    if (null != stu.arrival && 0 != stu.arrival.time)
                                     {
                                         stopData.ArrivalTime = (ulong)stu.arrival.time;
+                                    }
+                                    else if (null != stu.departure && 0 != stu.departure.time)
+                                    {
+                                        stopData.ArrivalTime = (ulong)stu.departure.time;
                                     }
 
                                     if (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction)
@@ -592,23 +589,6 @@ namespace Timeplify
                         }
                     }
                 }
-
-                if (0 < rtData.Count)
-                {
-                    ParseObject poRealTimeData = new ParseObject("RealTimeData");
-                    poRealTimeData["stationTimeMap"] = Serialize.SerializeJson<RealTimeData>(rtData);
-                    poRealTimeData["uid"] = _realTimeCounter;
-                    listPO.Add(poRealTimeData);
-
-                    GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(fm.header.timestamp).ToString(FND_FMT) }, SetRTSettings);
-                    SaveSettings(_poRTSettings, ref listPO);
-
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} real time objects to parse.", listPO.Count);
-
-                    await ParseObject.SaveAllAsync<ParseObject>(listPO);
-                }
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} real time objects to parse.", listPO.Count);
-                listPO.Clear();
             }
             catch (Exception e)
             {
@@ -879,8 +859,7 @@ namespace Timeplify
                     {
                         if (routeId.Contains(route))
                         {
-                            routeId = route;
-                            AddRouteStatus(routeId, status, statusFeedTime, ref ssData);
+                            AddRouteStatus(route, status, statusFeedTime, ref ssData);
                         }
                     }
                 }
@@ -2369,17 +2348,17 @@ namespace Timeplify
             {
                 string routeChildStop = stopId + direction;
                 var stationTimes = stopTimes.Where(stopTime => (stopTime.StopId == routeChildStop)).
-                    OrderBy(stopTime => stopTime.DepartureTime.Hours).
-                    ThenBy(stopTime => stopTime.DepartureTime.Minutes).
-                    ThenBy(stopTime => stopTime.DepartureTime.Seconds).
+                    OrderBy(stopTime => stopTime.ArrivalTime.Hours).
+                    ThenBy(stopTime => stopTime.ArrivalTime.Minutes).
+                    ThenBy(stopTime => stopTime.ArrivalTime.Seconds).
                     ToList();
 
-                var stationTimesD = DistinctBy(stationTimes, stopTime => stopTime.DepartureTime).ToList();
+                var stationTimesA = DistinctBy(stationTimes, stopTime => stopTime.ArrivalTime).ToList();
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Total station departure times count" + stationTimesD.Count);
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Total station departure times count" + stationTimesA.Count);
 
                 int i = 0;
-                foreach (var stationTime in stationTimesD)
+                foreach (var stationTime in stationTimesA)
                 {
                     var curTrip = trips.Where(trip => trip.Id == stationTime.TripId).FirstOrDefault();
 
@@ -2389,7 +2368,7 @@ namespace Timeplify
                     if ("R" == curTrip.RouteId || "6" == curTrip.RouteId)//TO AVOID BURST LIMIT ISSUE FOR TESTING
                 #endif
                     {
-                        AddScheduleData(stopId, curTrip.ServiceId, curTrip.RouteId, stationTime.DepartureTime, direction, i, ref stopDataList);
+                        AddScheduleData(stopId, curTrip.ServiceId, curTrip.RouteId, stationTime.ArrivalTime, direction, i, ref stopDataList);
                     }
                 }
             }
@@ -2438,11 +2417,16 @@ namespace Timeplify
                     Directory.CreateDirectory(folder);
                 }
 
+                RealTimeData rtData = new RealTimeData();
+                ulong ulTimeStamp = 0;
+
                 // Real-Time Subway Locations - 1, 2, 3, 4, 5, 6, S Lines
-                DownloadRTFeed(url + "&feed_id=1", folder + "gtfs_123456S_");
+                DownloadRTFeed(url + "&feed_id=1", folder + "gtfs_123456S_", ref rtData);
 
                 // Real-Time Subway Locations - L Line
-                DownloadRTFeed(url + "&feed_id=2", folder + "gtfs_L_");
+                ulTimeStamp = DownloadRTFeed(url + "&feed_id=2", folder + "gtfs_L_", ref rtData);
+
+                SaveRTData(rtData, ulTimeStamp);
 
                 if (_rtMaxCounter <= _rtCounter)
                 {
@@ -2453,6 +2437,37 @@ namespace Timeplify
             // For better memory performance.
             GC.Collect();
         }
+
+        private async void SaveRTData(RealTimeData rtData, ulong ulTimeStamp)
+        {
+            // Locals
+            List<ParseObject> listPO = null;
+
+            try
+            {
+                if (0 < rtData.Count)
+                {
+                    listPO = new List<ParseObject>();
+                    ParseObject poRealTimeData = new ParseObject("RealTimeData");
+                    poRealTimeData["stationTimeMap"] = Serialize.SerializeJson<RealTimeData>(rtData);
+                    poRealTimeData["uid"] = _realTimeCounter;
+                    listPO.Add(poRealTimeData);
+
+                    GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(ulTimeStamp).ToString(FND_FMT) }, SetRTSettings);
+                    SaveSettings(_poRTSettings, ref listPO);
+
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} real time objects to parse.", listPO.Count);
+                    await ParseObject.SaveAllAsync<ParseObject>(listPO);
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} real time objects to parse.", listPO.Count);
+                    listPO.Clear();
+                }
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process status feed. [Error] {0}.", e.Message);
+            }
+        }
+        
 
         private void GTFSSFTimerProc(object state)
         {

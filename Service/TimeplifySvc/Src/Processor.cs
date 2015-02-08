@@ -268,7 +268,7 @@ namespace Timeplify
         private uint _rtMaxCounter = 0;
         private uint _rtCounter = 0;
 
-        private List<string> _arrInterestedRoutes = null;
+        private Dictionary<string, string> _arrInterestedRoutes = null;
 
         #endregion //Private Members
 
@@ -842,24 +842,24 @@ namespace Timeplify
 
         private void AddInterestedRouteStatus(string routeId, string status, string statusFeedTime, ref ServiceStatusData ssData)
         {
-            List<string> arrInterestedRoutes = null;
+            Dictionary<string, string> arrInterestedRoutes = null;
 
             try
             {
                 if (IsInterestedRoute(routeId))
                 {
-                    arrInterestedRoutes = new List<string>();
+                    arrInterestedRoutes = new Dictionary<string, string>();
                 #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                    arrInterestedRoutes.Add("6"); //TO AVOID BURST LIMIT ISSUE FOR TESTING                    
+                    arrInterestedRoutes.Add("6", "6"); //TO AVOID BURST LIMIT ISSUE FOR TESTING                    
                 #else
                     arrInterestedRoutes = _arrInterestedRoutes;                    
                 #endif
 
-                    foreach (string route in arrInterestedRoutes)
+                    foreach (KeyValuePair<string, string> route in arrInterestedRoutes)
                     {
-                        if (routeId.Contains(route))
+                        if (routeId.Contains(route.Value))
                         {
-                            AddRouteStatus(route, status, statusFeedTime, ref ssData);
+                            AddRouteStatus(route.Key, status, statusFeedTime, ref ssData);
                         }
                     }
                 }
@@ -2034,7 +2034,7 @@ namespace Timeplify
                 List<ParseObject> listStaticPO = new List<ParseObject>();
                 if (null == _arrInterestedRoutes)
                 {
-                    _arrInterestedRoutes = new List<string>();
+                    _arrInterestedRoutes = new Dictionary<string, string>();
                 }
 
                 int i = 0;
@@ -2279,6 +2279,7 @@ namespace Timeplify
         {
             ParseObject poRoute = null;
             string routeId = null;
+            string routeSN = null;
 
             try
             {
@@ -2292,11 +2293,13 @@ namespace Timeplify
                 poRoute["southStationId"] = routeStops[routeStops.Count - 1].ParentStation;
                 poRoute["uid"] = _staticCounter;
 
-                if (null == (from interestedRoute in _arrInterestedRoutes
+                routeSN = GetRouteId(route.ShortName);
+
+                if (null == (from interestedRoute in _arrInterestedRoutes.Keys
                              where interestedRoute == routeId
                              select interestedRoute).FirstOrDefault())
                 {
-                    _arrInterestedRoutes.Add(routeId);
+                    _arrInterestedRoutes.Add(routeId, routeSN);
                 }
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + route.Id + "\tnorthStationId\t" + routeStops[0].ParentStation

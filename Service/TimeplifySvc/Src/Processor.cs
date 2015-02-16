@@ -852,7 +852,7 @@ namespace Timeplify
                 #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
                     arrInterestedRoutes.Add("6", "6"); //TO AVOID BURST LIMIT ISSUE FOR TESTING                    
                 #else
-                    arrInterestedRoutes = _arrInterestedRoutes;                    
+                    arrInterestedRoutes = getInterestedRoutes();                    
                 #endif
 
                     foreach (KeyValuePair<string, string> route in arrInterestedRoutes)
@@ -868,6 +868,115 @@ namespace Timeplify
             {
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add interested Route Status. [Error] {0}.", e.Message);
             }
+        }
+
+        private Dictionary<string, string> getInterestedRoutes()
+        {
+            try
+            {
+                if (null == _arrInterestedRoutes)
+                {
+                    // Locals
+                    string curDT = null;
+                    string remoteUri = null;
+                    string localFile = null;
+                    string dataFolder = null;
+
+                    dataFolder = Worker.Instance.Configuration.GTFSStaticDataFolder;
+
+                    if (!Directory.Exists(dataFolder))
+                    {
+                        Directory.CreateDirectory(dataFolder);
+                    }
+
+                    curDT = GetCurrentTimeString();
+                    localFile = dataFolder + curDT + ".gtfs";
+                    dataFolder = dataFolder + "gtfs_" + curDT;
+                    remoteUri = Worker.Instance.Configuration.GTFSStaticFeedURL;
+
+                    // Create a new WebClient instance.
+                    WebClient webClient = new WebClient();
+                    webClient.Proxy = GetProxy();
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Downloading File \"{0}\" to \"{1}\" .......\n\n", remoteUri, localFile);
+                    // Download the Web resource and save it into the current filesystem folder.
+                    webClient.DownloadFile(remoteUri, localFile);
+                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Successfully Downloaded File \"{0}\" to \"{1}\"", remoteUri, localFile);
+
+                    ZipFile.ExtractToDirectory(localFile, dataFolder);
+
+                    _arrInterestedRoutes = new Dictionary<string, string>();
+
+                    // create the reader.
+                    var reader = new GTFSReader<GTFSFeed>();
+
+                    // execute the reader.
+                    var feed = reader.Read(new GTFSDirectorySource(new DirectoryInfo(dataFolder)));
+
+                    // get all routes
+                    var routes = new List<Route>(feed.GetRoutes());
+                    var trips = new List<Trip>(feed.GetTrips());
+                    var stopTimes = new List<StopTime>(feed.GetStopTimes());
+                    var stops = new List<Stop>(feed.GetStops());
+
+                    int i = 0;
+
+#if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                    List<string> interestedRoutes = new List<string>();
+                    interestedRoutes.Add("R");
+                    interestedRoutes.Add("6");
+#endif
+
+                    var parentStops = stops.Where(stop => ((0 == stop.ParentStation.Length) || (null == stop.ParentStation))).ToList();
+
+                    i = 0;
+
+                    foreach (var route in routes)
+                    {
+                        i++;
+#if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                        if (0 == interestedRoutes.Count)
+                        {
+                            break;
+                        }
+                        if ("R" == route.Id || "6" == route.Id)//TO AVOID BURST LIMIT ISSUE FOR TESTING
+#endif
+                        {
+                            var routeStops = (from stop in stops
+                                              join stopTime in stopTimes on stop.Id equals stopTime.StopId
+                                              join trip in trips on stopTime.TripId equals trip.Id
+                                              where trip.Direction == GTFS.Entities.Enumerations.DirectionType.OneDirection//North to south
+                                              join myroute in routes on trip.RouteId equals myroute.Id
+                                              where myroute.Id == route.Id
+                                              select stop).Distinct().ToList();
+
+                            if (0 < routeStops.Count)
+                            {
+                                if (IsInterestedRoute(route.ShortName) && IsNotExpressTrains(route.Id))
+                                {
+                                    var routeId = GetRouteId(route.Id);
+                                    var routeSN = GetRouteId(route.ShortName);
+
+                                    if (null == (from interestedRoute in _arrInterestedRoutes.Keys
+                                                 where interestedRoute == routeId
+                                                 select interestedRoute).FirstOrDefault())
+                                    {
+                                        _arrInterestedRoutes.Add(routeId, routeSN);
+                                    }
+                                }
+                            }
+#if (SKIP_PARSE_LIMIT_BURST_ISSUE)
+                                interestedRoutes.Remove(route.Id);
+#endif
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process static feed. [Error] {0}.", e.Message);
+            }
+
+            return _arrInterestedRoutes;
         }
 
         private void AddRouteStatus(string routeId, string status, string statusFeedTime, ref ServiceStatusData ssData)

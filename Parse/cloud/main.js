@@ -224,9 +224,9 @@ function getTimeString(milliSeconds) {
 function convertToMilliSeconds(timeString) {
     var str = timeString.split(":");
     var milliSeconds = 0;
-    var hours = str[0];
-    var minutes = str[1];
-    var seconds = str[2];
+    var hours = parseInt(str[0]);
+    var minutes = parseInt(str[1]);
+    var seconds = parseInt(str[2]);
     milliSeconds = ((hours * 60 * 60) + (minutes * 60) + seconds) * 1000;
     return milliSeconds;
 }

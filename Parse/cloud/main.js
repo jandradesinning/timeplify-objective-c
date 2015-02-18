@@ -42,6 +42,7 @@ function getScheduledData(routeId, stationId, direction, uid, ssUID, skip, runni
         var curD = ("0" + curLDate.getUTCDate()).slice(-2);
         var curM = ("0" + (curLDate.getUTCMonth() + 1)).slice(-2);
         var curY = curLDate.getUTCFullYear();
+        var utcT = getUTCToday();
         promise = promise.then(function() {
             if(sdObj) {
                 var sMap = {};          
@@ -52,7 +53,7 @@ function getScheduledData(routeId, stationId, direction, uid, ssUID, skip, runni
                     var stpData = stopData[i];
    
                     var arrTime = stpData.t;
-                    var diff =  (getUTCToday() + convertToMilliSeconds(arrTime)) - curTime;
+                    var diff =  (utcT + convertToMilliSeconds(arrTime)) - curTime;
                     var diffStr = getTimeString(diff);              
                     var serviceId = stpData.s;
                     var runningDays = runningDaysMap[serviceId];
@@ -74,7 +75,7 @@ function getScheduledData(routeId, stationId, direction, uid, ssUID, skip, runni
                     if(bOK) {
                         var sData = {
                             "routeId": stpData.r,
-                            "arrivalTime": diffStr,
+                            "arrivalTime": arrTime,
                             "serviceStatus": ""
                         }
                         var sKey = sData.routeId + diffStr;

@@ -1074,7 +1074,7 @@ namespace Timeplify
                 #region Route 1
 
                 boundsMap = new Hashtable();
-                boundsMap.Add("101", new Bounds("Uptown", "Downtown"));
+                boundsMap.Add("101", new Bounds("", "Downtown"));
                 boundsMap.Add("103", new Bounds("Uptown", "Downtown"));
                 boundsMap.Add("104", new Bounds("Uptown", "Downtown"));
                 boundsMap.Add("106", new Bounds("Uptown", "Downtown"));
@@ -1228,7 +1228,7 @@ namespace Timeplify
                 #region Route 4
 
                 boundsMap = new Hashtable();
-                boundsMap.Add("401", new Bounds("Woodlawn", "Manhattan"));
+                boundsMap.Add("401", new Bounds("", "Manhattan"));
                 boundsMap.Add("402", new Bounds("Woodlawn", "Manhattan"));
                 boundsMap.Add("405", new Bounds("Woodlawn", "Manhattan"));
                 boundsMap.Add("406", new Bounds("Woodlawn", "Manhattan"));
@@ -1333,7 +1333,7 @@ namespace Timeplify
                 boundsMap.Add("244", new Bounds("Manhattan", "Flatbush Av - Brooklyn College"));
                 boundsMap.Add("245", new Bounds("Manhattan", "Flatbush Av - Brooklyn College"));
                 boundsMap.Add("246", new Bounds("Manhattan", "Flatbush Av - Brooklyn College"));
-                boundsMap.Add("247", new Bounds("Manhattan", "Flatbush Av - Brooklyn College"));
+                boundsMap.Add("247", new Bounds("Manhattan", ""));
                 _routeMap.Add("5", boundsMap);
 
                 #endregion Route 5
@@ -1731,7 +1731,7 @@ namespace Timeplify
                 boundsMap.Add("F38", new Bounds("Manhattan", "Coney Island"));
                 boundsMap.Add("F39", new Bounds("Manhattan", "Coney Island"));
                 boundsMap.Add("D42", new Bounds("Manhattan", "Coney Island"));
-                boundsMap.Add("D43", new Bounds("Manhattan", "Coney Island"));
+                boundsMap.Add("D43", new Bounds("Manhattan", ""));
                 _routeMap.Add("F", boundsMap);
 
                 #endregion Route F

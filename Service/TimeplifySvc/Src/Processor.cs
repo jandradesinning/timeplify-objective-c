@@ -260,10 +260,12 @@ namespace Timeplify
 
         private string _staticCounter = "";
         private string _realTimeCounter = "";
+        private string _utcOffsetS = "";
 
         private ParseObject _poSTSettings = null;
         private ParseObject _poRTSettings = null;
         private ParseObject _poSTSSettings = null;
+        private ParseObject _poUTCOSettings = null;
 
         private uint _rtMaxCounter = 0;
         private uint _rtCounter = 0;
@@ -596,6 +598,40 @@ namespace Timeplify
             }
         }
 
+        private void GetUTCOffset(ref List<ParseObject> listPO)
+        {
+            try
+            {
+                var curDTime = DateTime.UtcNow;
+                var tzEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+                var utcOffset = new DateTimeOffset(curDTime, TimeSpan.Zero);
+                string utcOffsetS = tzEST.GetUtcOffset(utcOffset).ToString();
+
+                if (_utcOffsetS != utcOffsetS)
+                {
+                    GetSettings("utcOffset", new string[] { utcOffsetS }, SetUTCOSettings);
+                    SaveSettings(_poUTCOSettings, ref listPO);
+                    _utcOffsetS = utcOffsetS;
+                }
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to get utc offset. [Error] {0}.", e.Message);
+            }
+        }
+
+        private void SetUTCOSettings(ParseObject poSettings)
+        {
+            try
+            {
+                _poUTCOSettings = poSettings;
+            }
+            catch (Exception e)
+            {
+                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set utc offset settings. [Error] {0}.", e.Message);
+            }
+        }
+
         private async void GetSettings(string settingsKey, string[] settingsValues, SetSettingsCallback ssCallback)
         {
             ParseObject poSettings = null;
@@ -824,6 +860,8 @@ namespace Timeplify
 
                 GetSettings("statusTime", new string[] { statusFeedTime }, SetSTSSettings);
                 SaveSettings(_poSTSSettings, ref listPO);
+
+                GetUTCOffset(ref listPO);
 
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} service status objects to parse.", listPO.Count);
 
@@ -2279,6 +2317,8 @@ namespace Timeplify
                 GetSettings("staticTime", new string[] { _staticCounter }, SetSTSettings);
                 SaveSettings(_poSTSettings, ref listStaticPO);
 
+                GetUTCOffset(ref listStaticPO);
+
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static settings objects to parse.", listStaticPO.Count);
                 await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static settings objects to parse.", listStaticPO.Count);
@@ -2567,6 +2607,8 @@ namespace Timeplify
 
                     GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(ulTimeStamp).ToString(FND_FMT) }, SetRTSettings);
                     SaveSettings(_poRTSettings, ref listPO);
+
+                    GetUTCOffset(ref listPO);
 
                     Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} real time objects to parse.", listPO.Count);
                     await ParseObject.SaveAllAsync<ParseObject>(listPO);

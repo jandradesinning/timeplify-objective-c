@@ -14,6 +14,12 @@
 
 @interface ViewController : UIViewController
 {
+    
+    IBOutlet UIButton* m_ctrlBtnLeftArrow;
+    IBOutlet UIButton* m_ctrlBtnRightArrow;
+    IBOutlet UIButton* m_ctrlBtnSwitchDirection;
+    
+    
     IBOutlet UIView* m_ctrlViewHide;
     
     IBOutlet UIActivityIndicatorView* m_ctrlActivity;
@@ -44,6 +50,10 @@
     int m_iWalkingDistance;
     
     BOOL m_bRemainingWasUp;
+    
+    BOOL m_bRunningMode;
+    
+    BOOL m_bFirstCallMade;
         
 }
 -(IBAction) btnMenuClicked:(id)sender;

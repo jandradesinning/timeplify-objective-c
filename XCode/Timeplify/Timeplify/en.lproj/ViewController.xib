@@ -8,6 +8,9 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController">
             <connections>
                 <outlet property="m_ctrlActivity" destination="ODG-4I-8PA" id="vQl-h4-K0S"/>
+                <outlet property="m_ctrlBtnLeftArrow" destination="7ue-gW-nIC" id="eiw-kC-pCq"/>
+                <outlet property="m_ctrlBtnRightArrow" destination="0OM-M2-TxR" id="kG1-wv-Gxm"/>
+                <outlet property="m_ctrlBtnSwitchDirection" destination="e8H-XA-o4y" id="nd0-6a-wta"/>
                 <outlet property="m_ctrlImgViewTrain" destination="fgP-2l-LF7" id="H9B-ki-jke"/>
                 <outlet property="m_ctrlLblDataType" destination="Ka1-XZ-FPM" id="MZf-Uo-f5g"/>
                 <outlet property="m_ctrlLblDirection" destination="gVK-Bu-hr6" id="0LS-aO-okS"/>

@@ -34,8 +34,8 @@
 
 #define INT_LEFT_NAV_MOVE_DISTANCE      258
 
-#define INT_UPDATE_STATUS_TIMER_DELAY       2.0// TEST_CODE 30.0
-#define INT_UPDATE_WALK_DIST_TIMER_DELAY    3.0// TEST_CODE 30.0
+#define INT_UPDATE_STATUS_TIMER_DELAY               1.0// TEST_CODE 30.0
+#define INT_UPDATE_SERVER_RECALL_TIMER_DELAY        30.0// TEST_CODE 30.0
 
 
 #define INT_ALERT_TAG_RETRY             1
@@ -43,9 +43,12 @@
 #define STR_FOLDER_DATA_FILES           @"DataFiles"
 
 
+//TEST     // TEST_CODE
 //#define STR_PARSE_APP_ID              @"zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i"
 //#define STR_PARSE_CLIENT_KEY          @"pI4IVkAUE5qSym9wmzur0Nn6OhlS1a7p0cqz5s0t"
 
+
+//LIVE
 #define STR_PARSE_APP_ID                @"RbAVcTWNVSPFsEXu1xhfmehMhkeBlZqdeyEcXseS"
 #define STR_PARSE_CLIENT_KEY            @"h24351TKlXm2NXeQHUley8dvHyfLEJVAKBWA147e"
 
@@ -56,6 +59,12 @@
 #define INT_TESTING_LATITUDE            40.821
 #define INT_TESTING_LONGITUDE           -73.874
 
+#define INT_GPS_ACCURACY                250
+
+
+#define STR_APP_STORE_ID                @"893213536"
+
+#define INT_GPS_NOTIFY_MIN_DISTANCE     100 // TEST_CODE 100
 
 // TEST_CODE
 

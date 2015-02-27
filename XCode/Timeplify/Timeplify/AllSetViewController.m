@@ -26,6 +26,7 @@
     [Utility saveObjectInDefault:STR_KEY_FAV_STATIONS :oArr2];
     
     
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_ALL_SET_INITIALLY" object:nil];
     
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }

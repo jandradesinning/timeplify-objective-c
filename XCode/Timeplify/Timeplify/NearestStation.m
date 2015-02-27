@@ -108,14 +108,7 @@
 
 #pragma mark - Others
 
--(double) getDistance :(double) lat1 : (double) lon1 : (double) lat2 : (double) lon2
-{
-	CLLocation* loc1 = [[CLLocation alloc] initWithLatitude:lat1 longitude:lon1];
-	CLLocation* loc2 = [[CLLocation alloc] initWithLatitude:lat2 longitude:lon2];
-	
-	double dbDist =  [loc1 distanceFromLocation:loc2];
-	return dbDist;
-}
+
 
 
 
@@ -127,7 +120,7 @@
 	{
 		ST_Station* oStation = (ST_Station*) [IN_arrStations objectAtIndex:i];
 		
-		oStation.m_dbDistanceFromGPS =  [self getDistance:appDel.m_GPSCoordinate.latitude
+		oStation.m_dbDistanceFromGPS =  [Utility getLocationDistance:appDel.m_GPSCoordinate.latitude
 																		 :appDel.m_GPSCoordinate.longitude
 																		 :oStation.m_dbLatitude
 																		 :oStation.m_dbLongitude];
@@ -178,8 +171,7 @@ NSInteger sortStationComparer(id num1, id num2, void *context)
         }
         
         [oArrNearStations addObject:oStation];
-        NSLog(@"Station %@ dist %f  Lat %f Long %f", oStation.m_strStationName, oStation.m_dbDistanceFromGPS,
-              oStation.m_dbLatitude, oStation.m_dbLongitude);
+  
     }
     
     

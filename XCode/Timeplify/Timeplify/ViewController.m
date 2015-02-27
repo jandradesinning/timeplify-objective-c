@@ -116,11 +116,16 @@
 
 }
 
--(void) timerWalkDistanceCalled
+
+-(void) timerServerReCallCalled
 {
+    if (m_bRunningMode == YES) {
+        [self getTrainStatusFromServer];
+    }
     
-    [self getWalkingDistance];
 }
+
+
 
 #pragma mark Walking Distance
 
@@ -252,7 +257,7 @@
     [self makeBusy];
     
     m_curStation = m_Direction2View.m_Station;
-    m_curStation.m_iTemporaryDirection = m_curStation.m_iSelectedDirection;
+    m_curStation.m_iTemporaryDirection = m_curStation.m_iTemporaryDirection;
     [self getTrainStatus];
     
     
@@ -367,12 +372,82 @@
         [self showAbout];
     }
     
+    if (oInd.row == 3) {
+        [Utility rateThisApp];
+    }
+    
     [self hideLeftMenu];
 }
 
 
 
 #pragma mark Get Status
+
+-(void) updateButtonStyles
+{
+    m_ctrlBtnLeftArrow.enabled = NO;
+    m_ctrlBtnRightArrow.enabled = NO;
+    
+    
+    if (m_curStation == nil) {
+        m_ctrlBtnSwitchDirection.enabled = NO;
+        return;
+    }
+    
+    NearestStation* oNear = [[NearestStation alloc] init];
+    
+    ST_Station* oStation1 = nil;
+    if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+        oStation1 = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    else
+    {
+        oStation1 = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    if (oStation1 != nil) {
+        m_ctrlBtnLeftArrow.enabled = YES;
+    }
+    
+    
+    
+    
+    ST_Station* oStation2 = nil;
+    if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+        
+        oStation2 = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    else
+    {
+        oStation2 = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    
+    if (oStation2 != nil) {
+        m_ctrlBtnRightArrow.enabled = YES;
+    }
+        
+    
+    ST_Station* oOrderedNextStation = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    ST_Station* oOrderedPrevStation = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    
+
+    
+    m_ctrlBtnSwitchDirection.enabled = NO;
+    
+    if  ((m_curStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) &&
+         (oOrderedNextStation != nil))
+    {
+        m_ctrlBtnSwitchDirection.enabled = YES;
+    }
+    
+    if  ((m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) &&
+         (oOrderedPrevStation != nil))
+    {
+        m_ctrlBtnSwitchDirection.enabled = YES;
+    }
+    
+}
+
+
 
 -(void) clearStatusValues
 {
@@ -389,31 +464,13 @@
 
 -(void) setServiceStatus:(NSMutableDictionary*)IN_Dict
 {
-    NSString* strTxt = [IN_Dict objectForKey:@"serviceStatus"];
+    
+    StatusUtility* oSUtil = [[StatusUtility alloc] init];
+    NSString* strTxt = [oSUtil getServiceStatusText:IN_Dict];
+    
     m_ctrlLblService.text = strTxt;
     
-    UIColor* oClr = [UIColor whiteColor];
-    
-    NSString* strLower = [strTxt lowercaseString];
-    if ([strLower isEqualToString:@"suspended"]) {
-        oClr = [UIColor colorWithRed:(153.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
-    }
-    
-    if ([strLower isEqualToString:@"delays"]) {
-        oClr = [UIColor colorWithRed:(153.0/255.0) green:(0.0/255.0) blue:(51.0/255.0) alpha:1.0];
-    }
-
-    if ([strLower isEqualToString:@"goodservice"]) {
-        oClr = [UIColor colorWithRed:(0.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
-    }
-
-    if ([strLower isEqualToString:@"plannedwork"]) {
-        oClr = [UIColor colorWithRed:(153.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
-    }
-
-    if ([strLower isEqualToString:@"servicechange"]) {
-        oClr = [UIColor colorWithRed:(153.0/255.0) green:(102.0/255.0) blue:(0.0/255.0) alpha:1.0];
-    }
+    UIColor* oClr = [oSUtil getServiceStatusColor:IN_Dict];
 
     m_ctrlLblService.textColor = oClr;
 }
@@ -466,6 +523,7 @@
     
     int iTimeRemaining = [oStatusUtil getTimeRemainingInSecs:oDict];
     
+    
     if (iTimeRemaining < m_iWalkingDistance) {
         if (m_iVibrateCalls < 1) {
             
@@ -477,7 +535,10 @@
     }
     else
     {
-        m_bRemainingWasUp = YES;
+        if (m_iWalkingDistance > 0) {
+            m_bRemainingWasUp = YES;
+        }
+        
     }
         
     NSString* strTime = [oStatusUtil getTimeRemaining:oDict];
@@ -564,12 +625,26 @@
 
 -(void)parseStatusServerResponse:(NSDictionary*)IN_Dict :(BOOL) IN_bUsingLocal
 {
+    
+    
+    if (IN_bUsingLocal == YES) {
+        [self performSelector:@selector(getTrainStatusFromLocalDB) withObject:nil afterDelay:0.0];
+        return;
+    }
+    
+    
+    
     m_bRemainingWasUp = NO;
+    m_iWalkingDistance = 0;
+    
+    
 
     if (IN_Dict == nil) {
         [self displayError:@"Invalid response from server"];
         return;
     }
+    
+    NSLog(@"Dict '%@'", IN_Dict);
 
     NSDictionary* oDictData = [IN_Dict objectForKey:@"data"];
     if (oDictData == nil) {
@@ -582,25 +657,26 @@
     NSDictionary* oDict = oDictData;
     
     StatusUtility* oUtil = [[StatusUtility alloc]   init];
-    if (IN_bUsingLocal == NO) {
-        [oUtil saveScheduledData:oDict :m_curStation];
-    }
-    else
-    {
-        oDict = [oUtil getScheduledData:m_curStation];
-        if (oDict == nil) {
-            return;
-        }
-    }
-    
-    
     
     if (!([oDict isKindOfClass:[NSDictionary class]])) {
         [self displayError:@"Invalid response from server"];
         return;
     }
    
-    NSLog(@"Dict '%@'", oDict);
+    [oUtil storeServiceStatusInDefault:oDict];
+    
+    
+    
+    NSNumber* oNumStatus = [IN_Dict objectForKey:@"status"];
+    if (oNumStatus != nil) {
+        if ([oNumStatus intValue] == 1) {
+            [self performSelector:@selector(getTrainStatusFromLocalDB) withObject:nil afterDelay:0.0];
+            return;
+        }
+        
+    }
+
+    
     
     m_arrNextTrains = [oUtil getFormattedStatusResult:oDict:IN_bUsingLocal];
     
@@ -611,18 +687,56 @@
     }
     
     [self setStatusValues];
+    
+    
 }
 
--(void) getTrainStatus
+
+-(void) getTrainStatusFromLocalDB
 {
+    ST_Station* oStation = m_curStation;
+    NSString* strDirection = @"";
+    if (oStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
+        strDirection = @"N";
+    }
+    if (oStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+        strDirection = @"S";
+    }
+       
     
-    [self clearStatusValues];
+    m_bRemainingWasUp = NO;
+    m_iWalkingDistance = 0;
     
-    m_iCurrentTrainPos = -1;
-    [m_arrNextTrains removeAllObjects];
+    
+    
+    StatusUtility* oUtil = [[StatusUtility alloc]   init];
+    
+    NSMutableDictionary* oDict = [oUtil getLocalDBScheduledData:oStation];
+    
+    NSLog(@"Dict '%@'", oDict);
+    
+    m_arrNextTrains = [oUtil getFormattedStatusResult:oDict:YES];
+    
+    
+    if ([m_arrNextTrains count] > 0) {
+        m_iCurrentTrainPos = 0;
+        m_iVibrateCalls = 0;
+    }
+    
+    [self setStatusValues];
+
+    
+    
+    [self makeReady];
+}
+
+
+-(void)getTrainStatusFromServer
+{
+   
+    
     
     ST_Station* oStation = m_curStation;
-    
     
     [self getWalkingDistance];
     
@@ -634,15 +748,14 @@
     if (oStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
         strDirection = @"S";
     }
-
+    
     
     NSMutableDictionary* oDictParam= [[NSMutableDictionary alloc] init];
     [oDictParam setObject:@"1.0" forKey:@"appVersion"];
-  //  [oDictParam setObject:@"6" forKey:@"route"];
     [oDictParam setObject:oStation.m_strStationId forKey:@"station"];
+    [oDictParam setObject:oStation.m_strRouteId forKey:@"route"];
     [oDictParam setObject:strDirection forKey:@"direction"];
-    [oDictParam setObject:[NSNumber numberWithBool:YES] forKey:@"fetchScheduledData"];
-    
+    [oDictParam setObject:[NSNumber numberWithBool:NO] forKey:@"fetchScheduledData"];
     
     
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:oDictParam
@@ -665,14 +778,18 @@
              }
              else
              {
+                 if (m_bRunningMode == NO) {
+                     [self displayError:[error localizedDescription]];
+                 }
                  
-                 [self displayError:[error localizedDescription]];
              }
              
          }
          else
          {
              [self parseStatusServerResponse: result :NO];
+             m_bRunningMode = YES;
+             
          }
          
          [self makeReady];
@@ -683,6 +800,32 @@
     
     
     NSLog(@"Called");
+}
+
+
+
+-(void) getTrainStatus
+{
+    
+    m_bRunningMode = NO;
+    [self clearStatusValues];
+    
+    m_iCurrentTrainPos = -1;
+    [m_arrNextTrains removeAllObjects];
+    
+    StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
+    BOOL bHasLive = [oStatusUtil doesRouteHaveLive:m_curStation.m_strRouteId];
+    BOOL bStatusStored = [oStatusUtil isServiceStatusStoredInDefault];
+    if ((bHasLive == YES)||(bStatusStored == NO)) {
+        [self getTrainStatusFromServer];
+    }
+    else
+    {
+        [self performSelector:@selector(getTrainStatusFromLocalDB) withObject:nil afterDelay:0.0];
+    }
+        
+    
+    [self updateButtonStyles];
 }
 
 
@@ -755,12 +898,8 @@
 #pragma mark Others
 
 
-
 -(void) checkAndDisplayConfigScreens:(BOOL)IN_bAnimated
 {
-    
-    
-    
     NSArray* oArr = (NSArray*) [Utility getObjectFromDefault:STR_KEY_FAV_TRAINS];
     if (oArr != nil) {
         NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
@@ -771,16 +910,14 @@
         NSArray* oArr2 = (NSArray*) [Utility getObjectFromDefault:STR_KEY_FAV_STATIONS];
         NSMutableArray* oArrFavStations = [GlobalCaller getFavStationsArray];
         [oArrFavStations removeAllObjects];
-        [oArrFavStations addObjectsFromArray:oArr2];        
+        [oArrFavStations addObjectsFromArray:oArr2];
+        
         return;
     }
     
 
-    
-
     TrainSelectViewController* viewController = [[TrainSelectViewController alloc] initWithNibName:@"TrainSelectViewController" bundle:nil];
     
-    
     UINavigationController* navigationController;
     navigationController = [[UINavigationController alloc]
                             initWithRootViewController:viewController ];
@@ -788,47 +925,6 @@
     
     [self.navigationController presentViewController:navigationController animated:IN_bAnimated completion:nil];
 
-    
-    
-    
-    
-    /*
-    StationSelectViewController* viewController = [[StationSelectViewController alloc] initWithNibName:@"StationSelectViewController" bundle:nil];
-    
-    viewController.m_iScreenMode = INT_STATION_SEL_FROM_WELOCOME;
-    
-    UINavigationController* navigationController;
-    navigationController = [[UINavigationController alloc]
-                            initWithRootViewController:viewController ];
-    navigationController.navigationBarHidden = YES;
-    
-    [self.navigationController presentViewController:navigationController animated:IN_bAnimated completion:nil];
-    */
-    
-    /*
-    AllSetViewController* viewController = [[AllSetViewController alloc] initWithNibName:@"AllSetViewController" bundle:nil];
-    
-    
-    UINavigationController* navigationController;
-    navigationController = [[UINavigationController alloc]
-                            initWithRootViewController:viewController ];
-    navigationController.navigationBarHidden = YES;
-    
-    [self.navigationController presentViewController:navigationController animated:IN_bAnimated completion:nil];
-     */
-    
-    
-    /*
-    FavoritesViewController* viewController = [[FavoritesViewController alloc] initWithNibName:@"FavoritesViewController" bundle:nil];
-    
-    
-    UINavigationController* navigationController;
-    navigationController = [[UINavigationController alloc]
-                            initWithRootViewController:viewController ];
-    navigationController.navigationBarHidden = YES;
-    
-    [self.navigationController presentViewController:navigationController animated:IN_bAnimated completion:nil];
-     */
 }
 
 
@@ -855,8 +951,6 @@
                                                            delegate:nil cancelButtonTitle:@"Ok" otherButtonTitles: nil];
             
             [alert show];
-            
-            
         }
 
         return;
@@ -893,6 +987,21 @@
         
         m_curStation.m_iTemporaryDirection = INT_DIRECTION_NORTH;
     }
+    
+    
+    /*
+     ViewController* oVC2 = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+     oVC2.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
+     [self presentViewController:oVC2 animated:YES completion:^(){
+     [oVC2 dismissViewControllerAnimated:NO completion:nil];
+     
+     [self makeBusy];
+     [self getTrainStatus];
+     
+     
+     }];
+     */
+    
   
     [self makeBusy];
     [self getTrainStatus];
@@ -907,7 +1016,17 @@
     
     NearestStation* oNear = [[NearestStation alloc] init];
     
-    ST_Station* oStation = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    ST_Station* oStation = nil;
+    
+    if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+        oStation = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    else
+    {
+        oStation = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    
+    
     if (oStation == nil) {
         return;
     }
@@ -929,10 +1048,26 @@
     
     NearestStation* oNear = [[NearestStation alloc] init];
     
-    ST_Station* oStation = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    ST_Station* oStation = nil;
+    
+    if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+        
+        oStation = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    else
+    {
+        oStation = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+
     if (oStation == nil) {
         return;
     }
+    
+    
+    
+    
+    
+    
     
     [self makeBusy];
     
@@ -1005,10 +1140,39 @@
 
 
 
+-(void)handleAllSetInitially:(NSNotification *)pNotification
+{    
+    NSArray* oArr = (NSArray*) [Utility getObjectFromDefault:STR_KEY_FAV_TRAINS];
+    if (oArr == nil) {
+        return;
+    }
+    
+    if (m_bFirstCallMade == YES) {
+        return;
+    }
+    
+    m_bFirstCallMade = YES;
+    
+    [self btnGPSClicked:0];
+
+}
+
+
+-(void)handleSignificantGPSChange:(NSNotification *)pNotification
+{
+    NSLog(@"handleSignificantGPSChange");
+    [self getWalkingDistance];
+    
+}
+
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    
+    m_bFirstCallMade = NO;
     
     m_ctrlLblWalkingDistance.text = @"";
     
@@ -1022,13 +1186,18 @@
     
     [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_STATUS_TIMER_DELAY target:self selector:@selector(timerUpdationCalled) userInfo:nil repeats:YES];
     
-    [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_WALK_DIST_TIMER_DELAY target:self selector:@selector(timerWalkDistanceCalled) userInfo:nil repeats:YES];
+    [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_SERVER_RECALL_TIMER_DELAY target:self selector:@selector(timerServerReCallCalled) userInfo:nil repeats:YES];
     
     
     m_curStation = nil;
     
     m_arrNextTrains = [[NSMutableArray alloc] init];
     m_iCurrentTrainPos = -1;
+    
+    
+    [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleSignificantGPSChange:)	 name:@"EVENT_SIGNIFICANT_GPS_CHANGE"
+												object:nil];
+ 
     
     [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleHideLeftMenuView:)	 name:@"EVENT_HIDE_LEFT_MENU_VIEW"
 												object:nil];
@@ -1038,9 +1207,11 @@
     
     [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleOneAllStationSelected:)	 name:@"EVENT_ONE_ALL_STATION_SELECTED"
 												object:nil];
-
     
     [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleDirection2Selected:)	 name:@"EVENT_DIRECTION_2_SELECTED"
+												object:nil];
+    
+    [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleAllSetInitially:)	 name:@"EVENT_ALL_SET_INITIALLY"
 												object:nil];
     
     
@@ -1067,6 +1238,8 @@
     [self checkAndDisplayConfigScreens:NO];
     
     [self setStatusValues];
+    
+    [self updateButtonStyles];
 }
 
 - (void)didReceiveMemoryWarning

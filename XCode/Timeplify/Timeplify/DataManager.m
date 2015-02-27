@@ -15,17 +15,53 @@
 @implementation DataManager
 
 
++(NSString*) getSQLStringField:(sqlite3_stmt*)IN_stmt :(int) IN_iIndex
+{
+	
+	NSString *strTemp;
+	
+	char* pTemp = (char*)sqlite3_column_text(IN_stmt, IN_iIndex);
+	if (pTemp != NULL)
+		strTemp = [NSString stringWithUTF8String:pTemp];
+	else
+		strTemp = @"";
+	
+	if (strTemp == nil)
+	{
+		strTemp = @"";
+	}
+	
+	return strTemp;
+	
+}
+
+
 
 +(void)insertServerData:(NSDictionary*)IN_Dict{
     
+       
+    
+    NSString* strFile = [DataManager getDBPath];
+    
+    sqlite3 *database;
+    int result = sqlite3_open([strFile UTF8String], &database);
+    if(result != SQLITE_OK)
+    {
+        NSLog(@"Error opening database");
+        return;
+    }
+    
+    
     NSDictionary* oDictData = [IN_Dict objectForKey:@"data"];
     
-    NSLog(@"insertServerData '%@'", oDictData);
+    NSLog(@"insertServerData Start");
     
     
-    [DataManager executeSQL:@"DELETE FROM TrainStop"];
-    [DataManager executeSQL:@"DELETE FROM Station"];
-    [DataManager executeSQL:@"DELETE FROM Train"];
+    [DataManager executeSQL:@"DELETE FROM TrainStop":database];
+    [DataManager executeSQL:@"DELETE FROM Station":database];
+    [DataManager executeSQL:@"DELETE FROM Train":database];
+    
+    NSLog(@"insertServerData 1");
 
     NSArray* arrRoutes = [oDictData objectForKey:@"routes"];
    
@@ -43,7 +79,7 @@
                             [oDict objectForKey:@"northStationId"],
                             [oDict objectForKey:@"southStationId"]];
         
-        [DataManager executeSQL:strSQL];
+        [DataManager executeSQL:strSQL:database];
         
         NSArray* arrStops = [oDict objectForKey:@"stations"];
         
@@ -63,11 +99,12 @@
                                 (j+1)];
             
             
-            [DataManager executeSQL:strSQL];
+            [DataManager executeSQL:strSQL:database];
 
         }
     }
     
+    NSLog(@"insertServerData 2");
     
     NSArray* arrStations = [oDictData objectForKey:@"stations"];
     
@@ -81,11 +118,69 @@
                             [oDict objectForKey:@"lat"],
                             [oDict objectForKey:@"lon"]];
         
-        [DataManager executeSQL:strSQL];
+        [DataManager executeSQL:strSQL:database];
     }
     
     
+    sqlite3_close(database);
+    
+    NSLog(@"insertServerData Over");
+    
 }
+
+
+
++(NSMutableArray*) getLocalScheduledData:(NSString*)IN_strStationId : (NSString*) IN_strDirection
+{
+    NSString* strSql =  [NSString stringWithFormat:@"SELECT ServiceID, RouteId, ArrivalTime FROM ScheduledData WHERE StationID = '%@' AND Direction = '%@' order by ArrivalTime", IN_strStationId, IN_strDirection];
+    
+    NSLog(@"SQL '%@'", strSql);
+    
+    NSMutableArray *arrReturn= [[NSMutableArray alloc]init];
+    
+    NSString* strFile = [DataManager getDBPath];
+    
+    sqlite3 *objSQLite3;
+	
+	int result= sqlite3_open([strFile UTF8String],&objSQLite3);
+	if(result!=SQLITE_OK){
+		return arrReturn;
+	}
+    
+    sqlite3_stmt *compiledStatement;
+	result=sqlite3_prepare_v2(objSQLite3, [strSql UTF8String],-1,  &compiledStatement, NULL);
+    
+    int iIndex = 0;
+    while(sqlite3_step(compiledStatement) == SQLITE_ROW)
+	{
+		NSMutableDictionary* oDict = [[NSMutableDictionary alloc] init];
+        
+        
+        
+        
+        NSString *strTemp = [DataManager getSQLStringField:compiledStatement: 0];
+        [oDict setObject:strTemp forKey:@"ServiceId"];
+        
+        strTemp = [DataManager getSQLStringField:compiledStatement: 1];
+        [oDict setObject:strTemp forKey:@"routeId"];
+        
+        strTemp = [DataManager getSQLStringField:compiledStatement: 2];
+        [oDict setObject:strTemp forKey:@"arrivalTime"];
+         
+		[arrReturn addObject:oDict];
+        iIndex++;
+	}
+	
+	sqlite3_finalize(compiledStatement);
+	sqlite3_close(objSQLite3);
+	
+    return arrReturn;
+    
+}
+
+
+
+
 
 +(NSMutableArray*) getStationsOfTrain:(NSString*)IN_strTrain
 {
@@ -113,30 +208,30 @@
 		ST_Station *oStation = [[ST_Station alloc] init];
         oStation.m_iIndex = iIndex;
         
-        NSString *strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 0)];
+        NSString *strTemp = [DataManager getSQLStringField:compiledStatement: 0];
         oStation.m_strStationId = strTemp;
 		
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 1)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 1];
         oStation.m_strRouteId = strTemp;
         
         oStation.m_iOrder = sqlite3_column_int(compiledStatement, 2);
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 3)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 3];
         oStation.m_strStationName = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 4)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 4];
         oStation.m_strTrainName = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 5)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 5];
         oStation.m_strNorthDirection = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 6)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 6];
         oStation.m_strSouthDirection = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 7)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 7];
         oStation.m_dbLatitude = [strTemp doubleValue];
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 8)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 8];
         oStation.m_dbLongitude = [strTemp doubleValue];
         
 		[arrReturn addObject:oStation];
@@ -154,6 +249,8 @@
 +(NSMutableArray*) getStationsOfTrainStopInStation:(NSString*)IN_strStationId
 {
     NSString* strSql = [NSString stringWithFormat: @"SELECT TrainStop.StationId,  TrainStop.RouteId, TrainStop.DirOrder, Station.Name, Train.Name, TrainStop.North, TrainStop.South, Station.Latitude, Station.Longitude FROM Train, TrainStop, Station where Train.Id = TrainStop.RouteId AND Station.Id = TrainStop.StationId AND Station.Id = '%@' ORDER BY TrainStop.DirOrder", IN_strStationId ];
+    
+    NSLog(@"SQL '%@'", strSql);
     
     NSMutableArray *arrReturn= [[NSMutableArray alloc]init];
     
@@ -175,30 +272,30 @@
 		ST_Station *oStation = [[ST_Station alloc] init];
         oStation.m_iIndex = iIndex;
         
-        NSString *strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 0)];
+        NSString *strTemp = [DataManager getSQLStringField:compiledStatement: 0];
         oStation.m_strStationId = strTemp;
 		
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 1)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 1];
         oStation.m_strRouteId = strTemp;
         
         oStation.m_iOrder = sqlite3_column_int(compiledStatement, 2);
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 3)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 3];
         oStation.m_strStationName = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 4)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 4];
         oStation.m_strTrainName = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 5)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 5];
         oStation.m_strNorthDirection = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 6)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 6];
         oStation.m_strSouthDirection = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 7)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 7];
         oStation.m_dbLatitude = [strTemp doubleValue];
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 8)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 8];
         oStation.m_dbLongitude = [strTemp doubleValue];
         
 		[arrReturn addObject:oStation];
@@ -237,17 +334,17 @@
 		ST_Station *oStation = [[ST_Station alloc] init];
         oStation.m_iIndex = iIndex;
         
-        NSString *strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 0)];
+        NSString *strTemp = [DataManager getSQLStringField:compiledStatement: 0];
         oStation.m_strStationId = strTemp;
 		
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 1)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 1];
         oStation.m_strStationName = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 2)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 2];
         oStation.m_dbLatitude = [strTemp doubleValue];
     
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 3)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 3];
         oStation.m_dbLongitude = [strTemp doubleValue];
         
         oStation.m_iOrder = sqlite3_column_int(compiledStatement, 4);
@@ -289,19 +386,19 @@
 		ST_Train *oTrain = [[ST_Train alloc] init];
         oTrain.m_iIndex = iIndex;
         
-        NSString *strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 0)];
+        NSString *strTemp = [DataManager getSQLStringField:compiledStatement: 0];
         oTrain.m_strId = strTemp;
 		
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 1)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 1];
         oTrain.m_strName = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 2)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 2];
         oTrain.m_strImage = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 3)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 3];
         oTrain.m_strNorthStationId = strTemp;
         
-        strTemp = [NSString stringWithUTF8String:(char*)sqlite3_column_text(compiledStatement, 4)];
+        strTemp = [DataManager getSQLStringField:compiledStatement: 4];
         oTrain.m_strSouthStationId = strTemp;
         
 		      
@@ -319,23 +416,9 @@
 
 
 
-+(void) executeSQL:(NSString*)IN_strSQL
++(void) executeSQL:(NSString*)IN_strSQL :(sqlite3 *)IN_Database
 {
-    NSString* strFile = [DataManager getDBPath];
-    
-   
-    sqlite3 *database;
-	int result = sqlite3_open([strFile UTF8String], &database);
-	if(result != SQLITE_OK)
-	{
-		NSLog(@"Error opening database");
-		return;
-	}
-	
-	NSString* strSQL = IN_strSQL;
-	sqlite3_exec(database, [strSQL UTF8String],	 NULL, NULL, NULL);
-	
-	sqlite3_close(database);
+    sqlite3_exec(IN_Database, [IN_strSQL UTF8String],	 NULL, NULL, NULL);
 }
 
 

@@ -37,6 +37,8 @@
     appDel.m_GPSCoordinate = mapView.centerCoordinate;
     
     [self setTitleLabel];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_SIGNIFICANT_GPS_CHANGE" object:nil];
 }
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -59,6 +61,7 @@
     
     [self setTitleLabel];
 
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_SIGNIFICANT_GPS_CHANGE" object:nil];
     
 }
 

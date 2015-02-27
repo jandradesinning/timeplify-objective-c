@@ -14,6 +14,12 @@
 {
     
 }
+-(UIColor*) getServiceStatusColor:(NSDictionary*)IN_Dict;
+-(NSString*) getServiceStatusText:(NSDictionary*)IN_Dict;
+-(NSString*) getServiceStatusfromDefault:(NSDictionary*)IN_Dict;
+-(void) storeServiceStatusInDefault:(NSDictionary*)IN_Dict;
+-(BOOL) isServiceStatusStoredInDefault;
+
 -(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData;
 -(NSString*) getTimeRemaining:(NSDictionary*)IN_Dict;
 -(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(int) IN_iCurPos;
@@ -23,9 +29,9 @@
 -(NSString*) getUnitOnlyFromFormattedSecs:(NSString*)IN_strTxt;
 -(NSString*) getTimeOnlyFromFormattedSecs:(NSString*)IN_strTxt;
 
--(void) saveScheduledData:(NSDictionary*)IN_Dict :(ST_Station*) IN_Station;
--(NSMutableDictionary*) getScheduledData:(ST_Station*) IN_Station;
+-(NSMutableDictionary*) getLocalDBScheduledData:(ST_Station*) IN_Station;
 
 -(int) getTimeRemainingInSecs:(NSDictionary*)IN_Dict;
 -(int) getWalkingDistanceInSecs:(NSDictionary*)IN_Dict;
+-(BOOL) doesRouteHaveLive:(NSString*)IN_strRoute;
 @end

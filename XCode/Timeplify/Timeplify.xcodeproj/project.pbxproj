@@ -30,6 +30,13 @@
 		044E65BC1A34A22C0078F839 /* FavStationCellView.m in Sources */ = {isa = PBXBuildFile; fileRef = 044E65BA1A34A22C0078F839 /* FavStationCellView.m */; };
 		044E65BD1A34A22C0078F839 /* FavStationCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 044E65BB1A34A22C0078F839 /* FavStationCellView.xib */; };
 		0454BEE41A346B0000459B32 /* DirectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0454BEE31A346B0000459B32 /* DirectionView.m */; };
+		045CEEB21A9F721500FA0182 /* LiveTrains.plist in Resources */ = {isa = PBXBuildFile; fileRef = 045CEEB11A9F721500FA0182 /* LiveTrains.plist */; };
+		04633B4C1A8670EC008B0465 /* vehicle-logo-6x-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B481A8670EC008B0465 /* vehicle-logo-6x-gray.png */; };
+		04633B4D1A8670EC008B0465 /* vehicle-logo-6x.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B491A8670EC008B0465 /* vehicle-logo-6x.png */; };
+		04633B4E1A8670EC008B0465 /* vehicle-logo-7.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B4A1A8670EC008B0465 /* vehicle-logo-7.png */; };
+		04633B4F1A8670EC008B0465 /* vehicle-logo-7-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B4B1A8670EC008B0465 /* vehicle-logo-7-gray.png */; };
+		04633B521A8671FD008B0465 /* vehicle-logo-7x-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B501A8671FD008B0465 /* vehicle-logo-7x-gray.png */; };
+		04633B531A8671FD008B0465 /* vehicle-logo-7x.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B511A8671FD008B0465 /* vehicle-logo-7x.png */; };
 		046952421A61661C0095990A /* Direction2View.m in Sources */ = {isa = PBXBuildFile; fileRef = 046952401A61661C0095990A /* Direction2View.m */; };
 		046952431A61661C0095990A /* Direction2View.xib in Resources */ = {isa = PBXBuildFile; fileRef = 046952411A61661C0095990A /* Direction2View.xib */; };
 		046952471A61752A0095990A /* StatusUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 046952461A61752A0095990A /* StatusUtility.m */; };
@@ -114,6 +121,7 @@
 		04B8CF8B1A3C4CB600DF7BDB /* GPSTestViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 04B8CF891A3C4CB600DF7BDB /* GPSTestViewController.m */; };
 		04B8CF8C1A3C4CB600DF7BDB /* GPSTestViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04B8CF8A1A3C4CB600DF7BDB /* GPSTestViewController.xib */; };
 		04B8CF8E1A3C4EBE00DF7BDB /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04B8CF8D1A3C4EBE00DF7BDB /* MapKit.framework */; };
+		04B9AFE91A85FAF100BCE2DF /* ExceptionDate.plist in Resources */ = {isa = PBXBuildFile; fileRef = 04B9AFE81A85FAF100BCE2DF /* ExceptionDate.plist */; };
 		04CE827E1A300F600033D5A0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04CE827D1A300F600033D5A0 /* UIKit.framework */; };
 		04CE82801A300F600033D5A0 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04CE827F1A300F600033D5A0 /* Foundation.framework */; };
 		04CE82821A300F600033D5A0 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04CE82811A300F600033D5A0 /* CoreGraphics.framework */; };
@@ -163,6 +171,13 @@
 		044E65BB1A34A22C0078F839 /* FavStationCellView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FavStationCellView.xib; sourceTree = "<group>"; };
 		0454BEE21A346B0000459B32 /* DirectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectionView.h; sourceTree = "<group>"; };
 		0454BEE31A346B0000459B32 /* DirectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectionView.m; sourceTree = "<group>"; };
+		045CEEB11A9F721500FA0182 /* LiveTrains.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = LiveTrains.plist; sourceTree = "<group>"; };
+		04633B481A8670EC008B0465 /* vehicle-logo-6x-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-6x-gray.png"; sourceTree = "<group>"; };
+		04633B491A8670EC008B0465 /* vehicle-logo-6x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-6x.png"; sourceTree = "<group>"; };
+		04633B4A1A8670EC008B0465 /* vehicle-logo-7.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-7.png"; sourceTree = "<group>"; };
+		04633B4B1A8670EC008B0465 /* vehicle-logo-7-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-7-gray.png"; sourceTree = "<group>"; };
+		04633B501A8671FD008B0465 /* vehicle-logo-7x-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-7x-gray.png"; sourceTree = "<group>"; };
+		04633B511A8671FD008B0465 /* vehicle-logo-7x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-7x.png"; sourceTree = "<group>"; };
 		0469523F1A61661C0095990A /* Direction2View.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Direction2View.h; sourceTree = "<group>"; };
 		046952401A61661C0095990A /* Direction2View.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Direction2View.m; sourceTree = "<group>"; };
 		046952411A61661C0095990A /* Direction2View.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Direction2View.xib; sourceTree = "<group>"; };
@@ -258,6 +273,7 @@
 		04B8CF891A3C4CB600DF7BDB /* GPSTestViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GPSTestViewController.m; sourceTree = "<group>"; };
 		04B8CF8A1A3C4CB600DF7BDB /* GPSTestViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = GPSTestViewController.xib; sourceTree = "<group>"; };
 		04B8CF8D1A3C4EBE00DF7BDB /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
+		04B9AFE81A85FAF100BCE2DF /* ExceptionDate.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = ExceptionDate.plist; sourceTree = "<group>"; };
 		04CE827A1A300F600033D5A0 /* Timeplify.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Timeplify.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		04CE827D1A300F600033D5A0 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		04CE827F1A300F600033D5A0 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -380,6 +396,12 @@
 		046A40341A306FB30011C1A1 /* VehicleLogo */ = {
 			isa = PBXGroup;
 			children = (
+				04633B501A8671FD008B0465 /* vehicle-logo-7x-gray.png */,
+				04633B511A8671FD008B0465 /* vehicle-logo-7x.png */,
+				04633B481A8670EC008B0465 /* vehicle-logo-6x-gray.png */,
+				04633B491A8670EC008B0465 /* vehicle-logo-6x.png */,
+				04633B4A1A8670EC008B0465 /* vehicle-logo-7.png */,
+				04633B4B1A8670EC008B0465 /* vehicle-logo-7-gray.png */,
 				046A40351A306FB30011C1A1 /* vehicle-logo-1-gray.png */,
 				046A40361A306FB30011C1A1 /* vehicle-logo-1.png */,
 				046A40371A306FB30011C1A1 /* vehicle-logo-2-gray.png */,
@@ -469,6 +491,8 @@
 		047396B41A4FBDBB00BAC5CD /* Data */ = {
 			isa = PBXGroup;
 			children = (
+				045CEEB11A9F721500FA0182 /* LiveTrains.plist */,
+				04B9AFE81A85FAF100BCE2DF /* ExceptionDate.plist */,
 				047396B51A4FBDBB00BAC5CD /* Data.sqlite3 */,
 			);
 			path = Data;
@@ -675,9 +699,11 @@
 				046A407F1A306FB40011C1A1 /* vehicle-logo-m-gray.png in Resources */,
 				046A40891A306FB40011C1A1 /* vehicle-logo-z-gray.png in Resources */,
 				046A40781A306FB40011C1A1 /* vehicle-logo-f.png in Resources */,
+				04633B4E1A8670EC008B0465 /* vehicle-logo-7.png in Resources */,
 				046A40651A306FB40011C1A1 /* vehicle-logo-3.png in Resources */,
 				046A40601A306FB40011C1A1 /* vehicle-logo-1-gray.png in Resources */,
 				046A40831A306FB40011C1A1 /* vehicle-logo-q-gray.png in Resources */,
+				045CEEB21A9F721500FA0182 /* LiveTrains.plist in Resources */,
 				0472FADA1A346B2D00936CB7 /* DirectionView.xib in Resources */,
 				046A406F1A306FB40011C1A1 /* vehicle-logo-b-gray.png in Resources */,
 				046A402E1A306FAB0011C1A1 /* gps-icon.png in Resources */,
@@ -694,12 +720,14 @@
 				04CE82881A300F600033D5A0 /* InfoPlist.strings in Resources */,
 				046A40861A306FB40011C1A1 /* vehicle-logo-r.png in Resources */,
 				046A40811A306FB40011C1A1 /* vehicle-logo-n-gray.png in Resources */,
+				04633B521A8671FD008B0465 /* vehicle-logo-7x-gray.png in Resources */,
 				046A402F1A306FAB0011C1A1 /* left-arrow.png in Resources */,
 				046D9F8A1A301070007765BB /* icon@2x.png in Resources */,
 				041671151A35720D002F7F41 /* LeftMenuCellView.xib in Resources */,
 				046A406B1A306FB40011C1A1 /* vehicle-logo-6-gray.png in Resources */,
 				04DB9D561A35BB3B00EA5D17 /* AboutViewController.xib in Resources */,
 				046A40721A306FB40011C1A1 /* vehicle-logo-c.png in Resources */,
+				04B9AFE91A85FAF100BCE2DF /* ExceptionDate.plist in Resources */,
 				046A40741A306FB40011C1A1 /* vehicle-logo-d.png in Resources */,
 				04CE829A1A300F600033D5A0 /* ViewController.xib in Resources */,
 				046A40701A306FB40011C1A1 /* vehicle-logo-b.png in Resources */,
@@ -733,8 +761,11 @@
 				04B8CF8C1A3C4CB600DF7BDB /* GPSTestViewController.xib in Resources */,
 				046A40301A306FAB0011C1A1 /* left-menu-icon.png in Resources */,
 				041671171A35720D002F7F41 /* LeftMenuView.xib in Resources */,
+				04633B4C1A8670EC008B0465 /* vehicle-logo-6x-gray.png in Resources */,
+				04633B4D1A8670EC008B0465 /* vehicle-logo-6x.png in Resources */,
 				046A40311A306FAB0011C1A1 /* right-arrow.png in Resources */,
 				046A40671A306FB40011C1A1 /* vehicle-logo-4.png in Resources */,
+				04633B4F1A8670EC008B0465 /* vehicle-logo-7-gray.png in Resources */,
 				046A40851A306FB40011C1A1 /* vehicle-logo-r-gray.png in Resources */,
 				046A407D1A306FB40011C1A1 /* vehicle-logo-l-gray.png in Resources */,
 				041D65911A30175700E1823B /* TrainSelectCellView.xib in Resources */,
@@ -744,6 +775,7 @@
 				046A40841A306FB40011C1A1 /* vehicle-logo-q.png in Resources */,
 				046D9F851A301070007765BB /* Default-568h@2x.png in Resources */,
 				046D9F861A301070007765BB /* Default.png in Resources */,
+				04633B531A8671FD008B0465 /* vehicle-logo-7x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -833,7 +865,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				ONLY_ACTIVE_ARCH = YES;
-				PROVISIONING_PROFILE = "becca625-731d-4605-8ae1-eeb532a9632b";
+				PROVISIONING_PROFILE = "9aa46aa2-c864-460a-b6ea-a8d9e69918e9";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -859,7 +891,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
-				PROVISIONING_PROFILE = "becca625-731d-4605-8ae1-eeb532a9632b";
+				PROVISIONING_PROFILE = "9aa46aa2-c864-460a-b6ea-a8d9e69918e9";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};

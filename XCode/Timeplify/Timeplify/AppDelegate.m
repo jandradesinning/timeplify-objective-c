@@ -10,6 +10,7 @@
 #import "ViewController.h"
 #import "Defines.h"
 #import "DataManager.h"
+#import "Utility.h"
 
 @implementation AppDelegate
 
@@ -39,7 +40,28 @@
     
 	m_GPSCoordinate = newLocation.coordinate;
 	m_iGPSStatus = 2;
+    
+    
+    double dbDist =  [Utility getLocationDistance:m_GPSCoordinate.latitude
+                                                                :m_GPSCoordinate.longitude
+                                                                :m_PrevGPSCoordinate.latitude
+                                                                :m_PrevGPSCoordinate.longitude];
+    if (dbDist > INT_GPS_NOTIFY_MIN_DISTANCE) {
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_SIGNIFICANT_GPS_CHANGE" object:nil];
+        m_PrevGPSCoordinate = m_GPSCoordinate;
+    }
+    
 	   
+    if (newLocation.horizontalAccuracy < INT_GPS_ACCURACY) {
+        
+        if (m_bInitalStationShown == NO) {
+            m_bInitalStationShown = YES;
+            [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_ALL_SET_INITIALLY" object:nil];
+        }
+        
+    }
+    
 }
 
 
@@ -80,17 +102,31 @@
     
     if ([m_LocationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {        
         // TEST_CODE
-        //[m_LocationManager requestWhenInUseAuthorization];
+        [m_LocationManager requestWhenInUseAuthorization];
     }
     
 
 }
 
-#pragma mark - Others
+#pragma mark - No Idle
 
+
+- (void) ScreenDimTimerCalled
+{
+	UIApplication *thisApp = [UIApplication sharedApplication];
+	thisApp.idleTimerDisabled = NO;
+	thisApp.idleTimerDisabled = YES;
+	
+}
+
+
+#pragma mark - Others
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    m_bInitalStationShown = NO;
+    
+    
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     // Override point for customization after application launch.
     self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
@@ -110,6 +146,10 @@
     
     [self initGPS];
     [self startGPS];
+        
+	[NSTimer scheduledTimerWithTimeInterval:5.0 target:self
+								   selector:@selector(ScreenDimTimerCalled) userInfo:nil repeats:YES];
+
     
     //self.window.rootViewController = self.viewController;
     [self.window makeKeyAndVisible];

@@ -36,12 +36,12 @@
 
 -(IBAction) btnNorthClicked:(id)sender
 {
-    m_Station.m_iSelectedDirection = INT_DIRECTION_NORTH;
+    m_Station.m_iTemporaryDirection = INT_DIRECTION_NORTH;
     [self doClose];
 }
 -(IBAction) btnSouthClicked:(id)sender
 {
-    m_Station.m_iSelectedDirection = INT_DIRECTION_SOUTH;
+    m_Station.m_iTemporaryDirection = INT_DIRECTION_SOUTH;
     [self doClose];
 }
 

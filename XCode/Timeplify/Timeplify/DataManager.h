@@ -13,9 +13,11 @@
 {
     
 }
++(NSString*) getSQLStringField:(sqlite3_stmt*)IN_stmt :(int) IN_iIndex;
 +(NSString*) getDBPath;
 +(void) checkAndCopyDatabase;
-+(void) executeSQL:(NSString*)IN_strSQL;
++(void) executeSQL:(NSString*)IN_strSQL :(sqlite3 *)IN_Database;
++(NSMutableArray*) getLocalScheduledData:(NSString*)IN_strStationId : (NSString*) IN_strDirection;
 +(NSMutableArray*) getAllTrains;
 +(NSMutableArray*) getAllStations;
 +(NSMutableArray*) getStationsOfTrain:(NSString*)IN_strTrain;

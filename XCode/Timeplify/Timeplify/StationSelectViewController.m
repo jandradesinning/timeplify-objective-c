@@ -232,6 +232,36 @@
 }
 
 
+-(BOOL) doActionOfEndStaion:(ST_Station*)IN_Station
+{
+    NSString* strNorth = [IN_Station.m_strNorthDirection stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString* strSouth = [IN_Station.m_strSouthDirection stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    
+    if (([strNorth length] > 0)&&
+        ([strSouth length] > 0)){
+        return NO;
+    }
+    
+    if ([strNorth length] < 1)
+    {
+        IN_Station.m_iSelectedDirection = INT_DIRECTION_SOUTH;
+        [GlobalCaller updateFavStation:IN_Station];
+        return YES;
+    }
+
+    
+    if ([strSouth length] < 1)
+    {
+        IN_Station.m_iSelectedDirection = INT_DIRECTION_NORTH;
+        [GlobalCaller updateFavStation:IN_Station];
+        return YES;
+    }
+    
+    
+    return NO;
+}
+
+
 
 - (void) rowSelected:(NSIndexPath *)indexPath :(UITableView *)IN_tableView
 {
@@ -256,9 +286,6 @@
     }
     
     
-    
-
-    
     if (oStation.m_iSelectedDirection > 0) {
         oStation.m_iSelectedDirection = 0;
         [self updateVisibleCells:m_ctrlTable];
@@ -269,10 +296,20 @@
     }
     
     
-    
     [m_searchDisplayController setActive:NO animated:YES];
-    [self showDirectionView:oStation];
-    NSLog(@"Selected '%@'", oStation.m_strStationName);
+    
+    NSLog(@"AAA Selected '%@'", oStation.m_strStationName);
+    
+    BOOL bEnd = [self doActionOfEndStaion:oStation];
+    if (bEnd == NO) {
+        [self showDirectionView:oStation];
+    }
+    else
+    {
+        [self updateVisibleCells:m_ctrlTable];
+        [self updateVisibleCells:m_searchDisplayController.searchResultsTableView];
+    }
+    
 }
 
 
@@ -499,11 +536,11 @@
     
     
     
-    [[UIBarButtonItem appearanceWhenContainedIn: [UISearchBar class], nil] setTintColor:[UIColor lightGrayColor]];
+    [[UIBarButtonItem appearanceWhenContainedIn: [UISearchBar class], nil] setTintColor:[UIColor darkGrayColor]];
     
     
     m_ctrlSearchBar.placeholder = @"";
-    m_ctrlSearchBar.showsCancelButton = YES;
+    m_ctrlSearchBar.showsCancelButton = NO;
     
     m_searchDisplayController = [[UISearchDisplayController alloc]
                                  initWithSearchBar:m_ctrlSearchBar

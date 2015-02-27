@@ -16,5 +16,6 @@
     NSMutableArray* m_arrRecords;
 }
 -(IBAction) btnNextClicked:(id)sender;
--(void) getServerStaticData;
+-(void) getServerAppSettings;
+//-(void) getServerStaticData;
 @end

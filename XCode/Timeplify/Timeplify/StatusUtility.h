@@ -20,9 +20,9 @@
 -(void) storeServiceStatusInDefault:(NSDictionary*)IN_Dict;
 -(BOOL) isServiceStatusStoredInDefault;
 
--(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData;
+-(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData :(ST_Station*)IN_curStation;
 -(NSString*) getTimeRemaining:(NSDictionary*)IN_Dict;
--(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(int) IN_iCurPos;
+-(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(ST_Station*)IN_curStation;
 -(NSString*) getWalkingDistance:(NSDictionary*)IN_Dict;
 -(NSString*) getFormattedSeconds:(int) IN_iSecs;
 
@@ -34,4 +34,7 @@
 -(int) getTimeRemainingInSecs:(NSDictionary*)IN_Dict;
 -(int) getWalkingDistanceInSecs:(NSDictionary*)IN_Dict;
 -(BOOL) doesRouteHaveLive:(NSString*)IN_strRoute;
+
+-(NSMutableDictionary*) getCurrentDisplayingDict:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation;
+-(NSMutableDictionary*) getNextDisplayingDict:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation;
 @end

@@ -12,9 +12,10 @@
 {
     IBOutlet UITableView* m_ctrlTable;
     NSMutableArray* m_arrNextTrains;
+    int m_iDirection;
 
 }
--(void) setValues;
+-(void) setValues:(int) IN_iDirection;
 @property (nonatomic, strong) NSMutableArray* m_arrNextTrains;
 -(void) initControl;
 @end

@@ -139,7 +139,17 @@
     
     StationSelectViewController* viewController = [[StationSelectViewController alloc] initWithNibName:@"StationSelectViewController" bundle:nil];
     
-    viewController.m_iScreenMode = INT_STATION_SEL_FROM_WELCOME;
+    
+    NSArray* oArr = (NSArray*) [Utility getObjectFromDefault:STR_KEY_FAV_TRAINS];
+    if (oArr != nil) {
+        viewController.m_iScreenMode = INT_STATION_SEL_FROM_FAV;
+    }
+    else
+    {
+        viewController.m_iScreenMode = INT_STATION_SEL_FROM_WELCOME;
+    }
+
+    
     
     
     [self.navigationController pushViewController:viewController animated:YES];
@@ -311,6 +321,43 @@
 }
 
 #pragma mark Others
+
+
+-(void) getLocallyStoredTrains
+{
+    
+    NSMutableDictionary* oDictTempFav = [[NSMutableDictionary alloc] init];
+    NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
+    for (int j = 0; j <[oArrFavTrains count]; j++)
+    {
+        ST_Train* oFAvTrain = [oArrFavTrains objectAtIndex:j];
+        [oDictTempFav setObject:@"YES" forKey:oFAvTrain.m_strId];
+    }
+    
+    
+    m_arrRecords = [GlobalCaller getAllTrainsArray];
+    
+    
+    
+    for (int i = 0; i <[m_arrRecords count]; i++) {
+        ST_Train* oTrain = [m_arrRecords objectAtIndex:i];
+        
+        NSString* strFav = [oDictTempFav objectForKey:oTrain.m_strId];
+        if (strFav != nil) {
+            oTrain.m_bSelected = YES;
+        }
+        else
+        {
+            oTrain.m_bSelected = NO;
+        }
+        
+        oTrain.m_iIndex = i;
+    }
+    
+    [m_ctrlTable reloadData];
+}
+
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -319,9 +366,21 @@
     m_ctrlActivity.hidden = YES;
    
     m_arrRecords = [[NSMutableArray alloc] init];
+    
+    
+    NSArray* oArr = (NSArray*) [Utility getObjectFromDefault:STR_KEY_FAV_TRAINS];
+    if (oArr != nil) {
+        
+        [self getLocallyStoredTrains];
+    }
+    else
+    {
+        [self getServerAppSettings];
+        
+    }
   
     
-    [self getServerAppSettings];
+    
 }
 
 - (void)didReceiveMemoryWarning

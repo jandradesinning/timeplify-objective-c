@@ -16,6 +16,8 @@
     NSString* m_strImage;
     NSString* m_strNorthStationId;
     NSString* m_strSouthStationId;
+    NSString* m_strNorthStationName;
+    NSString* m_strSouthStationName;
     BOOL m_bSelected;
 }
 
@@ -25,6 +27,8 @@
 @property (strong, nonatomic) NSString* m_strImage;
 @property (strong, nonatomic) NSString* m_strNorthStationId;
 @property (strong, nonatomic) NSString* m_strSouthStationId;
+@property (strong, nonatomic) NSString* m_strNorthStationName;
+@property (strong, nonatomic) NSString* m_strSouthStationName;
 @property (readwrite, assign) BOOL m_bSelected;
 
 

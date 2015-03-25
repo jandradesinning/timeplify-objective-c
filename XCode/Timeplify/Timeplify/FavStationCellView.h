@@ -12,8 +12,11 @@
 
 @interface FavStationCellView : UITableViewCell
 {
+    IBOutlet UIImageView* m_ctrlImageView;
+    
     IBOutlet UILabel* m_ctrlLblStation;
     IBOutlet UILabel* m_ctrlLblDirection;
+    IBOutlet UILabel* m_ctrlLblTime;
     ST_Station* m_Station;
     int m_iRowIndex;
 }

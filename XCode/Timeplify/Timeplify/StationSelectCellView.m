@@ -23,30 +23,44 @@
     m_ctrlImgViewStar.image = [UIImage imageNamed:@"favorties-star-clear.png"];
     m_ctrlLblDirection.text = @"";
     
-    if (m_iScreenMode == INT_STATION_SEL_FROM_SEE_ALL) {
-        m_ctrlImgViewStar.hidden = YES;
-        m_ctrlLblDirection.hidden = YES;
-        self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-        return;
-    }
     
+    self.accessoryType = UITableViewCellAccessoryNone;
+    m_ctrlImgViewStar.hidden = NO;
+    m_ctrlLblDirection.hidden = NO;
+    
+    
+    BOOL bFav = NO;
     
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_NORTH) {
         m_ctrlImgViewStar.image = [UIImage imageNamed:@"favorites-star-filled.png"];
         m_ctrlLblDirection.text = STR_DIRECTION_NORTH;
+        bFav = YES;
     }
     
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_SOUTH) {
         m_ctrlImgViewStar.image = [UIImage imageNamed:@"favorites-star-filled.png"];
         m_ctrlLblDirection.text = STR_DIRECTION_SOUTH;
+        bFav = YES;
     }
     
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_EITHER) {
         m_ctrlImgViewStar.image = [UIImage imageNamed:@"favorites-star-filled.png"];
         m_ctrlLblDirection.text = STR_DIRECTION_EITHER;
+        bFav = YES;
     }
     
-    
+    if (m_iScreenMode == INT_STATION_SEL_FROM_SEE_ALL) {
+        if (bFav == YES) {
+            self.accessoryType = UITableViewCellAccessoryNone;
+        }
+        else
+        {
+            m_ctrlImgViewStar.hidden = YES;
+            m_ctrlLblDirection.hidden = YES;
+            self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        }
+        
+    }
 }
 
 - (void)awakeFromNib

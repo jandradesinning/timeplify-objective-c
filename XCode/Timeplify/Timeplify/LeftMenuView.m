@@ -9,6 +9,8 @@
 #import "LeftMenuView.h"
 #import "LeftMenuCellView.h"
 
+#import "GlobalCaller.h"
+
 @implementation LeftMenuView
 
 @synthesize m_arrNextTrains;
@@ -68,6 +70,7 @@
     
     LeftMenuCellView* cell = [self getLeftMenuCellView:tableView];
     
+    cell.m_iIndex = (int)(indexPath.row);
     
     if (tableView.tag == 0) {
     
@@ -81,9 +84,9 @@
 
     }
     
-    
-    cell.m_iIndex = (int)(indexPath.row);
     [cell setValues];
+    
+    
     
     return cell;
     
@@ -107,8 +110,9 @@
 
 #pragma mark Others
 
--(void) setValues
+-(void) setValues:(int) IN_iDirection
 {
+    m_iDirection = IN_iDirection;
     [m_ctrlTable reloadData];
 }
 

@@ -131,6 +131,10 @@
     // Override point for customization after application launch.
     self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
     
+    self.viewController.m_VCFlipParent = nil;
+    self.viewController.m_bDummyFlip = NO;
+    
+    
     [DataManager checkAndCopyDatabase];
     
     [Parse setApplicationId:STR_PARSE_APP_ID  clientKey:STR_PARSE_CLIENT_KEY];

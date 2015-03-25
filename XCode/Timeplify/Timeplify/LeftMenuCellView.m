@@ -25,6 +25,12 @@
         self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
         self.selectionStyle = UITableViewCellSelectionStyleGray;
         
+        CGRect oRect = m_ctrlLblMenu.frame;
+        oRect.origin.x = 15;
+        m_ctrlLblMenu.frame = oRect;
+        
+        m_ctrlLblMenu.font = [UIFont boldSystemFontOfSize:17.0];
+        
         if (m_iIndex == 0) {
             m_ctrlLblMenu.text = @"See All Stations";
         }
@@ -37,12 +43,24 @@
         if (m_iIndex == 3) {
             m_ctrlLblMenu.text = @"Rate This App";
         }
+        
+        
         return;
-    }    
+    }
+    
+    
+    m_ctrlLblMenu.font = [UIFont systemFontOfSize:15.0];
+    
+    NSLog(@"m_dict '%@'", m_dict);
+    
+    CGRect oRect = m_ctrlLblMenu.frame;
+    oRect.origin.x = 45;
+    m_ctrlLblMenu.frame = oRect;
+    
+    m_ctrlLblMenu.text = [m_dict objectForKey:@"LAST_STATION"];;
     
     m_ctrlImgView.hidden = NO;
     m_ctrlLblTime.hidden = NO;
-    m_ctrlLblMenu.hidden = YES;
     self.accessoryType = UITableViewCellAccessoryNone;
     self.selectionStyle = UITableViewCellSelectionStyleNone;
 

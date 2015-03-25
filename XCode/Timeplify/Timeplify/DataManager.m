@@ -364,7 +364,7 @@
 
 +(NSMutableArray*) getAllTrains
 {
-    NSString* strSql =  @"SELECT * FROM Train order by Id";
+    NSString* strSql =  @"SELECT Train.*, S1.Name AS NorthName, S2.Name AS SouthName FROM Train, Station S1, Station S2 WHERE Train.NorthStationId = S1.Id AND Train.SouthStationId = S2.Id order by Id";
     
     NSMutableArray *arrReturn= [[NSMutableArray alloc]init];
     
@@ -400,6 +400,12 @@
         
         strTemp = [DataManager getSQLStringField:compiledStatement: 4];
         oTrain.m_strSouthStationId = strTemp;
+        
+        strTemp = [DataManager getSQLStringField:compiledStatement: 5];
+        oTrain.m_strNorthStationName = strTemp;
+        
+        strTemp = [DataManager getSQLStringField:compiledStatement: 6];
+        oTrain.m_strSouthStationName = strTemp;
         
 		      
 		[arrReturn addObject:oTrain];

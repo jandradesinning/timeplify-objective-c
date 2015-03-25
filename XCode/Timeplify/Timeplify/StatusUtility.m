@@ -11,6 +11,8 @@
 #import "Defines.h"
 #import "Utility.h"
 #import "DataManager.h"
+#import "GlobalCaller.h"
+#import "ST_Train.h"
 
 @implementation StatusUtility
 
@@ -462,15 +464,25 @@ NSInteger sortScheduledDateComparer(id num1, id num2, void *context)
 }
 
 
--(NSMutableArray*) removeExtraScheduledRecs:(NSMutableArray*)IN_arrRecs
+-(NSMutableArray*) removeExtraScheduledRecs:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
 {
     NSMutableArray* oArrOut = [[NSMutableArray alloc] init];
     
+    int iCount = 0;
+    
     for (int i= 0; i <[IN_arrRecs count]; i++) {
+        
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        NSLog(@"Dict '%@'", oDict);
+        
+        NSString* strRouteId = [oDict objectForKey:@"routeId"];
+        if ([strRouteId isEqualToString:IN_curStation.m_strRouteId]) {
+            iCount++;
+        }
         
         [oArrOut addObject:[IN_arrRecs objectAtIndex:i]];
         
-        if (i >= INT_MAX_SCHEDULED_RECS) {
+        if (iCount >= INT_MAX_SCHEDULED_RECS) {
             break;
         }
     }
@@ -570,6 +582,43 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
 
 #pragma mark Others
 
+-(NSMutableDictionary*) getCurrentDisplayingDict:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
+{
+    
+    for (int i= 0; i <[IN_arrRecs count]; i++) {
+        
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        
+        NSString* strRouteId = [oDict objectForKey:@"routeId"];
+        if ([strRouteId isEqualToString:IN_curStation.m_strRouteId]) {
+            return oDict;
+        }
+    }
+    
+    return nil;
+}
+
+-(NSMutableDictionary*) getNextDisplayingDict:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
+{
+    int iCount = 0;
+    
+    for (int i= 0; i <[IN_arrRecs count]; i++) {
+        
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        
+        NSString* strRouteId = [oDict objectForKey:@"routeId"];
+        if ([strRouteId isEqualToString:IN_curStation.m_strRouteId]) {
+            if (iCount > 0) {
+                return oDict;
+            }
+            iCount++;
+        }
+    }
+    
+    return nil;
+}
+
+
 
 -(int) getTimeRemainingInSecs:(NSDictionary*)IN_Dict
 {
@@ -590,8 +639,36 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
 }
 
 
+-(void) assignLastStations:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
+{
+    NSMutableArray* arrAllTrains = [GlobalCaller getAllTrainsArray];
+    
+    for (int i=0; i <[IN_arrRecs count]; i++) {
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        NSString* strId = [oDict objectForKey:@"routeId"];
+        
+        for (int j=0; j <[arrAllTrains count]; j++) {
+            ST_Train* oTrain = [arrAllTrains objectAtIndex:j];
+            if ([oTrain.m_strId isEqualToString:strId]) {
+                
+                if (IN_curStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
+                    [oDict setObject:oTrain.m_strNorthStationName forKey:@"LAST_STATION"];
+                }
+                
+                if (IN_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+                    [oDict setObject:oTrain.m_strSouthStationName forKey:@"LAST_STATION"];
+                }
+                
+                break;
+            }
+        }
+        
+    }
+}
 
--(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData
+
+
+-(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData :(ST_Station*)IN_curStation
 {
     NSMutableArray* oArrRecs;
     
@@ -604,6 +681,8 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
             
             [oArrRecs sortUsingFunction:sortRealtimeDateComparer context:(__bridge void *)(self)];
             
+            [self assignLastStations:oArrRecs :IN_curStation];
+            
             return oArrRecs;
         }
         else
@@ -614,7 +693,9 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
             
             [oArrRecs sortUsingFunction:sortScheduledDateComparer context:(__bridge void *)(self)];
             
-            oArrRecs = [self removeExtraScheduledRecs:oArrRecs];
+            oArrRecs = [self removeExtraScheduledRecs:oArrRecs:IN_curStation];
+            
+            [self assignLastStations:oArrRecs :IN_curStation];
             
             return oArrRecs;
         }
@@ -629,7 +710,9 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
         
         [oArrRecs sortUsingFunction:sortScheduledDateComparer context:(__bridge void *)(self)];
         
-        oArrRecs = [self removeExtraScheduledRecs:oArrRecs];
+        oArrRecs = [self removeExtraScheduledRecs:oArrRecs:IN_curStation];
+        
+        [self assignLastStations:oArrRecs :IN_curStation];
         
         return oArrRecs;
     }
@@ -764,17 +847,17 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
 }
 
 
--(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(int) IN_iCurPos
+-(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(ST_Station*)IN_curStation
 {
-    int iPos = IN_iCurPos +1;
-    if ([IN_ArrRecs count] <= iPos) {
+    
+    NSMutableDictionary* oDict = [self getNextDisplayingDict:IN_ArrRecs :IN_curStation];
+    if (oDict == nil) {
         return @"";
     }
     
-    NSMutableDictionary* oDict = [IN_ArrRecs objectAtIndex:iPos];
-    
     NSString* strText = [self getTimeRemaining:oDict];
     return strText;
+    
 }
 
 -(BOOL) doesRouteHaveLive:(NSString*)IN_strRoute

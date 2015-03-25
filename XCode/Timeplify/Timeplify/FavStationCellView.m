@@ -9,6 +9,7 @@
 #import "FavStationCellView.h"
 #import "ST_Station.h"
 #import "Defines.h"
+#import "StatusUtility.h"
 
 @implementation FavStationCellView
 
@@ -23,12 +24,29 @@
 
     m_ctrlLblDirection.text = @"";
     
+    
+    
+    NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", m_Station.m_strRouteId];
+    NSLog(@"Image '%@'", strNormalImage);
+    strNormalImage = [strNormalImage lowercaseString];
+    m_ctrlImageView.image = [UIImage imageNamed:strNormalImage];
+    
+    m_ctrlLblTime.text = @"";
+    if (m_Station.m_dbWalkingDistance >=0 ) {
+        StatusUtility* oStat = [[StatusUtility alloc] init];
+        NSString* strTime = [oStat getFormattedSeconds:m_Station.m_dbWalkingDistance];
+        m_ctrlLblTime.text = strTime;
+    }
+    
+    
+     
+    
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_NORTH) {
-        m_ctrlLblDirection.text = STR_DIRECTION_NORTH;
+        m_ctrlLblDirection.text = m_Station.m_strNorthDirection;  //STR_DIRECTION_NORTH;
     }
     
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_SOUTH) {
-        m_ctrlLblDirection.text = STR_DIRECTION_SOUTH;
+        m_ctrlLblDirection.text = m_Station.m_strSouthDirection; //STR_DIRECTION_SOUTH;
     }
     
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_EITHER) {

@@ -7,14 +7,19 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <CoreLocation/CoreLocation.h>
 
 @interface FavoritesViewController : UIViewController
 {
-    IBOutlet UITableView* m_ctrlTblTrains;
     IBOutlet UITableView* m_ctrlTblStations;
-    
-    NSMutableArray* m_arrTrains;
+
     NSMutableArray* m_arrStations;
+    
+    IBOutlet UIActivityIndicatorView* m_ctrlActivity;
+    
+    BOOL m_bProcessingOver;
+    
+    CLLocationCoordinate2D m_curGPS;
 }
 
 -(IBAction) btnAddClicked:(id)sender;

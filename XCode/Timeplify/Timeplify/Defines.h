@@ -34,8 +34,8 @@
 
 #define INT_LEFT_NAV_MOVE_DISTANCE      258
 
-#define INT_UPDATE_STATUS_TIMER_DELAY               1.0// TEST_CODE 30.0
-#define INT_UPDATE_SERVER_RECALL_TIMER_DELAY        30.0// TEST_CODE 30.0
+#define INT_UPDATE_STATUS_TIMER_DELAY               1.0
+#define INT_UPDATE_SERVER_RECALL_TIMER_DELAY        30.0
 
 
 #define INT_ALERT_TAG_RETRY             1
@@ -65,6 +65,12 @@
 #define STR_APP_STORE_ID                @"893213536"
 
 #define INT_GPS_NOTIFY_MIN_DISTANCE     100 // TEST_CODE 100
+
+
+#define INT_VIBRATE_TIMES               4
+#define INT_ZERO_BLINK_TIMES            60  // TEST_CODE 60
+#define INT_JUST_LEFT_BLINK_TIMES       20  // TEST_CODE 20
+
 
 // TEST_CODE
 

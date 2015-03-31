@@ -7,7 +7,6 @@
 //
 
 #import "FavoritesViewController.h"
-#import "FavTrainCellView.h"
 #import "FavStationCellView.h"
 
 #import "Defines.h"
@@ -16,6 +15,11 @@
 #import "GlobalCaller.h"
 #import "StationSelectViewController.h"
 #import "Utility.h"
+
+#import "TrainSelectViewController.h"
+
+#import "AppDelegate.h"
+#import "StatusUtility.h"
 
 @interface FavoritesViewController ()
 
@@ -46,31 +50,6 @@
 #pragma mark Table
 
 
--(FavTrainCellView*) getFavTrainCellView:(UITableView *)tableView
-{
-    NSString *CellIdentifier = @"FavTrainCellView";
-    
-    FavTrainCellView *cell = (FavTrainCellView *)[tableView dequeueReusableCellWithIdentifier:CellIdentifier];
-    
-    if(cell == nil)
-    {
-        NSArray *topLevelObjects = [[NSBundle mainBundle] loadNibNamed:@"FavTrainCellView" owner:self options:nil];
-        
-        for (id currentObject in topLevelObjects)
-        {
-            if ([currentObject isKindOfClass:[UITableViewCell class]]){
-                cell =  (FavTrainCellView *) currentObject;
-                break;
-            }
-        }
-        
-    }
-    
-    return cell;
-}
-
-
-
 -(FavStationCellView*) getFavStationCellView:(UITableView *)tableView
 {
     NSString *CellIdentifier = @"FavStationCellView";
@@ -97,22 +76,11 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    if (tableView.tag == 0) {
-        int iCount = (int)[m_arrTrains count] / INT_FAV_TRAINS_IN_A_ROW;
-        
-        if (([m_arrTrains count] % INT_FAV_TRAINS_IN_A_ROW) > 0) {
-            iCount++;
-        }
-        return iCount;
+    if (m_bProcessingOver == NO) {
+        return 0;
     }
     
-    if (tableView.tag == 1) {
-       
-        return [m_arrStations count];
-    }
-    
-    return 0;
-    
+    return [m_arrStations count];
 }
 
 
@@ -127,56 +95,45 @@
 
 - (UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (tableView.tag == 0) {
-   
-        FavTrainCellView* cell = [self getFavTrainCellView:tableView];
-        cell.m_iRowIndex = (int) indexPath.row;
-        cell.m_arrTrains = m_arrTrains;
-        [cell setValues];
-        
-        return cell;
-    }
+    FavStationCellView* cell = [self getFavStationCellView:tableView];
     
-    if (tableView.tag == 1) {
-        
-        FavStationCellView* cell = [self getFavStationCellView:tableView];
-        
-        ST_Station* oStation = [m_arrStations objectAtIndex:(int)indexPath.row];
-        cell.m_iRowIndex = (int) indexPath.row;
-        cell.m_Station = oStation;
-        [cell setValues];
-        
-        return cell;
-    }
+    ST_Station* oStation = [m_arrStations objectAtIndex:(int)indexPath.row];
     
-    return nil;
+    AppDelegate* appDel = (AppDelegate* )[[UIApplication sharedApplication] delegate];
+    if (appDel.m_iGPSStatus != 2)
+    {
+        oStation.m_dbWalkingDistance = -1;
+    }
+        
+    
+    
+    cell.m_iRowIndex = (int) indexPath.row;
+    cell.m_Station = oStation;
+    [cell setValues];
+    
+    return cell;
+
 }
 
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     
+    ST_Station* oStation = [m_arrStations objectAtIndex:(int)indexPath.row];
+        
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_FAV_STATION_SELECTED" object:oStation];
+    
+    [self.navigationController popViewControllerAnimated:YES];
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
     // Return YES if you want the specified item to be editable.
     
-    if (tableView.tag == 0)
-    {
-        return NO;
-        
-    }
     return YES;
 }
 
 // Override to support editing the table view.
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    
-    if (tableView.tag == 0)
-    {
-        return;
-        
-    }
     
     if (editingStyle == UITableViewCellEditingStyleDelete) {
         //add code here for when you hit delete
@@ -192,40 +149,6 @@
     }
     return self;
 }
-
--(void) getTrains
-{
-    
-    NSMutableDictionary* oDictTempFav = [[NSMutableDictionary alloc] init];
-    NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
-    for (int j = 0; j <[oArrFavTrains count]; j++)
-    {
-        ST_Train* oFAvTrain = [oArrFavTrains objectAtIndex:j];
-        [oDictTempFav setObject:@"YES" forKey:oFAvTrain.m_strId];
-     }
-    
-    
-    m_arrTrains = [GlobalCaller getAllTrainsArray];
-   
-    
-    
-    for (int i = 0; i <[m_arrTrains count]; i++) {
-        ST_Train* oTrain = [m_arrTrains objectAtIndex:i];
-        
-        NSString* strFav = [oDictTempFav objectForKey:oTrain.m_strId];
-        if (strFav != nil) {
-            oTrain.m_bSelected = YES;
-        }
-        else
-        {
-            oTrain.m_bSelected = NO;
-        }
-        
-        oTrain.m_iIndex = i;
-    }
-
-}
-
 
 
 -(void) getStations
@@ -258,28 +181,152 @@
 -(IBAction) btnAddClicked:(id)sender
 {
     
-    NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
-    if ([oArrFavTrains count] < 1) {
-        return;
-    }
-
+    TrainSelectViewController* viewController = [[TrainSelectViewController alloc] initWithNibName:@"TrainSelectViewController" bundle:nil];
     
-    StationSelectViewController* viewController = [[StationSelectViewController alloc] initWithNibName:@"StationSelectViewController" bundle:nil];
-    
-    viewController.m_iScreenMode = INT_STATION_SEL_FROM_FAV;
     UINavigationController* navigationController;
     navigationController = [[UINavigationController alloc]
                             initWithRootViewController:viewController ];
     navigationController.navigationBarHidden = YES;
     
     [self.navigationController presentViewController:navigationController animated:YES completion:nil];
-
+    
+   
 }
 
--(void) viewWillAppear:(BOOL)animated
+
+
+
+#pragma mark Distance Sort
+
+
+NSInteger sortStationComparer2(id num1, id num2, void *context)
 {
+	// Sort Function
+	ST_Station* oStation1 = (ST_Station*)num1;
+	ST_Station* oStation2 = (ST_Station*)num2;
+	
+	
+	return (oStation1.m_dbWalkingDistance > oStation2.m_dbWalkingDistance);
+}
+
+
+-(void) sortAllStations{
+    
+    NSMutableArray* oArrStations = m_arrStations;
+    
+  
+    [oArrStations sortUsingFunction:sortStationComparer2 context:(__bridge void *)(self)];
+    
+}
+
+
+#pragma mark Walking Distance
+
+-(void) mainThreadAfterWalkingDistance:(ST_Station*)IN_stStation
+{
+    BOOL bOk = YES;
+    for (int i = 0; i < [m_arrStations count]; i++)
+	{
+		ST_Station* oStation = (ST_Station*) [m_arrStations objectAtIndex:i];
+        
+        if  (oStation.m_dbWalkingDistance < -100)
+        {
+            bOk = NO;
+            break;
+        }
+	}
+    
+    if (bOk == YES) {
+        
+        [self sortAllStations];
+        NSLog(@"Ok");
+        m_bProcessingOver = YES;
+        m_ctrlActivity.hidden = YES;
+        [m_ctrlTblStations reloadData];
+    }
+}
+
+-(void) getWalkingDistanceInBackground:(ST_Station*)IN_stStation
+{
+    
+    ST_Station* oStation = IN_stStation;
+    
+    NSString *strURL = [NSString stringWithFormat:@"http://maps.googleapis.com/maps/api/distancematrix/json?origins=%f,%f&destinations=%f,%f&mode=walking&language=en-EN&sensor=false",
+                        m_curGPS.latitude,
+                        m_curGPS.longitude,
+                        oStation.m_dbLatitude, oStation.m_dbLongitude];
+    
+    NSData *locData = [NSData dataWithContentsOfURL:[NSURL URLWithString:strURL]];
+    
+    if (locData != nil) {
+        NSDictionary *locDict = [NSJSONSerialization JSONObjectWithData:locData options:kNilOptions error:nil];
+        if (locDict != nil) {
+            StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
+            oStation.m_dbWalkingDistance = [oStatusUtil getWalkingDistanceInSecs:locDict];
+        }
+        else
+        {
+            oStation.m_dbWalkingDistance = 1000000;
+        }
+    }
+    else
+    {
+        oStation.m_dbWalkingDistance = 1000000;
+    }
+    
+    
+        
+    [self performSelectorOnMainThread:@selector(mainThreadAfterWalkingDistance:) withObject:oStation waitUntilDone:YES];
+    
+	CFRunLoopRun();
+    
+}
+
+-(void) getWalkingDistances
+{
+    
+    
+    for (int i = 0; i < [m_arrStations count]; i++)
+	{
+		ST_Station* oStation = (ST_Station*) [m_arrStations objectAtIndex:i];
+        
+        oStation.m_dbWalkingDistance = -101;
+        [self performSelectorInBackground:@selector(getWalkingDistanceInBackground:) withObject:oStation];
+        
+	}
+}
+
+
+
+-(void) prepareStationList
+{
+    AppDelegate* appDel = (AppDelegate* )[[UIApplication sharedApplication] delegate];
+    m_curGPS = appDel.m_GPSCoordinate;
+    
     [self getStations];
+    
+    if (appDel.m_iGPSStatus != 2)
+    {
+        m_bProcessingOver = YES;
+        m_ctrlActivity.hidden = YES;
+        [m_ctrlTblStations reloadData];
+        return;
+    }
+    
+    [self getWalkingDistances];
+}
+
+#pragma mark Others
+
+
+-(void)handleReloadFavorites:(NSNotification *)pNotification
+{
+    NSLog(@"handleReloadFavorites");
+    m_bProcessingOver = NO;
+    m_arrStations = [[NSMutableArray alloc] init];
     [m_ctrlTblStations reloadData];
+    [self performSelector:@selector(prepareStationList) withObject:nil afterDelay:0.0];
+    
 }
 
 - (void)viewDidLoad
@@ -287,21 +334,33 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
     
-  
-    m_arrTrains = [[NSMutableArray alloc] init];
-    m_arrStations = [[NSMutableArray alloc] init];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     
-    [self getTrains];
-    
-   
+    [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleReloadFavorites:)	 name:@"EVENT_RELOAD_FAVORITES"
+												object:nil];
+
     
 
+    [m_ctrlActivity startAnimating];
+    m_ctrlActivity.hidden = NO;
+    m_bProcessingOver = NO;
+    m_arrStations = [[NSMutableArray alloc] init];
+    
+    [self performSelector:@selector(prepareStationList) withObject:nil afterDelay:0.0];
+    
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+
+-(void) dealloc
+{
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 @end

@@ -139,7 +139,17 @@
     
     StationSelectViewController* viewController = [[StationSelectViewController alloc] initWithNibName:@"StationSelectViewController" bundle:nil];
     
-    viewController.m_iScreenMode = INT_STATION_SEL_FROM_WELCOME;
+    
+    NSArray* oArr = (NSArray*) [Utility getObjectFromDefault:STR_KEY_FAV_TRAINS];
+    if (oArr != nil) {
+        viewController.m_iScreenMode = INT_STATION_SEL_FROM_FAV;
+    }
+    else
+    {
+        viewController.m_iScreenMode = INT_STATION_SEL_FROM_WELCOME;
+    }
+
+    
     
     
     [self.navigationController pushViewController:viewController animated:YES];
@@ -152,7 +162,7 @@
 	
 	if (alertView.tag == INT_ALERT_TAG_RETRY) {
 	
-		[self getServerStaticData];
+		[self getServerAppSettings];
 	}
 	
     
@@ -181,12 +191,14 @@
 }
 
 
--(void)parseServerResponse:(NSDictionary*)IN_Dict
+-(void)parseServerStaticDataResponse:(NSDictionary*)IN_Dict
 {
     if (!([IN_Dict isKindOfClass:[NSDictionary class]])) {
         [self displayError:@"Invalid response from server"];
         return;
     }
+    
+    NSLog(@"Dict '%@'", IN_Dict);
     
     [DataManager insertServerData:IN_Dict];
     
@@ -195,6 +207,8 @@
     [self readTrainList];
   
 }
+
+/*
 -(void) getServerStaticData
 {
     NSString* strSaved = [Utility getStringFromDefault:@"DATA_COPIED"];
@@ -230,21 +244,119 @@
              }
          else
          {
-             [self parseServerResponse: result];
+             [self parseServerStaticDataResponse: result];
          }
          
          NSLog(@"Over");
          
      }];
-   
     
     NSLog(@"Called");
     
+}
+*/
+
+
+
+#pragma mark ServerAppSettings
+
+-(void)parseServerAppSettingsResponse:(NSDictionary*)IN_Dict
+{
+    if (!([IN_Dict isKindOfClass:[NSDictionary class]])) {
+        [self displayError:@"Invalid response from server"];
+        return;
+    }
+
+    
+    NSMutableDictionary* oD2 = [[NSMutableDictionary alloc] initWithDictionary:IN_Dict];
+    [Utility saveDictInDefault:@"DICT_APP_SETTINGS" :oD2];
+ 
+    //[self getServerStaticData];
+    
+    [Utility saveStringInDefault:@"DATA_COPIED" :@"YES"];
+    [self readTrainList];
+
+}
+
+
+-(void) getServerAppSettings
+{
+    [self makeBusy];
+    
+    NSMutableDictionary* oDictParam= [[NSMutableDictionary alloc] init];
+    [oDictParam setObject:@"1.0" forKey:@"appVersion"];
+    [oDictParam setObject:@"" forKey:@"updatedTime"];
     
     
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:oDictParam
+                                                       options:NSJSONWritingPrettyPrinted
+                                                         error:nil];
+    NSString* strPostParam = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    NSLog(@"JSON '%@'", strPostParam);
+    
+    
+    [PFCloud callFunctionInBackground:@"getSettings" withParameters:oDictParam
+                                block:^(id result, NSError *error)
+     {
+         [self makeReady];
+         
+         if (error) {
+             
+             [self displayError:[error localizedDescription]];
+             
+         }
+         else
+         {
+             [self parseServerAppSettingsResponse: result];
+         }
+         
+         NSLog(@"Over");
+         
+     }];
+    
+    
+    NSLog(@"Called");
     
 
 }
+
+#pragma mark Others
+
+
+-(void) getLocallyStoredTrains
+{
+    
+    NSMutableDictionary* oDictTempFav = [[NSMutableDictionary alloc] init];
+    NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
+    for (int j = 0; j <[oArrFavTrains count]; j++)
+    {
+        ST_Train* oFAvTrain = [oArrFavTrains objectAtIndex:j];
+        [oDictTempFav setObject:@"YES" forKey:oFAvTrain.m_strId];
+    }
+    
+    
+    m_arrRecords = [GlobalCaller getAllTrainsArray];
+    
+    
+    
+    for (int i = 0; i <[m_arrRecords count]; i++) {
+        ST_Train* oTrain = [m_arrRecords objectAtIndex:i];
+        
+        NSString* strFav = [oDictTempFav objectForKey:oTrain.m_strId];
+        if (strFav != nil) {
+            oTrain.m_bSelected = YES;
+        }
+        else
+        {
+            oTrain.m_bSelected = NO;
+        }
+        
+        oTrain.m_iIndex = i;
+    }
+    
+    [m_ctrlTable reloadData];
+}
+
 
 - (void)viewDidLoad
 {
@@ -254,9 +366,21 @@
     m_ctrlActivity.hidden = YES;
    
     m_arrRecords = [[NSMutableArray alloc] init];
+    
+    
+    NSArray* oArr = (NSArray*) [Utility getObjectFromDefault:STR_KEY_FAV_TRAINS];
+    if (oArr != nil) {
+        
+        [self getLocallyStoredTrains];
+    }
+    else
+    {
+        [self getServerAppSettings];
+        
+    }
   
     
-    [self getServerStaticData];
+    
 }
 
 - (void)didReceiveMemoryWarning

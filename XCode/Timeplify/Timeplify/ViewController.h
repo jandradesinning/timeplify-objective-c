@@ -11,14 +11,25 @@
 @class LeftMenuView;
 @class Direction2View;
 @class ST_Station;
+@class PullDownRefreshScrollView;
 
 @interface ViewController : UIViewController
 {
+    
+        IBOutlet PullDownRefreshScrollView *m_ctrlPullDownScrollView;
+    
+    IBOutlet UIButton* m_ctrlBtnLeftArrow;
+    IBOutlet UIButton* m_ctrlBtnRightArrow;
+    IBOutlet UIButton* m_ctrlBtnSwitchDirection;
+    
+    
     IBOutlet UIView* m_ctrlViewHide;
     
     IBOutlet UIActivityIndicatorView* m_ctrlActivity;
     IBOutlet UIView* m_viewDim;
     
+    IBOutlet UILabel* m_ctrlLblNoInternet;
+    IBOutlet UILabel* m_ctrlLblTimeNow;
     IBOutlet UILabel* m_ctrlLblService;
     IBOutlet UILabel* m_ctrlLblDataType;
     IBOutlet UILabel* m_ctrlLblMainTimeValue;
@@ -36,20 +47,54 @@
     Direction2View* m_Direction2View;
     
     NSMutableArray* m_arrNextTrains;
-    int m_iCurrentTrainPos;
+    int m_iCurrentFavOnlyTrainPos;
+    int m_iCurrentNextFavOnlyTrainPos;
     ST_Station* m_curStation;
     
     NSTimer* m_timerVibrate;
+    NSTimer* m_timerJustLeft;
+    
     int m_iVibrateCalls;
     int m_iWalkingDistance;
     
+    int m_iJustLeftCalls;
+    
     BOOL m_bRemainingWasUp;
-        
+    
+    BOOL m_bRunningMode;
+    
+    BOOL m_bFirstCallMade;
+    
+    ViewController* m_VCFlipParent;
+    BOOL m_bDummyFlip;
 }
+
+@property (readwrite, assign)   BOOL m_bDummyFlip;
+@property (nonatomic, strong)   ViewController* m_VCFlipParent;
+
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblNoInternet;
+@property (nonatomic, strong)   IBOutlet UIButton* m_ctrlBtnLeftArrow;
+@property (nonatomic, strong)   IBOutlet UIButton* m_ctrlBtnRightArrow;
+@property (nonatomic, strong)   IBOutlet UIButton* m_ctrlBtnSwitchDirection;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblService;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblDataType;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblMainTimeValue;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblMainTimeUnit;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblNextTime;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblWalkingDistance;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblStation;
+@property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblDirection;
+@property (nonatomic, strong)   IBOutlet UIImageView* m_ctrlImgViewTrain;
+
+
 -(IBAction) btnMenuClicked:(id)sender;
 -(IBAction) btnGPSClicked:(id)sender;
+-(IBAction) btnFavoriteClicked:(id)sender;
 -(IBAction) btnMChangeDirectionClicked:(id)sender;
 -(IBAction) btnLeftArrowClicked:(id)sender;
 -(IBAction) btnRightArrowClicked:(id)sender;
 -(IBAction) btnTestGPSClicked:(id)sender;
+
+-(void) setFlipControllerValues;
+
 @end

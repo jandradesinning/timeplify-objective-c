@@ -23,6 +23,7 @@
 @synthesize m_iSelectedDirection;
 @synthesize m_iTemporaryDirection;
 @synthesize m_dbDistanceFromGPS;
+@synthesize m_dbWalkingDistance;
 
 
 - (void)encodeWithCoder:(NSCoder *)aCoder{

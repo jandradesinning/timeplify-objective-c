@@ -23,6 +23,8 @@
     int m_iTemporaryDirection;
     double m_dbDistanceFromGPS;
     int m_iOrder;
+    
+    double m_dbWalkingDistance;
 }
 @property (strong, nonatomic) NSString* m_strStationId;
 @property (strong, nonatomic) NSString* m_strRouteId;
@@ -38,4 +40,5 @@
 @property (readwrite, assign) int m_iTemporaryDirection;
 
 @property (readwrite, assign) double m_dbDistanceFromGPS;
+@property (readwrite, assign) double m_dbWalkingDistance;
 @end

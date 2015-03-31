@@ -9,8 +9,13 @@
 #import "StatusUtility.h"
 #import "ST_Station.h"
 #import "Defines.h"
+#import "Utility.h"
+#import "DataManager.h"
+#import "GlobalCaller.h"
+#import "ST_Train.h"
 
 @implementation StatusUtility
+
 
 -(int) getNowTotalSecs
 {
@@ -56,6 +61,330 @@
     return iTotalSecs;
 }
 
+
+#pragma mark ServiceStatus
+
+
+-(UIColor*) getServiceStatusColor:(NSDictionary*)IN_Dict
+{
+    UIColor* oClr = [UIColor blackColor];
+    
+    NSString* strKey = [self getServiceStatusfromDefault:IN_Dict];
+    if (strKey == nil) {
+        return oClr;
+    }
+    
+    if ([strKey length] < 1) {
+        return oClr;
+    }
+    
+    NSMutableDictionary* oDict = [Utility getDictFromDefault:@"DICT_APP_SETTINGS"];
+    if (oDict == nil) {
+        return oClr;
+    }
+    
+    NSDictionary* oD3  = [oDict objectForKey:@"data"];
+    if (oD3 == nil) {
+        return oClr;
+    }
+    
+    NSDictionary* oD4  = [oD3 objectForKey:@"subway"];
+    if (oD4 == nil) {
+        return oClr;
+    }
+    
+    
+    NSDictionary* oD5  = [oD4 objectForKey:@"serviceStatuses"];
+    if (oD5 == nil) {
+        return oClr;
+    }
+    
+    NSDictionary* oD6 = [oD5 objectForKey:strKey];
+    if (oD6 == nil) {
+        return oClr;
+    }
+    
+    
+    NSString* strClr = [oD6 objectForKey:@"color"];
+    if (strClr == nil) {
+        return oClr;
+    }
+    
+    strClr = [strClr stringByReplacingOccurrencesOfString:@"#" withString:@""];
+    
+    oClr = [Utility colorFromHexString:strClr];
+    return oClr;
+    
+}
+
+-(NSString*) getServiceStatusText:(NSDictionary*)IN_Dict
+{
+    NSString* strKey = [self getServiceStatusfromDefault:IN_Dict];
+    if (strKey == nil) {
+        return @"";
+    }
+    
+    if ([strKey length] < 1) {
+        return @"";
+    }
+    
+    NSMutableDictionary* oDict = [Utility getDictFromDefault:@"DICT_APP_SETTINGS"];
+    if (oDict == nil) {
+        return @"";
+    }
+    
+    NSDictionary* oD3  = [oDict objectForKey:@"data"];
+    if (oD3 == nil) {
+        return @"";
+    }
+    
+    NSDictionary* oD4  = [oD3 objectForKey:@"subway"];
+    if (oD4 == nil) {
+        return @"";
+    }
+    
+    
+    NSDictionary* oD5  = [oD4 objectForKey:@"serviceStatuses"];
+    if (oD5 == nil) {
+        return @"";
+    }
+    
+    NSDictionary* oD6 = [oD5 objectForKey:strKey];
+    if (oD6 == nil) {
+        return @"";
+    }
+    
+    NSString* strTxt = [oD6 objectForKey:@"text"];
+    
+    return strTxt;
+    
+    
+}
+
+-(NSString*) getServiceStatusfromDefault:(NSDictionary*)IN_Dict
+{
+    NSString* strRoute = [IN_Dict objectForKey:@"routeId"];
+    if (strRoute == nil) {
+        return @"";
+    }
+    
+    NSDictionary* oDictStatus = [Utility getDictFromDefault:@"ALL_SERVICE_STATUSES"];
+    if (oDictStatus == nil) {
+        return @"";
+    }
+    
+    NSString* strStatus = [oDictStatus objectForKey:strRoute];
+    if (strStatus == nil) {
+        return @"";
+    }
+    
+    return strStatus;
+    
+}
+
+-(void) storeServiceStatusInDefault:(NSDictionary*)IN_Dict
+{
+    NSDictionary* oDictStatus = [IN_Dict objectForKey:@"serviceStatus"];
+    if (oDictStatus == nil) {
+        return;
+    }
+    
+    NSMutableDictionary* oD2 = [[NSMutableDictionary alloc] initWithDictionary:oDictStatus];
+    [Utility saveDictInDefault:@"ALL_SERVICE_STATUSES" :oD2];
+    
+}
+
+-(BOOL) isServiceStatusStoredInDefault
+{
+  
+    
+    NSDictionary* oDictStatus = [Utility getDictFromDefault:@"ALL_SERVICE_STATUSES"];
+    if (oDictStatus == nil) {
+        return NO;
+    }
+    
+    return YES;
+    
+}
+
+#pragma mark Local DB Scheduled Data
+
+
+-(BOOL) isLocalDBExceptionDate:(NSString*)IN_strDate
+{
+    
+    NSDate* oDtNow = [NSDate date];
+    oDtNow = [Utility getDateWithoutTime:oDtNow];
+    
+    if (IN_strDate == nil) {
+        return NO;
+    }
+    
+    if ( IN_strDate == (NSString *)[NSNull null] )
+    {
+        return NO;
+    }
+    
+    
+    NSString* strFormat = @"yyyyMMdd";
+    
+    NSDateFormatter *format = [[NSDateFormatter alloc] init];
+	[format setDateFormat:strFormat];
+    
+	NSDate* oDt = [format dateFromString:IN_strDate];
+    if (oDt == nil) {
+        return NO;
+    }
+    
+    oDt = [Utility getDateWithoutTime:oDt];
+    
+    if ([oDtNow compare:oDt] == NSOrderedSame) {
+        return YES;
+    }
+    
+    return NO;
+}
+
+-(void) removeLocalDBExceptionDates:(NSMutableArray*)IN_arrRecs
+{
+    
+    NSMutableArray* oArrExceptServices = [[NSMutableArray alloc] init];
+    
+    
+    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"ExceptionDate.plist" ofType:nil];
+    NSArray* oArr = [NSArray arrayWithContentsOfFile:filepath];
+    
+    for (int i = 0; i < [oArr count]; i++) {
+        NSDictionary* oDict = [oArr objectAtIndex:i];
+        
+        
+        NSString* strExpDate = [oDict objectForKey:@"Date"];
+        NSString* strServiceId = [oDict objectForKey:@"ServiceId"];
+       
+        if ([self isLocalDBExceptionDate:strExpDate]) {
+            [oArrExceptServices addObject:strServiceId];
+        }
+    }
+
+    
+    for (int i =  ((int)[IN_arrRecs count] -1); i >= 0; i--) {
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+         
+        NSString* strService = [oDict objectForKey:@"ServiceId"];
+        BOOL bExcep = NO;
+        for (int j = 0; j < [oArrExceptServices count]; j++) {
+            NSString* strExcepService = [oArrExceptServices objectAtIndex:j];
+            if ([strExcepService isEqualToString:strService]) {
+                bExcep = YES;
+                break;
+            }
+        }
+        
+        if (bExcep == YES) {
+            [IN_arrRecs removeObjectAtIndex:i];
+        }
+        
+    }
+    
+}
+
+
+-(NSMutableArray*) getLocalDBScheduledDataAfterExceptions:(NSMutableArray*) IN_arrAllData
+{
+    NSDate* oDtNow = [NSDate date];
+    oDtNow = [Utility getDateWithoutTime:oDtNow];
+    
+    NSLog(@"Count1 = %d", (int)[IN_arrAllData count]);
+    
+    NSMutableArray* oArrFinalData = [[NSMutableArray alloc] init];
+    
+    for (int i = 0; i < [IN_arrAllData count]; i++) {
+        NSDictionary* oDict = [IN_arrAllData objectAtIndex:i];
+        NSString* strService = [oDict objectForKey:@"ServiceId"];
+        if (strService == nil) {
+            continue;
+        }
+        
+        
+        NSString* strTime = [oDict objectForKey:@"arrivalTime"];
+        if (strTime == nil) {
+            continue;
+        }
+        
+        int iTrainTotalSecs = [self getTotalSeconds:strTime];
+        
+        NSDate* oDtTemp = [oDtNow dateByAddingTimeInterval:iTrainTotalSecs];
+        
+        NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar];
+        [gregorian setLocale:[NSLocale currentLocale]];
+        NSDateComponents *weekdayComponents =[gregorian components:NSWeekdayCalendarUnit fromDate:oDtTemp];
+        int iWeek = (int)[weekdayComponents weekday];
+        
+        if ([strService rangeOfString:@"WKD" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+            if (iWeek == 7) {
+                continue;
+            }
+            if (iWeek == 1) {
+                continue;
+            }
+        }
+        
+        if ([strService rangeOfString:@"SAT" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+            if (iWeek != 7) {
+                continue;
+            }
+        }
+        
+        if ([strService rangeOfString:@"SUN" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+            if (iWeek != 1) {
+                continue;
+            }
+        }
+        
+        if ([strService rangeOfString:@"MON" options:NSCaseInsensitiveSearch].location != NSNotFound) {
+            if (iWeek != 2) {
+                continue;
+            }
+        }
+
+        
+        [oArrFinalData addObject:oDict];
+        
+    }
+    
+    NSLog(@"Count2 = %d", (int)[oArrFinalData count]);
+    
+    [self removeLocalDBExceptionDates:oArrFinalData];
+    
+    NSLog(@"Count3 = %d", (int)[oArrFinalData count]);
+    
+    return oArrFinalData;
+}
+
+
+-(NSMutableDictionary*) getLocalDBScheduledData:(ST_Station*) IN_Station
+{
+    NSString* strDir = @"S";
+    if (IN_Station.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
+        strDir = @"N";
+    }
+    
+    NSMutableArray* oArr = [DataManager getLocalScheduledData:IN_Station.m_strStationId: strDir];
+    
+    oArr = [self getLocalDBScheduledDataAfterExceptions:oArr];
+    
+    NSMutableDictionary* oDictData = [[NSMutableDictionary alloc] init];
+    [oDictData setObject:oArr forKey:@"data"];
+    
+                            
+    NSMutableDictionary* oDictOut = [[NSMutableDictionary alloc] init];
+    [oDictOut setObject:oDictData forKey:@"scheduled"];
+    
+    return oDictOut;
+
+}
+
+
 #pragma mark Static Data
 
 
@@ -81,49 +410,6 @@ NSInteger sortScheduledDateComparer(id num1, id num2, void *context)
 
 }
 
-
--(NSMutableDictionary*) getScheduledData:(ST_Station*) IN_Station{
-    
-    NSString* strDir = @"S";
-    if (IN_Station.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
-        strDir = @"N";
-    }
-    
-    NSString* strKey = [NSString stringWithFormat:@"SCHEDULED_ST_%@_DIR_%@", IN_Station.m_strStationId, strDir];
-    
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSDictionary* oDict = [defaults objectForKey:strKey];
-    
-    if (oDict == nil) {
-        return nil;
-    }
-    
-    NSMutableDictionary* oDictOut = [[NSMutableDictionary alloc] init];
-    [oDictOut setObject:oDict forKey:@"scheduled"];
-    
-    return oDictOut;
-}
-
--(void) saveScheduledData:(NSDictionary*)IN_Dict :(ST_Station*) IN_Station
-{
-    NSDictionary* oDictSch = [IN_Dict objectForKey:@"scheduled"];
-    if (oDictSch == nil) {
-        return;
-    }
-    
-    NSString* strDir = @"S";
-    if (IN_Station.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
-        strDir = @"N";
-    }
-    
-    NSString* strKey = [NSString stringWithFormat:@"SCHEDULED_ST_%@_DIR_%@", IN_Station.m_strStationId, strDir];
-    
-    
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	[defaults setObject:oDictSch forKey:strKey];
-	[defaults  synchronize];
-    
-}
 
 -(void)prepareScheduledRecs:(NSMutableArray*)IN_arrRecs
 {
@@ -178,15 +464,25 @@ NSInteger sortScheduledDateComparer(id num1, id num2, void *context)
 }
 
 
--(NSMutableArray*) removeExtraScheduledRecs:(NSMutableArray*)IN_arrRecs
+-(NSMutableArray*) removeExtraScheduledRecs:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
 {
     NSMutableArray* oArrOut = [[NSMutableArray alloc] init];
     
+    int iCount = 0;
+    
     for (int i= 0; i <[IN_arrRecs count]; i++) {
+        
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        NSLog(@"Dict '%@'", oDict);
+        
+        NSString* strRouteId = [oDict objectForKey:@"routeId"];
+        if ([strRouteId isEqualToString:IN_curStation.m_strRouteId]) {
+            iCount++;
+        }
         
         [oArrOut addObject:[IN_arrRecs objectAtIndex:i]];
         
-        if (i >= INT_MAX_SCHEDULED_RECS) {
+        if (iCount >= INT_MAX_SCHEDULED_RECS) {
             break;
         }
     }
@@ -286,6 +582,43 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
 
 #pragma mark Others
 
+-(NSMutableDictionary*) getCurrentDisplayingDict:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
+{
+    
+    for (int i= 0; i <[IN_arrRecs count]; i++) {
+        
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        
+        NSString* strRouteId = [oDict objectForKey:@"routeId"];
+        if ([strRouteId isEqualToString:IN_curStation.m_strRouteId]) {
+            return oDict;
+        }
+    }
+    
+    return nil;
+}
+
+-(NSMutableDictionary*) getNextDisplayingDict:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
+{
+    int iCount = 0;
+    
+    for (int i= 0; i <[IN_arrRecs count]; i++) {
+        
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        
+        NSString* strRouteId = [oDict objectForKey:@"routeId"];
+        if ([strRouteId isEqualToString:IN_curStation.m_strRouteId]) {
+            if (iCount > 0) {
+                return oDict;
+            }
+            iCount++;
+        }
+    }
+    
+    return nil;
+}
+
+
 
 -(int) getTimeRemainingInSecs:(NSDictionary*)IN_Dict
 {
@@ -306,8 +639,36 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
 }
 
 
+-(void) assignLastStations:(NSMutableArray*)IN_arrRecs :(ST_Station*)IN_curStation
+{
+    NSMutableArray* arrAllTrains = [GlobalCaller getAllTrainsArray];
+    
+    for (int i=0; i <[IN_arrRecs count]; i++) {
+        NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
+        NSString* strId = [oDict objectForKey:@"routeId"];
+        
+        for (int j=0; j <[arrAllTrains count]; j++) {
+            ST_Train* oTrain = [arrAllTrains objectAtIndex:j];
+            if ([oTrain.m_strId isEqualToString:strId]) {
+                
+                if (IN_curStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
+                    [oDict setObject:oTrain.m_strNorthStationName forKey:@"LAST_STATION"];
+                }
+                
+                if (IN_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+                    [oDict setObject:oTrain.m_strSouthStationName forKey:@"LAST_STATION"];
+                }
+                
+                break;
+            }
+        }
+        
+    }
+}
 
--(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData
+
+
+-(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData :(ST_Station*)IN_curStation
 {
     NSMutableArray* oArrRecs;
     
@@ -320,6 +681,8 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
             
             [oArrRecs sortUsingFunction:sortRealtimeDateComparer context:(__bridge void *)(self)];
             
+            [self assignLastStations:oArrRecs :IN_curStation];
+            
             return oArrRecs;
         }
         else
@@ -330,7 +693,9 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
             
             [oArrRecs sortUsingFunction:sortScheduledDateComparer context:(__bridge void *)(self)];
             
-            oArrRecs = [self removeExtraScheduledRecs:oArrRecs];
+            oArrRecs = [self removeExtraScheduledRecs:oArrRecs:IN_curStation];
+            
+            [self assignLastStations:oArrRecs :IN_curStation];
             
             return oArrRecs;
         }
@@ -345,7 +710,9 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
         
         [oArrRecs sortUsingFunction:sortScheduledDateComparer context:(__bridge void *)(self)];
         
-        oArrRecs = [self removeExtraScheduledRecs:oArrRecs];
+        oArrRecs = [self removeExtraScheduledRecs:oArrRecs:IN_curStation];
+        
+        [self assignLastStations:oArrRecs :IN_curStation];
         
         return oArrRecs;
     }
@@ -388,9 +755,9 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
         }
         
         // TEST_CODE
-       // NSString* strRet = [NSString stringWithFormat:@"%d min", IN_iSecs];
+        NSString* strRet = [NSString stringWithFormat:@"%0.2lf min", (IN_iSecs/60.0)];
         
-        NSString* strRet = [NSString stringWithFormat:@"%d min", iMin];
+        //NSString* strRet = [NSString stringWithFormat:@"%d min", iMin];
         return strRet;
     }
     
@@ -480,16 +847,38 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
 }
 
 
--(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(int) IN_iCurPos
+-(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(ST_Station*)IN_curStation
 {
-    int iPos = IN_iCurPos +1;
-    if ([IN_ArrRecs count] <= iPos) {
+    
+    NSMutableDictionary* oDict = [self getNextDisplayingDict:IN_ArrRecs :IN_curStation];
+    if (oDict == nil) {
         return @"";
     }
     
-    NSMutableDictionary* oDict = [IN_ArrRecs objectAtIndex:iPos];
-    
     NSString* strText = [self getTimeRemaining:oDict];
     return strText;
+    
+}
+
+-(BOOL) doesRouteHaveLive:(NSString*)IN_strRoute
+{
+    
+    NSString* strIn = [IN_strRoute uppercaseString];
+    
+    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"LiveTrains.plist" ofType:nil];
+    NSArray* oArr = [NSArray arrayWithContentsOfFile:filepath];
+    
+    for (int i = 0; i < [oArr count]; i++) {
+        NSString* strRoute = [oArr objectAtIndex:i];
+        
+        NSString* strUpperRoute = [strRoute uppercaseString];
+        
+        if ([strUpperRoute isEqualToString:strIn]) {
+            return YES;
+        }
+        
+    }
+    
+    return NO;
 }
 @end

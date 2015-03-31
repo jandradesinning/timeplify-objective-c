@@ -29,6 +29,7 @@
 @implementation StationSelectViewController
 
 @synthesize m_iScreenMode;
+@synthesize m_iTrainIndex;
 
 -(void) getStations
 {
@@ -232,6 +233,36 @@
 }
 
 
+-(BOOL) doActionOfEndStaion:(ST_Station*)IN_Station
+{
+    NSString* strNorth = [IN_Station.m_strNorthDirection stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    NSString* strSouth = [IN_Station.m_strSouthDirection stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    
+    if (([strNorth length] > 0)&&
+        ([strSouth length] > 0)){
+        return NO;
+    }
+    
+    if ([strNorth length] < 1)
+    {
+        IN_Station.m_iSelectedDirection = INT_DIRECTION_SOUTH;
+        [GlobalCaller updateFavStation:IN_Station];
+        return YES;
+    }
+
+    
+    if ([strSouth length] < 1)
+    {
+        IN_Station.m_iSelectedDirection = INT_DIRECTION_NORTH;
+        [GlobalCaller updateFavStation:IN_Station];
+        return YES;
+    }
+    
+    
+    return NO;
+}
+
+
 
 - (void) rowSelected:(NSIndexPath *)indexPath :(UITableView *)IN_tableView
 {
@@ -251,13 +282,10 @@
     if (m_iScreenMode == INT_STATION_SEL_FROM_SEE_ALL) {
         
         [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_ONE_ALL_STATION_SELECTED" object:oStation];
-        [self.navigationController popViewControllerAnimated:YES];
+        [self.navigationController popToRootViewControllerAnimated:YES];
         return;
     }
     
-    
-    
-
     
     if (oStation.m_iSelectedDirection > 0) {
         oStation.m_iSelectedDirection = 0;
@@ -269,10 +297,20 @@
     }
     
     
-    
     [m_searchDisplayController setActive:NO animated:YES];
-    [self showDirectionView:oStation];
-    NSLog(@"Selected '%@'", oStation.m_strStationName);
+    
+    NSLog(@"AAA Selected '%@'", oStation.m_strStationName);
+    
+    BOOL bEnd = [self doActionOfEndStaion:oStation];
+    if (bEnd == NO) {
+        [self showDirectionView:oStation];
+    }
+    else
+    {
+        [self updateVisibleCells:m_ctrlTable];
+        [self updateVisibleCells:m_searchDisplayController.searchResultsTableView];
+    }
+    
 }
 
 
@@ -376,6 +414,8 @@
 
 -(IBAction) btnDoneClicked:(id)sender
 {
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_RELOAD_FAVORITES" object:nil];
+    
     [NSObject cancelPreviousPerformRequestsWithTarget:self];
     [self.navigationController dismissViewControllerAnimated:YES completion:nil];
 }
@@ -420,7 +460,7 @@
         m_ctrlBtnDone.hidden = NO;
         m_ctrlBtnBack.hidden = YES;
         m_ctrlLblTitle.text = @"Select your station(s)";
-        [self arrangeTable];
+        //[self arrangeTable];
     }
     
     if (m_iScreenMode == INT_STATION_SEL_FROM_SEE_ALL)
@@ -457,7 +497,7 @@
     
 }
 
--(void) getTrains
+-(void) getFavTrains
 {
     NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
     for (int i = 0; i <[oArrFavTrains count]; i++) {
@@ -475,12 +515,56 @@
 }
 
 
+
+#pragma mark Selected Train Only
+
+
+NSInteger sortStationsByFavComparer(id num1, id num2, void *context)
+{
+	// Sort Function
+	ST_Station* oStation1 = (ST_Station*)num1;
+	ST_Station* oStation2 = (ST_Station*)num2;
+	
+	
+	return (oStation1.m_iSelectedDirection < oStation2.m_iSelectedDirection);
+}
+
+
+-(void) sortStationsByFav{
+    
+    NSMutableArray* oArrStations = m_arrAllValues;
+    [oArrStations sortUsingFunction:sortStationsByFavComparer context:(__bridge void *)(self)];
+    
+}
+
+
+
+
+-(void) getSelectedTrain
+{
+    [m_arrTrains removeAllObjects];
+    NSMutableArray* oArr = [GlobalCaller getAllTrainsArray];
+    
+    
+    if ([oArr count] > m_iTrainIndex) {
+        ST_Train* oTrain = [oArr objectAtIndex:m_iTrainIndex];
+        [m_arrTrains addObject:oTrain];
+        m_iTrainIndex = 0;
+        [m_ctrlFlowCover setCurrentIndex:0];
+        [self getStations];
+        [self sortStationsByFav];
+    }
+    
+}
+
+#pragma mark Basic
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
     
-    m_iTrainIndex = -1;
+    
     
     m_ctrlActivity.hidden = YES;
     [m_ctrlActivity startAnimating];
@@ -495,15 +579,25 @@
     m_arrSearchValues = [[NSMutableArray alloc] init];
     m_arrTrains = [[NSMutableArray alloc] init];
     
-    [self getTrains];
+    if (m_iScreenMode == INT_STATION_SEL_FROM_SEE_ALL) {
+        
+        [self getSelectedTrain];
+        
+    }
+    else
+    {
+        m_iTrainIndex = -1;
+        [self getFavTrains];
+    }
     
     
     
-    [[UIBarButtonItem appearanceWhenContainedIn: [UISearchBar class], nil] setTintColor:[UIColor lightGrayColor]];
+    
+    [[UIBarButtonItem appearanceWhenContainedIn: [UISearchBar class], nil] setTintColor:[UIColor darkGrayColor]];
     
     
     m_ctrlSearchBar.placeholder = @"";
-    m_ctrlSearchBar.showsCancelButton = YES;
+    m_ctrlSearchBar.showsCancelButton = NO;
     
     m_searchDisplayController = [[UISearchDisplayController alloc]
                                  initWithSearchBar:m_ctrlSearchBar

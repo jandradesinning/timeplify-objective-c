@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>Date</key>
+		<string>20150101</string>
+		<key>ServiceId</key>
+		<string>A20141207WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20150216</string>
+		<key>ServiceId</key>
+		<string>A20141207WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20150525</string>
+		<key>ServiceId</key>
+		<string>A20141207WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20150101</string>
+		<key>ServiceId</key>
+		<string>B20141207WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20150216</string>
+		<key>ServiceId</key>
+		<string>B20141207WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20150525</string>
+		<key>ServiceId</key>
+		<string>B20141207WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20140704</string>
+		<key>ServiceId</key>
+		<string>R20140615WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20140901</string>
+		<key>ServiceId</key>
+		<string>R20140615WKD</string>
+	</dict>
+	<dict>
+		<key>Date</key>
+		<string>20141127</string>
+		<key>ServiceId</key>
+		<string>R20140615WKD</string>
+	</dict>
+</array>
+</plist>

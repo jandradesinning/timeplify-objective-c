@@ -18,9 +18,12 @@
     NSMutableArray* m_arrFavoriteTrains;
     NSMutableArray* m_arrFavoriteStations;
     CLLocationManager *m_LocationManager;
+    
+    CLLocationCoordinate2D m_PrevGPSCoordinate;
 	CLLocationCoordinate2D m_GPSCoordinate;
 	int m_iGPSStatus;
 
+    BOOL m_bInitalStationShown;
     
 }
 -(void) stopGPS;

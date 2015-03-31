@@ -30,11 +30,7 @@ using Parse;
 namespace Timeplify
 {
     /// <summary>
-    /// Responsible for gathering data from service provider (Siemens) based on 
-    /// the configuration. The implementation of this module would adapt to the requirements 
-    /// based on the type of service provider. Data obtained from service provider is transformed
-    /// into a structure understandable by PRIS Parking Data Manager. The transformed data is 
-    /// then passed to OnShoreClient to be sent to Parking Data Manager service.
+    /// Process MTA.info NYC Subway data and push data into parse cloud.
     /// </summary>
     public class Processor : CDisposableObj
     {
@@ -226,7 +222,7 @@ namespace Timeplify
         /// <summary>
         /// Timer to fetch gtfs real time feed.
         /// </summary>
-        private Timer               _gtfsRTFTimer       = null;
+        private Timer _gtfsRTFTimer = null;
 
         /// <summary>
         /// Timer to fetch gtfs static feed.
@@ -246,12 +242,12 @@ namespace Timeplify
         /// <summary>
         /// Used for locking ...similar to critical section.
         /// </summary>
-        private static Object       _lockThis           = new Object();
+        private static Object _lockThis = new Object();
             
         /// <summary>
         /// Used for identify service stop signal.
         /// </summary>
-        private static bool         _bStopping          = false;
+        private static bool _bStopping = false;
 
         /// <summary>
         /// Hardcoded values of north & south bound for each route
@@ -308,6 +304,7 @@ namespace Timeplify
                 
             try
             {
+                //Initialize parse client with Application ID and .NET Key
                 //AFQ
                 //ParseClient.Initialize("zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i", "Bv8UkHYe1WhIiu86rK6boshd0LIXK54k1hC1HP05");
                 //Nimi
@@ -368,6 +365,7 @@ namespace Timeplify
                 _rtMaxCounter = 1;//((uint)(5 * 60) / Worker.Instance.Configuration.GTFSRealTimeFeedInterval);
 
                 StartTimer(ref _gtfsRTFTimer, Worker.Instance.Configuration.GTFSRealTimeFeedInterval, GTFSRTFTimerProc, "GTFS Real Time");
+                // ATTN: If the service is stopped in between make sure that either the parse cloud is cleared before starting the service again or this timer function be commented as Static data  is only updated once every four months, otherwise data will be overwritten.
                 StartTimer(ref _gtfsSFTimer, Worker.Instance.Configuration.GTFSStaticFeedInterval, GTFSSFTimerProc, "GTFS Static");
                 StartTimer(ref _serviceStatusTimer, Worker.Instance.Configuration.ServiceStatusInterval, ServiceStatusTimerProc, "ServiceStatus");
                 StartTimer(ref _cleanupLiveDataTimer, 1*60, CleanUpTimerProc, "Cleanup Live Data");
@@ -382,6 +380,7 @@ namespace Timeplify
             return bRet; 
         }
 
+        // Timer Function
         private bool StartTimer(ref Timer timer, uint uInterval, TimerCallback procCallbk, string description)
         {
             // Locals
@@ -460,6 +459,7 @@ namespace Timeplify
             return DateTime.Now.ToString(FND_FMT);
         }
 
+        // Download and process RealTime Feed
         private ulong DownloadRTFeed(string url, string folder, ref RealTimeData rtData)
         {
             // Locals
@@ -484,6 +484,7 @@ namespace Timeplify
             return ulTimeStamp;
         }
 
+        // Download RealTime data
         private FeedMessage DownloadRTFile(string url, string toLocalPath)
         {
             // Locals
@@ -531,10 +532,20 @@ namespace Timeplify
             return fm;
         }
 
+        // Process RealTime Feed
         private void ProcessRTFeed(FeedMessage fm, ref RealTimeData rtData)
         {
             try
-            {
+            { 
+                // Feed Logic
+                // for matching stop_id in the real-time feed using node:
+                // 1 FeedEntity.trip_update.trip.route_id
+                // 2 FeedEntity.trip_update.trip.direction
+                // 3 TripUpdate.stop_time_update.StopTimeUpdate.stop_id
+                // 4 if FeedEntity.trip_update.trip.is_assigned continue
+                // 3 Once the matching node(s) are selected, pick corresponding node's StopTimeUpdate.arrival.time
+                //      1 First in the list shall be countdownNext
+                //      2 Second in the list shall be countdownAfterNext
                 foreach(FeedEntity fe in fm.entity)
                 {
                     TripUpdate tu = fe.trip_update;
@@ -632,6 +643,7 @@ namespace Timeplify
             }
         }
 
+        // Get settings value from Settings Table
         private async void GetSettings(string settingsKey, string[] settingsValues, SetSettingsCallback ssCallback)
         {
             ParseObject poSettings = null;
@@ -672,6 +684,7 @@ namespace Timeplify
             }
         }
 
+        // Add settings values to list of ParseObject
         private void SaveSettings(ParseObject poSettings, ref List<ParseObject> listPO)
         {
             try
@@ -686,6 +699,7 @@ namespace Timeplify
 
         private delegate void SetSettingsCallback(ParseObject poSettings);
 
+        // Add static feed settings value to ParseObject
         private void SetSTSettings(ParseObject poSettings)
         {
             try
@@ -698,6 +712,7 @@ namespace Timeplify
             }
         }
 
+        // Add status feed settings value to ParseObject
         private void SetSTSSettings(ParseObject poSettings)
         {
             try
@@ -710,6 +725,7 @@ namespace Timeplify
             }
         }
 
+        // Add real time feed settings value to ParseObject
         private void SetRTSettings(ParseObject poSettings)
         {
             try
@@ -722,6 +738,7 @@ namespace Timeplify
             }
         }
 
+        // Save real time feed
         private void SaveRTFeed(string file, FeedMessage fm)
         {
             try
@@ -793,6 +810,7 @@ namespace Timeplify
             return webProxy;
         }
 
+        // Download and process Service Status Feed
         private void DownloadServiceStatusFeed()
         {
             // Locals
@@ -830,10 +848,15 @@ namespace Timeplify
             }
         }
 
+        // Process Service Status feed
         private async void ProcessStatusFeed(string statusFile)
         {
             try
             {
+                // Feed Logic
+                //1 Get subway nodes from Service status real time feed.
+                //2 Get line's related node by looking into name node, based on route_id (need to split name node's value).
+                
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.Load(statusFile);
 
@@ -979,6 +1002,7 @@ namespace Timeplify
                         if ("R" == route.Id || "6" == route.Id)//TO AVOID BURST LIMIT ISSUE FOR TESTING
 #endif
                         {
+                            // find stations in a particular route
                             var routeStops = (from stop in stops
                                               join stopTime in stopTimes on stop.Id equals stopTime.StopId
                                               join trip in trips on stopTime.TripId equals trip.Id
@@ -989,6 +1013,8 @@ namespace Timeplify
 
                             if (0 < routeStops.Count)
                             {
+                                // IsInterestedRoute was initially used for testing purpose, when only one station was added each for scheduled and live
+                                // IsNotExpressTrains is used to avoid repetition of stations
                                 if (IsInterestedRoute(route.ShortName) && IsNotExpressTrains(route.Id))
                                 {
                                     var routeId = GetRouteId(route.Id);
@@ -1017,6 +1043,7 @@ namespace Timeplify
             return _arrInterestedRoutes;
         }
 
+        // Add service status for  different routes
         private void AddRouteStatus(string routeId, string status, string statusFeedTime, ref ServiceStatusData ssData)
         {
             try
@@ -1048,6 +1075,7 @@ namespace Timeplify
             }
         }
 
+        // Download and process Static Feed
         private void DownloadStaticFeed()
         {
             // Locals
@@ -1099,6 +1127,7 @@ namespace Timeplify
             }
         }
 
+        // As per the spread sheet sent by Tim, north bound and south bound for each stations are added here
         private string GetDisplayName(string routeId, string stationId, bool directionNorth)
         {
             // Locals
@@ -2156,10 +2185,16 @@ namespace Timeplify
             return 'X' != route[route.Length - 1];
         }
 
+        // Process Static Feed
         private async void ProcessStaticFeed(string dataFolder)
         {
             try
             {
+                // Feed Logic
+                // 1 Get all trip_id for a given route_id from trips.txt
+                // 2 Get all stop_id for a given trip_id from stop_times.txt
+                // 3 Do #2 for each trip_id resulted in #1.
+                // 4 Get unique stop_id from stops.txt based on the above list.
                 Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "ProcessStaticFeed BEGIN: " + GetCurrentTimeString());
 
                 // create the reader.

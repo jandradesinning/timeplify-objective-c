@@ -86,7 +86,8 @@
     
     for (int i=0; i <[oArrFavStations count]; i++) {
         ST_Station* oSt = [oArrFavStations objectAtIndex:i];
-        if ([oSt.m_strStationId isEqualToString:IN_Station.m_strStationId]) {
+        if (([oSt.m_strRouteId isEqualToString:IN_Station.m_strRouteId])&&
+            ([oSt.m_strStationId isEqualToString:IN_Station.m_strStationId])){
             oStationExisting = oSt;
             break;
         }

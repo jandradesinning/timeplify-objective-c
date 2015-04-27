@@ -51,7 +51,7 @@
         return ([m_arrNextTrains count]);
     }
     
-    return 4;
+    return 2;
     
 }
 

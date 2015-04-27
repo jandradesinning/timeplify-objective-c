@@ -12,11 +12,12 @@
 @class Direction2View;
 @class ST_Station;
 @class PullDownRefreshScrollView;
+@class DummyLeftRightView;
 
 @interface ViewController : UIViewController
 {
     
-        IBOutlet PullDownRefreshScrollView *m_ctrlPullDownScrollView;
+    IBOutlet PullDownRefreshScrollView *m_ctrlPullDownScrollView;
     
     IBOutlet UIButton* m_ctrlBtnLeftArrow;
     IBOutlet UIButton* m_ctrlBtnRightArrow;
@@ -37,6 +38,7 @@
     IBOutlet UILabel* m_ctrlLblNextTime;
     IBOutlet UILabel* m_ctrlLblWalkingDistance;
     IBOutlet UILabel* m_ctrlLblStation;
+    IBOutlet UILabel* m_ctrlLblLastStation;
     IBOutlet UILabel* m_ctrlLblDirection;
     
     IBOutlet UIImageView* m_ctrlImgViewTrain;
@@ -65,8 +67,17 @@
     
     BOOL m_bFirstCallMade;
     
+    BOOL m_bDataTypeBlink;
+    
+    
+    DummyLeftRightView* m_DummyLeftView;
+    DummyLeftRightView* m_DummyRightView;
+    
+    
     ViewController* m_VCFlipParent;
     BOOL m_bDummyFlip;
+    
+    double m_dbOffSetPrevious;
 }
 
 @property (readwrite, assign)   BOOL m_bDummyFlip;
@@ -90,6 +101,7 @@
 -(IBAction) btnMenuClicked:(id)sender;
 -(IBAction) btnGPSClicked:(id)sender;
 -(IBAction) btnFavoriteClicked:(id)sender;
+-(IBAction) btnSubwayClicked:(id)sender;
 -(IBAction) btnMChangeDirectionClicked:(id)sender;
 -(IBAction) btnLeftArrowClicked:(id)sender;
 -(IBAction) btnRightArrowClicked:(id)sender;

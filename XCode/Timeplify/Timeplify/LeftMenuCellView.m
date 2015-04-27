@@ -31,16 +31,18 @@
         
         m_ctrlLblMenu.font = [UIFont boldSystemFontOfSize:17.0];
         
+        /*
         if (m_iIndex == 0) {
-            m_ctrlLblMenu.text = @"See All Stations";
+            m_ctrlLblMenu.text = @"Subway Lines";
         }
         if (m_iIndex == 1) {
             m_ctrlLblMenu.text = @"Favorites";
         }
-        if (m_iIndex == 2) {
+         */
+        if (m_iIndex == 0) {
             m_ctrlLblMenu.text = @"About This App";
         }
-        if (m_iIndex == 3) {
+        if (m_iIndex == 1) {
             m_ctrlLblMenu.text = @"Rate This App";
         }
         

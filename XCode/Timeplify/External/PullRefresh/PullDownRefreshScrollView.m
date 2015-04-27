@@ -13,6 +13,7 @@
 
 @implementation PullDownRefreshScrollView
 
+@synthesize refreshView;
 
 -(PullRefreshView*) getPullRefreshView
 {
@@ -78,21 +79,25 @@
     }
 }
 
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    
+    NSLog(@"scrollViewDidEndDecelerating");
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_MAIN_VIEW_DECELARATED" object:nil];
+}
+
 -(void)scrollViewDidEndDragging:(UIScrollView *)myscrollView willDecelerate:(BOOL)decelerate
 {
      
     if ((myscrollView.contentOffset.y > -50) &&(myscrollView.contentOffset.y < 50)) {
         if (myscrollView.contentOffset.x > 50) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_SWIPED_MAIN_VIEW" object:@"LEFT"];
+          //  [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_SWIPED_MAIN_VIEW" object:@"LEFT"];
         }
         
         if (myscrollView.contentOffset.x < -50)  {
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_SWIPED_MAIN_VIEW" object:@"RIGHT"];
+          //  [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_SWIPED_MAIN_VIEW" object:@"RIGHT"];
         }
     }
-    
-
-    
     
     
     isDraging = false;

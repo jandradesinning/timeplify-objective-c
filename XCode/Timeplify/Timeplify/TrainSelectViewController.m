@@ -147,6 +147,7 @@
     else
     {
         viewController.m_iScreenMode = INT_STATION_SEL_FROM_WELCOME;
+        viewController.m_iWelomeTrainStep = 0;
     }
 
     

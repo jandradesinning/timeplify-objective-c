@@ -34,6 +34,9 @@
 #import "PullDownRefreshScrollView.h"
 
 #import "SeeAllTrainsViewController.h"
+#import "DummyLeftRightView.h"
+#import "PullRefreshView.h"
+#import "Reachability.h"
 
 @interface ViewController ()
 
@@ -105,6 +108,32 @@
     
 }
 
+
+
+#pragma mark DataTypeBlink
+
+- (void)animationToDataTypeBlinkStopped:(NSString *)animationID finished:(NSNumber *) finished context:(void *) context {
+    
+    m_ctrlLblDataType.alpha = 1.0;
+}
+
+
+-(void) doDataTypeBlink
+{
+    if (m_bDataTypeBlink == NO) {
+        m_ctrlLblDataType.alpha = 1.0;
+        return;
+    }
+    
+    [UIView beginAnimations:nil context:NULL];
+    [UIView setAnimationBeginsFromCurrentState:YES];
+    [UIView setAnimationDuration:0.8];
+    [UIView setAnimationDelegate:self];
+    [UIView setAnimationDidStopSelector:@selector(animationToDataTypeBlinkStopped:finished:context:)];
+    m_ctrlLblDataType.alpha = 0.0;
+    [UIView commitAnimations];
+}
+
 #pragma mark JustLeftActions
 
 - (void)animationToGrayZeroStopped:(NSString *)animationID finished:(NSNumber *) finished context:(void *) context {
@@ -114,6 +143,8 @@
 
 -(void) justLeftTimerCalled
 {
+    [self doDataTypeBlink];
+    
     m_iJustLeftCalls++;
     
     m_ctrlLblMainTimeValue.text = @"0";
@@ -141,6 +172,7 @@
          m_timerJustLeft = nil;
         [self removeLeftTrains];
         [self setStatusValues];
+        
         
         if ([m_arrNextTrains count] < 1) {
             [self timerServerReCallCalled];
@@ -486,6 +518,8 @@
 -(void)handleLeftMenuSelected:(NSNotification *)pNotification
 {
     NSIndexPath* oInd = [pNotification object];
+    
+    /*
     if (oInd.row == 0) {
                 
         [self showSeeAllTrains];
@@ -494,12 +528,13 @@
     if (oInd.row == 1) {
         [self showFavorites];
     }
+     */
     
-    if (oInd.row == 2) {
+    if (oInd.row == 0) {
         [self showAbout];
     }
     
-    if (oInd.row == 3) {
+    if (oInd.row == 1) {
         [Utility rateThisApp];
     }
     
@@ -507,8 +542,191 @@
 }
 
 
+#pragma mark DummyLeftRightView
+
+
+-(DummyLeftRightView*) getDummyLeftRightView
+{
+    DummyLeftRightView* oView = nil;
+    
+    NSArray *topLevelObjects;
+    
+    if ([Utility isDeviceiPhone5]) {
+        topLevelObjects = [[NSBundle mainBundle] loadNibNamed:@"DummyLeftRightView_5" owner:self options:nil];
+        
+    }
+    else
+    {
+        topLevelObjects = [[NSBundle mainBundle] loadNibNamed:@"DummyLeftRightView" owner:self options:nil];
+        
+    }
+    
+	for (id currentObject in topLevelObjects){
+		if ([currentObject isKindOfClass:[DummyLeftRightView class]]){
+			oView =  (DummyLeftRightView *) currentObject;
+			break;
+		}
+	}
+    return oView;
+}
+
+-(void) doScrollLeftRight:(ST_Station*)IN_Left :(ST_Station*)IN_Right
+{
+    [m_DummyLeftView removeFromSuperview];
+    [m_DummyRightView removeFromSuperview];
+    
+    double dbScreenWd = self.view.frame.size.width;
+    double dbMainViewPos = 0;
+    double dbRightViewPos = 0;
+    double dbTotalWidth = 0;
+    double dbOffsetX = 0;
+    double dbX = m_ctrlLblDirection.frame.origin.x;
+    if ((IN_Left ==nil)&&(IN_Right == nil)) {
+        if (dbX < 100) {
+            dbMainViewPos = 0;
+        }
+        else
+        {
+            dbMainViewPos = -dbScreenWd;
+        }
+        
+        dbTotalWidth =dbScreenWd;
+        dbOffsetX = 0;
+    }
+    
+    
+    if ((IN_Left !=nil)&&(IN_Right == nil)) {
+        if (dbX < 100) {
+            dbMainViewPos = dbScreenWd;
+        }
+        else
+        {
+            dbMainViewPos = 0;
+        }
+        
+        dbTotalWidth =2*dbScreenWd;
+        dbOffsetX = dbScreenWd;
+    }
+    
+    if ((IN_Left ==nil)&&(IN_Right != nil)) {
+        if (dbX < 100) {
+            dbMainViewPos = 0;
+        }
+        else
+        {
+            dbMainViewPos = -dbScreenWd;
+        }
+        dbRightViewPos = dbScreenWd;
+        dbTotalWidth =2*dbScreenWd;
+        dbOffsetX = 0;
+    }
+    
+    if ((IN_Left !=nil)&&(IN_Right != nil)) {
+        if (dbX < 100) {
+            dbMainViewPos = dbScreenWd;
+        }
+        else
+        {
+            dbMainViewPos = 0;
+        }
+        dbRightViewPos = 2*dbScreenWd;
+        dbTotalWidth =3*dbScreenWd;
+        dbOffsetX = dbScreenWd;
+    }
+
+    
+    
+    
+    
+    for (int i= 0; i < [m_ctrlPullDownScrollView.subviews count]; i++) {
+        UIView* oView = [m_ctrlPullDownScrollView.subviews objectAtIndex:i];
+        if (oView.tag != 33) {
+            continue;
+        }
+        
+        CGRect oRct = oView.frame;
+        oRct.origin.x+=dbMainViewPos;
+        oView.frame = oRct;
+    }
+    
+    
+    if (IN_Left != nil) {
+        CGRect oRct = m_DummyLeftView.frame;
+        oRct.origin.x=0;
+        m_DummyLeftView.frame = oRct;
+        
+        m_DummyLeftView.m_ctrlLblStation.text = IN_Left.m_strStationName;
+        
+        [m_ctrlPullDownScrollView addSubview:m_DummyLeftView];
+    }
+    
+    if (IN_Right != nil) {
+        CGRect oRct = m_DummyRightView.frame;
+        oRct.origin.x=dbRightViewPos;
+        m_DummyRightView.frame = oRct;
+        
+        m_DummyRightView.m_ctrlLblStation.text = IN_Right.m_strStationName;
+        
+        [m_ctrlPullDownScrollView addSubview:m_DummyRightView];
+    }
+    m_ctrlPullDownScrollView.contentSize = CGSizeMake(dbTotalWidth, self.view.frame.size.height+1);
+    
+    
+    CGPoint ptOff = CGPointMake(dbOffsetX, 0);
+    m_dbOffSetPrevious = dbOffsetX;
+    m_ctrlPullDownScrollView.contentOffset = ptOff;
+    
+    CGRect oRect = m_viewDim.frame;
+    oRect.origin.x = 0;
+    oRect.size.width = dbTotalWidth;
+    m_viewDim.frame = oRect;
+    
+    
+    oRect = m_ctrlPullDownScrollView.refreshView.frame;
+    oRect.origin.x = dbOffsetX;
+    m_ctrlPullDownScrollView.refreshView.frame = oRect;
+    
+}
+
+
+-(void) updateScrollLeftRight
+{
+    
+    if (m_curStation == nil) {
+        [self doScrollLeftRight:nil:nil];
+        return;
+    }
+    
+    NearestStation* oNear = [[NearestStation alloc] init];
+    ST_Station* oStation1 = nil;
+    if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+        oStation1 = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    else
+    {
+        oStation1 = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    
+    
+    ST_Station* oStation2 = nil;
+    if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
+        
+        oStation2 = [oNear getNextStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+    else
+    {
+        oStation2 = [oNear getPrevStationofStation:m_curStation :m_curStation.m_iTemporaryDirection];
+    }
+       
+    
+    [self doScrollLeftRight:oStation1:oStation2];
+    
+    
+}
+
 
 #pragma mark Get Status
+
 
 -(void) updateButtonStyles
 {
@@ -578,6 +796,7 @@
 
 -(void) clearStatusValues
 {
+    m_ctrlLblLastStation.text = @"";
     m_ctrlLblService.text = @"";
     m_ctrlLblDataType.text = @"";
     m_ctrlLblMainTimeValue.text = @"0";
@@ -586,6 +805,7 @@
     m_ctrlLblStation.text = @"";
     m_ctrlLblDirection.text = @"";
     m_ctrlImgViewTrain.image = nil;
+    m_bDataTypeBlink = NO;
 }
 
 -(void) setServiceStatus:(NSMutableDictionary*)IN_Dict
@@ -651,6 +871,7 @@
 
 -(void) setStatusValues
 {
+    [self doDataTypeBlink];
     
     if ([m_arrNextTrains count] < 1) {
         return;
@@ -687,14 +908,27 @@
     NSString* strReal = [oDict objectForKey:@"REAL_TIME"];
     if ([strReal isEqualToString:@"YES"]) {
         m_ctrlLblDataType.text = @"Realtime Data";
+        m_bDataTypeBlink = YES;
     }
     else
     {
         m_ctrlLblDataType.text = @"Scheduled Data";
+        m_bDataTypeBlink = NO;
     }
     
     [self setServiceStatus:oDict];
+    m_ctrlLblLastStation.text = [oDict objectForKey:@"LAST_STATION"];
     
+    
+    m_DummyLeftView.m_ctrlImgViewTrain.image = m_ctrlImgViewTrain.image;
+    m_DummyLeftView.m_ctrlLblLastStation.text = m_ctrlLblLastStation.text;
+    m_DummyLeftView.m_ctrlLblDirection.text = m_ctrlLblDirection.text;
+ 
+    m_DummyRightView.m_ctrlImgViewTrain.image = m_ctrlImgViewTrain.image;
+    m_DummyRightView.m_ctrlLblLastStation.text = m_ctrlLblLastStation.text;
+    m_DummyRightView.m_ctrlLblDirection.text = m_ctrlLblDirection.text;
+    
+
     
     
     int iTimeRemaining = [oStatusUtil getTimeRemainingInSecs:oDict];
@@ -991,9 +1225,9 @@
     }
 
     m_ctrlLblMainTimeValue.hidden = NO;
+    m_ctrlLblNoInternet.hidden = YES;
     
     
-    m_ctrlPullDownScrollView.contentOffset = CGPointZero;
     
     m_bRunningMode = NO;
     [self clearStatusValues];
@@ -1013,6 +1247,7 @@
         
     
     [self updateButtonStyles];
+    [self updateScrollLeftRight];
 }
 
 
@@ -1124,6 +1359,10 @@
     [self showLeftMenu];
 }
 
+-(IBAction) btnSubwayClicked:(id)sender
+{
+    [self showSeeAllTrains];
+}
 
 -(IBAction) btnFavoriteClicked:(id)sender
 {
@@ -1335,6 +1574,7 @@
 
 -(void) viewWillAppear:(BOOL)animated
 {
+    
     m_ctrlPullDownScrollView.contentSize = CGSizeMake(self.view.frame.size.width+1,self.view.frame.size.height+1);
     
     m_viewDim.frame = self.view.frame;
@@ -1345,6 +1585,10 @@
     m_LeftMenuView.frame = oRct;
     
     [self arrangeHideView];
+    
+    [self updateScrollLeftRight];
+    
+    [self setInternetStatus];
 }
 
 
@@ -1377,26 +1621,8 @@
     ST_Station* oStation = [pNotification object];
     
     NSLog(@"handleOneAllStationSelected '%@'", oStation.m_strStationName);
-    
-    if ((oStation.m_iSelectedDirection == INT_DIRECTION_NORTH)||
-        (oStation.m_iSelectedDirection == INT_DIRECTION_SOUTH)){
-        
-        [self makeBusy];
-        m_curStation = oStation;
-        oStation.m_iTemporaryDirection = oStation.m_iSelectedDirection;
-        [self getTrainStatus];
-        return;
-        
-    }
-    
-    [self showDirection2View:oStation:0.0];
-    
-    
-    /*
-    ST_Station* oStation = [pNotification object];
-    
-    NSLog(@"handleOneAllStationSelected '%@'", oStation.m_strStationName);
-    
+
+   
     if ([oStation.m_strSouthDirection length] < 1) {
         
         [self makeBusy];
@@ -1418,7 +1644,6 @@
     }
     
     [self showDirection2View:oStation:0.0];
-    */
     
 }
 
@@ -1473,15 +1698,48 @@
 {
     NSLog(@"handleSwipedMainView");
 
-    m_ctrlPullDownScrollView.contentOffset = CGPointZero;
-    
+        
     NSString* strDir = (NSString*)[pNotification object];
     
     [self performSelector:@selector(doMainViewSwipedAction:) withObject:strDir afterDelay:0.0];
     
 }
 
+-(void)handleDecelaratedMainView:(NSNotification *)pNotification
+{
+    NSLog(@"handleDecelaratedMainView");
+    
+    double dbNewX = m_ctrlPullDownScrollView.contentOffset.x;
+    
+    if (dbNewX < (m_dbOffSetPrevious - 100)) {
+        [self btnLeftArrowClicked:0];
+        return;
+    }
 
+    if (dbNewX > (m_dbOffSetPrevious + 100)) {
+        [self btnRightArrowClicked:0];
+        return;
+    }
+}
+
+-(void) setInternetStatus
+{
+    AppDelegate* appDel = (AppDelegate*)[[UIApplication sharedApplication] delegate];    
+    if (appDel.m_Reachability.currentReachabilityStatus ==NotReachable) {
+        m_ctrlLblNoInternet.hidden = NO;
+    }
+    else
+    {
+        m_ctrlLblNoInternet.hidden = YES;
+    }
+
+}
+
+-(void)handleReachabilityChanged:(NSNotification *)pNotification
+{
+    NSLog(@"handleReachabilityChanged");
+    [self setInternetStatus];
+}
 
 -(void) setFlipControllerValues
 {
@@ -1515,6 +1773,9 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     
+    self.automaticallyAdjustsScrollViewInsets = NO;
+
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     
     [self setTimeNow];
@@ -1544,6 +1805,13 @@
         [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_STATUS_TIMER_DELAY target:self selector:@selector(timerUpdationCalled) userInfo:nil repeats:YES];
         
         [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_SERVER_RECALL_TIMER_DELAY target:self selector:@selector(timerServerReCallCalled) userInfo:nil repeats:YES];
+        
+        
+        m_DummyLeftView = [self getDummyLeftRightView];
+        m_DummyLeftView.m_bLeft = YES;
+        
+        m_DummyRightView = [self getDummyLeftRightView];
+        m_DummyRightView.m_bLeft = NO;
 
     }
     
@@ -1584,6 +1852,13 @@
     
     [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleSwipedMainView:)	 name:@"EVENT_SWIPED_MAIN_VIEW"
 												object:nil];
+    
+    [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleDecelaratedMainView:)	 name:@"EVENT_MAIN_VIEW_DECELARATED"
+												object:nil];
+
+    [[NSNotificationCenter defaultCenter]	 addObserver:self	 selector:@selector(handleReachabilityChanged:)	 name:@"EVENT_REACHABILITY_CHANGED"
+												object:nil];
+    
 
 
     
@@ -1616,7 +1891,9 @@
     if (m_VCFlipParent != nil) {
         [self setFlipControllerValues];
     }
-
+    
+    m_ctrlPullDownScrollView.pagingEnabled = YES;
+  
 }
 
 - (void)didReceiveMemoryWarning

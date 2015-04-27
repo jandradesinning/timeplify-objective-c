@@ -30,6 +30,7 @@
 
 @synthesize m_iScreenMode;
 @synthesize m_iTrainIndex;
+@synthesize m_iWelomeTrainStep;
 
 -(void) getStations
 {
@@ -49,7 +50,9 @@
     {
         ST_Station* oFAvStation = [oArrFavStations objectAtIndex:j];
         NSNumber* oDirection = [NSNumber numberWithInt:oFAvStation.m_iSelectedDirection];
-        [oDictTempFav setObject:oDirection forKey:oFAvStation.m_strStationId];
+        
+        NSString* strKey = [NSString stringWithFormat:@"%@_%@", oFAvStation.m_strRouteId, oFAvStation.m_strStationId];
+        [oDictTempFav setObject:oDirection forKey:strKey];
     }
    
     
@@ -65,7 +68,8 @@
         oStation.m_iSelectedDirection = 0;
         
         
-        NSNumber* oDirection = [oDictTempFav objectForKey:oStation.m_strStationId];
+        NSString* strKey = [NSString stringWithFormat:@"%@_%@", oStation.m_strRouteId, oStation.m_strStationId];
+        NSNumber* oDirection = [oDictTempFav objectForKey:strKey];
         if (oDirection != nil) {
             oStation.m_iSelectedDirection = [oDirection intValue];
         }
@@ -422,9 +426,25 @@
 -(IBAction) btnNextClicked:(id)sender
 {
     if (m_iScreenMode == INT_STATION_SEL_FROM_WELCOME) {
-        AllSetViewController* viewController = [[AllSetViewController alloc] initWithNibName:@"AllSetViewController" bundle:nil];
+        
+        NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
        
+        if  ([oArrFavTrains count] <= (m_iWelomeTrainStep+1))
+        {
+            AllSetViewController* viewController = [[AllSetViewController alloc] initWithNibName:@"AllSetViewController" bundle:nil];
+            
+            [self.navigationController pushViewController:viewController animated:YES];
+            return;
+        }
+        
+        
+        StationSelectViewController* viewController = [[StationSelectViewController alloc] initWithNibName:@"StationSelectViewController" bundle:nil];
+        
+        viewController.m_iScreenMode = INT_STATION_SEL_FROM_WELCOME;
+        viewController.m_iWelomeTrainStep = (m_iWelomeTrainStep+1);
+        
         [self.navigationController pushViewController:viewController animated:YES];
+                
     }
     
 }
@@ -469,7 +489,7 @@
         m_ctrlBtnDone.hidden = YES;
         m_ctrlBtnBack.hidden = NO;
         [self arrangeTable];
-        m_ctrlLblTitle.text = @"All stations";
+        m_ctrlLblTitle.text = @"Subway Lines";
     }
     
     if (m_iScreenMode == INT_STATION_SEL_FROM_WELCOME)
@@ -503,7 +523,18 @@
     for (int i = 0; i <[oArrFavTrains count]; i++) {
         ST_Train* oTrain = [oArrFavTrains objectAtIndex:i];
         oTrain.m_iIndex = i;
-        [m_arrTrains addObject:oTrain];
+        
+        if (m_iScreenMode == INT_STATION_SEL_FROM_WELCOME)
+        {
+            if (m_iWelomeTrainStep == i) {
+                [m_arrTrains addObject:oTrain];
+            }
+            
+        }
+        else
+        {
+            [m_arrTrains addObject:oTrain];
+        }
     }
 
     if ([m_arrTrains count] > 0) {
@@ -640,6 +671,7 @@ NSInteger sortStationsByFavComparer(id num1, id num2, void *context)
 
 -(void) dealloc
 {
+    NSLog(@"dealloc");
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 

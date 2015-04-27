@@ -32,6 +32,9 @@
 		044E65BC1A34A22C0078F839 /* FavStationCellView.m in Sources */ = {isa = PBXBuildFile; fileRef = 044E65BA1A34A22C0078F839 /* FavStationCellView.m */; };
 		044E65BD1A34A22C0078F839 /* FavStationCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 044E65BB1A34A22C0078F839 /* FavStationCellView.xib */; };
 		0454BEE41A346B0000459B32 /* DirectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 0454BEE31A346B0000459B32 /* DirectionView.m */; };
+		045569491AE7676000192EBC /* DummyLeftRightView.m in Sources */ = {isa = PBXBuildFile; fileRef = 045569481AE7676000192EBC /* DummyLeftRightView.m */; };
+		0455694B1AE7677400192EBC /* DummyLeftRightView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0455694A1AE7677400192EBC /* DummyLeftRightView.xib */; };
+		0455694D1AE77D7F00192EBC /* DummyLeftRightView_5.xib in Resources */ = {isa = PBXBuildFile; fileRef = 0455694C1AE77D7F00192EBC /* DummyLeftRightView_5.xib */; };
 		045CEEB21A9F721500FA0182 /* LiveTrains.plist in Resources */ = {isa = PBXBuildFile; fileRef = 045CEEB11A9F721500FA0182 /* LiveTrains.plist */; };
 		04633B4C1A8670EC008B0465 /* vehicle-logo-6x-gray.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B481A8670EC008B0465 /* vehicle-logo-6x-gray.png */; };
 		04633B4D1A8670EC008B0465 /* vehicle-logo-6x.png in Resources */ = {isa = PBXBuildFile; fileRef = 04633B491A8670EC008B0465 /* vehicle-logo-6x.png */; };
@@ -123,6 +126,7 @@
 		048CD7141A34555F00D8A33B /* StationSelectCellView.m in Sources */ = {isa = PBXBuildFile; fileRef = 048CD7121A34555F00D8A33B /* StationSelectCellView.m */; };
 		048CD7151A34555F00D8A33B /* StationSelectCellView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 048CD7131A34555F00D8A33B /* StationSelectCellView.xib */; };
 		048CD7181A3456AF00D8A33B /* ST_Station.m in Sources */ = {isa = PBXBuildFile; fileRef = 048CD7171A3456AF00D8A33B /* ST_Station.m */; };
+		049255F41AE7980B00121CE1 /* Reachability.m in Sources */ = {isa = PBXBuildFile; fileRef = 049255F31AE7980B00121CE1 /* Reachability.m */; };
 		04B8CF861A3C499300DF7BDB /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04B8CF851A3C499300DF7BDB /* CoreLocation.framework */; };
 		04B8CF8B1A3C4CB600DF7BDB /* GPSTestViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 04B8CF891A3C4CB600DF7BDB /* GPSTestViewController.m */; };
 		04B8CF8C1A3C4CB600DF7BDB /* GPSTestViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04B8CF8A1A3C4CB600DF7BDB /* GPSTestViewController.xib */; };
@@ -140,6 +144,7 @@
 		04DB9D551A35BB3B00EA5D17 /* AboutViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 04DB9D531A35BB3B00EA5D17 /* AboutViewController.m */; };
 		04DB9D561A35BB3B00EA5D17 /* AboutViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04DB9D541A35BB3B00EA5D17 /* AboutViewController.xib */; };
 		04DB9D591A35BC4C00EA5D17 /* About.html in Resources */ = {isa = PBXBuildFile; fileRef = 04DB9D581A35BC4C00EA5D17 /* About.html */; };
+		04DC939A1AD56A8C0037DD74 /* GotoSubway.png in Resources */ = {isa = PBXBuildFile; fileRef = 04DC93991AD56A8C0037DD74 /* GotoSubway.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -181,6 +186,10 @@
 		044E65BB1A34A22C0078F839 /* FavStationCellView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FavStationCellView.xib; sourceTree = "<group>"; };
 		0454BEE21A346B0000459B32 /* DirectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DirectionView.h; sourceTree = "<group>"; };
 		0454BEE31A346B0000459B32 /* DirectionView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DirectionView.m; sourceTree = "<group>"; };
+		045569471AE7676000192EBC /* DummyLeftRightView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DummyLeftRightView.h; sourceTree = "<group>"; };
+		045569481AE7676000192EBC /* DummyLeftRightView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DummyLeftRightView.m; sourceTree = "<group>"; };
+		0455694A1AE7677400192EBC /* DummyLeftRightView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DummyLeftRightView.xib; sourceTree = "<group>"; };
+		0455694C1AE77D7F00192EBC /* DummyLeftRightView_5.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = DummyLeftRightView_5.xib; sourceTree = "<group>"; };
 		045CEEB11A9F721500FA0182 /* LiveTrains.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = LiveTrains.plist; sourceTree = "<group>"; };
 		04633B481A8670EC008B0465 /* vehicle-logo-6x-gray.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-6x-gray.png"; sourceTree = "<group>"; };
 		04633B491A8670EC008B0465 /* vehicle-logo-6x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "vehicle-logo-6x.png"; sourceTree = "<group>"; };
@@ -284,6 +293,8 @@
 		048CD7131A34555F00D8A33B /* StationSelectCellView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = StationSelectCellView.xib; sourceTree = "<group>"; };
 		048CD7161A3456AF00D8A33B /* ST_Station.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ST_Station.h; sourceTree = "<group>"; };
 		048CD7171A3456AF00D8A33B /* ST_Station.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ST_Station.m; sourceTree = "<group>"; };
+		049255F21AE7980B00121CE1 /* Reachability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Reachability.h; sourceTree = "<group>"; };
+		049255F31AE7980B00121CE1 /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
 		04B8CF851A3C499300DF7BDB /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
 		04B8CF881A3C4CB600DF7BDB /* GPSTestViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPSTestViewController.h; sourceTree = "<group>"; };
 		04B8CF891A3C4CB600DF7BDB /* GPSTestViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GPSTestViewController.m; sourceTree = "<group>"; };
@@ -308,6 +319,7 @@
 		04DB9D531A35BB3B00EA5D17 /* AboutViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AboutViewController.m; sourceTree = "<group>"; };
 		04DB9D541A35BB3B00EA5D17 /* AboutViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AboutViewController.xib; sourceTree = "<group>"; };
 		04DB9D581A35BC4C00EA5D17 /* About.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = About.html; sourceTree = "<group>"; };
+		04DC93991AD56A8C0037DD74 /* GotoSubway.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GotoSubway.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -353,6 +365,7 @@
 		043C75941A348BEA00E657CE /* External */ = {
 			isa = PBXGroup;
 			children = (
+				049255F11AE7980B00121CE1 /* Reachability */,
 				04435C871ABE82A900BA8F1B /* PullRefresh */,
 				043C75951A348BEA00E657CE /* FlowCover */,
 			);
@@ -416,6 +429,10 @@
 				04CE82981A300F600033D5A0 /* ViewController.xib */,
 				046952451A61752A0095990A /* StatusUtility.h */,
 				046952461A61752A0095990A /* StatusUtility.m */,
+				045569471AE7676000192EBC /* DummyLeftRightView.h */,
+				045569481AE7676000192EBC /* DummyLeftRightView.m */,
+				0455694A1AE7677400192EBC /* DummyLeftRightView.xib */,
+				0455694C1AE77D7F00192EBC /* DummyLeftRightView_5.xib */,
 			);
 			name = TrainStatus;
 			sourceTree = "<group>";
@@ -501,6 +518,7 @@
 		046D9F841A301070007765BB /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				04DC93991AD56A8C0037DD74 /* GotoSubway.png */,
 				04C886561AC14E3C00912B9D /* GotoFav.png */,
 				04435C8B1ABE86A700BA8F1B /* pull-arrow.png */,
 				046A40201A306FAB0011C1A1 /* check-icon.png */,
@@ -567,6 +585,15 @@
 				0472FAD91A346B2D00936CB7 /* DirectionView.xib */,
 			);
 			name = StationSelect;
+			sourceTree = "<group>";
+		};
+		049255F11AE7980B00121CE1 /* Reachability */ = {
+			isa = PBXGroup;
+			children = (
+				049255F21AE7980B00121CE1 /* Reachability.h */,
+				049255F31AE7980B00121CE1 /* Reachability.m */,
+			);
+			path = Reachability;
 			sourceTree = "<group>";
 		};
 		04B8CF871A3C4C9B00DF7BDB /* GPSTest */ = {
@@ -750,6 +777,7 @@
 				046A40601A306FB40011C1A1 /* vehicle-logo-1-gray.png in Resources */,
 				046A40831A306FB40011C1A1 /* vehicle-logo-q-gray.png in Resources */,
 				045CEEB21A9F721500FA0182 /* LiveTrains.plist in Resources */,
+				04DC939A1AD56A8C0037DD74 /* GotoSubway.png in Resources */,
 				0472FADA1A346B2D00936CB7 /* DirectionView.xib in Resources */,
 				046A406F1A306FB40011C1A1 /* vehicle-logo-b-gray.png in Resources */,
 				046A402E1A306FAB0011C1A1 /* gps-icon.png in Resources */,
@@ -764,6 +792,7 @@
 				046A40641A306FB40011C1A1 /* vehicle-logo-3-gray.png in Resources */,
 				04CE82881A300F600033D5A0 /* InfoPlist.strings in Resources */,
 				046A40861A306FB40011C1A1 /* vehicle-logo-r.png in Resources */,
+				0455694D1AE77D7F00192EBC /* DummyLeftRightView_5.xib in Resources */,
 				046A40811A306FB40011C1A1 /* vehicle-logo-n-gray.png in Resources */,
 				04633B521A8671FD008B0465 /* vehicle-logo-7x-gray.png in Resources */,
 				046A402F1A306FAB0011C1A1 /* left-arrow.png in Resources */,
@@ -773,6 +802,7 @@
 				04DB9D561A35BB3B00EA5D17 /* AboutViewController.xib in Resources */,
 				046A40721A306FB40011C1A1 /* vehicle-logo-c.png in Resources */,
 				04B9AFE91A85FAF100BCE2DF /* ExceptionDate.plist in Resources */,
+				0455694B1AE7677400192EBC /* DummyLeftRightView.xib in Resources */,
 				046A40741A306FB40011C1A1 /* vehicle-logo-d.png in Resources */,
 				04CE829A1A300F600033D5A0 /* ViewController.xib in Resources */,
 				046A40701A306FB40011C1A1 /* vehicle-logo-b.png in Resources */,
@@ -844,6 +874,7 @@
 				046AF6841A35851A00439ED5 /* Utility.m in Sources */,
 				048CD70F1A3454AF00D8A33B /* StationSelectViewController.m in Sources */,
 				04435C8F1ABE87F300BA8F1B /* PullRefreshView.m in Sources */,
+				049255F41AE7980B00121CE1 /* Reachability.m in Sources */,
 				04823C101A30749200050964 /* ST_Train.m in Sources */,
 				044E65BC1A34A22C0078F839 /* FavStationCellView.m in Sources */,
 				0485B4CB1AC28ADD006C356F /* SeeAllTrainsViewController.m in Sources */,
@@ -862,6 +893,7 @@
 				04CE82971A300F600033D5A0 /* ViewController.m in Sources */,
 				041D658B1A3011D500E1823B /* TrainSelectViewController.m in Sources */,
 				048CD7141A34555F00D8A33B /* StationSelectCellView.m in Sources */,
+				045569491AE7676000192EBC /* DummyLeftRightView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

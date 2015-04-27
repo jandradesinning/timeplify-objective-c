@@ -12,13 +12,15 @@
 #import "DataManager.h"
 #import "Utility.h"
 
+#import "Reachability.h"
+
 @implementation AppDelegate
 
 @synthesize m_arrFavoriteTrains;
 @synthesize m_arrFavoriteStations;
 @synthesize m_GPSCoordinate;
 @synthesize m_iGPSStatus;
-
+@synthesize m_Reachability;
 
 #pragma mark - GPS
 
@@ -150,7 +152,31 @@
     
     [self initGPS];
     [self startGPS];
+    
+    
+    
+    
+    
+    //Reachability *reachability = [Reachability reachabilityWithHostname:@"www.google.com"];
+    m_Reachability = [Reachability reachabilityForInternetConnection];
+    
+    
+    m_Reachability.reachableBlock = ^(Reachability *reachability) {
         
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_REACHABILITY_CHANGED" object:nil];
+        };
+    
+    m_Reachability.unreachableBlock = ^(Reachability *reachability) {
+
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_REACHABILITY_CHANGED" object:nil];
+    };
+    
+    [m_Reachability startNotifier];
+    
+    
+    
+    
+    
 	[NSTimer scheduledTimerWithTimeInterval:5.0 target:self
 								   selector:@selector(ScreenDimTimerCalled) userInfo:nil repeats:YES];
 

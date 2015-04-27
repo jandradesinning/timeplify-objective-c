@@ -22,7 +22,7 @@
     Boolean isLoading;
     Boolean isDraging;
 }
-
+@property (nonatomic, strong) PullRefreshView  *refreshView;
 
 -(void)initPushLoadingView;
 

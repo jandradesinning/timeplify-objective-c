@@ -266,12 +266,12 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
         }
         else
         {
-            oStation.m_dbWalkingDistance = 1000000;
+            oStation.m_dbWalkingDistance = -1;
         }
     }
     else
     {
-        oStation.m_dbWalkingDistance = 1000000;
+        oStation.m_dbWalkingDistance = -1;
     }
     
     
@@ -311,6 +311,14 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
         m_ctrlActivity.hidden = YES;
         [m_ctrlTblStations reloadData];
         return;
+    }
+    
+    if ([m_arrStations count] < 1) {
+        m_bProcessingOver = YES;
+        m_ctrlActivity.hidden = YES;
+        [m_ctrlTblStations reloadData];
+        return;
+
     }
     
     [self getWalkingDistances];

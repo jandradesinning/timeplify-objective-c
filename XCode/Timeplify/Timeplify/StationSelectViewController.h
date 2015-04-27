@@ -35,12 +35,14 @@
 
     DirectionView* m_DirectionView;
     int m_iScreenMode;
+    int m_iWelomeTrainStep;
     
     int m_iTrainIndex;
 
 }
 @property (readwrite, assign) int m_iScreenMode;
 @property (readwrite, assign) int m_iTrainIndex;
+@property (readwrite, assign) int m_iWelomeTrainStep;
 -(void) updateVisibleCells:(UITableView*)IN_TableView;
 -(IBAction) btnDoneClicked:(id)sender;
 -(IBAction) btnNextClicked:(id)sender;

@@ -22,5 +22,4 @@
 +(NSMutableArray*) getAllStations;
 +(NSMutableArray*) getStationsOfTrain:(NSString*)IN_strTrain;
 +(NSMutableArray*) getStationsOfTrainStopInStation:(NSString*)IN_strStationId;
-+(void)insertServerData:(NSDictionary*)IN_Dict;
 @end

@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="5056" systemVersion="14D136" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6245" systemVersion="14D136" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none">
     <dependencies>
         <deployment defaultVersion="1552" identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController">
             <connections>
                 <outlet property="m_ctrlActivity" destination="iR1-LH-MXF" id="Ymd-sl-EyU"/>
-                <outlet property="m_ctrlBtnLeftArrow" destination="wqu-5X-Ufo" id="dHy-zw-OcR"/>
-                <outlet property="m_ctrlBtnRightArrow" destination="p0I-DA-BhH" id="cym-2W-yeP"/>
                 <outlet property="m_ctrlBtnSwitchDirection" destination="N5z-cr-Gkl" id="kZ6-hJ-fM6"/>
                 <outlet property="m_ctrlImgViewTrain" destination="Phd-Qm-Hel" id="ZT6-wc-3nV"/>
                 <outlet property="m_ctrlLblDataType" destination="hTg-V7-gLN" id="NVA-97-VzN"/>
@@ -21,7 +19,6 @@
                 <outlet property="m_ctrlLblNoInternet" destination="iJ7-KP-vaM" id="DTw-cL-tFG"/>
                 <outlet property="m_ctrlLblService" destination="AKK-HJ-5fW" id="STZ-dN-smh"/>
                 <outlet property="m_ctrlLblStation" destination="DEr-HM-ob2" id="X6o-bt-o5G"/>
-                <outlet property="m_ctrlLblTimeNow" destination="ocO-uV-T0e" id="t8S-FP-xFi"/>
                 <outlet property="m_ctrlLblWalkingDistance" destination="fEm-XB-pLP" id="lKl-ok-gRK"/>
                 <outlet property="m_ctrlPullDownScrollView" destination="LEp-dh-SPf" id="FRM-9c-4Sp"/>
                 <outlet property="m_ctrlViewHide" destination="MLz-p9-62o" id="7nD-Sn-vFA"/>
@@ -42,12 +39,6 @@
                             <rect key="frame" x="0.0" y="20" width="320" height="40"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <subviews>
-                                <label hidden="YES" opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Time" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="ocO-uV-T0e">
-                                    <rect key="frame" x="50" y="6" width="46" height="27"/>
-                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                    <fontDescription key="fontDescription" type="system" pointSize="16"/>
-                                    <nil key="highlightedColor"/>
-                                </label>
                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="7BI-xh-GWD">
                                     <rect key="frame" x="10" y="4" width="32" height="32"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -154,26 +145,6 @@
                             <rect key="frame" x="10" y="66" width="40" height="40"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
                         </imageView>
-                        <button hidden="YES" opaque="NO" tag="33" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="wqu-5X-Ufo">
-                            <rect key="frame" x="3" y="424" width="32" height="32"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                            <state key="normal" backgroundImage="left-arrow.png">
-                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                            </state>
-                            <connections>
-                                <action selector="btnLeftArrowClicked:" destination="-1" eventType="touchUpInside" id="4r8-rt-amG"/>
-                            </connections>
-                        </button>
-                        <button hidden="YES" opaque="NO" tag="33" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="p0I-DA-BhH">
-                            <rect key="frame" x="288" y="424" width="32" height="32"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                            <state key="normal" backgroundImage="right-arrow.png">
-                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                            </state>
-                            <connections>
-                                <action selector="btnRightArrowClicked:" destination="-1" eventType="touchUpInside" id="Kgh-u5-loL"/>
-                            </connections>
-                        </button>
                         <view tag="33" contentMode="scaleToFill" id="MLz-p9-62o">
                             <rect key="frame" x="288" y="334" width="27" height="36"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -233,17 +204,21 @@
                 </scrollView>
             </subviews>
             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+            <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
         </view>
     </objects>
     <resources>
         <image name="GotoFav.png" width="64" height="64"/>
         <image name="GotoSubway.png" width="64" height="64"/>
-        <image name="left-arrow.png" width="128" height="128"/>
         <image name="left-menu-icon.png" width="120" height="120"/>
-        <image name="right-arrow.png" width="128" height="128"/>
         <image name="switch-direction.png" width="98" height="71"/>
         <image name="vehicle-logo-1.png" width="44" height="44"/>
         <image name="walking-man.png" width="40" height="40"/>
     </resources>
+    <simulatedMetricsContainer key="defaultSimulatedMetrics">
+        <simulatedStatusBarMetrics key="statusBar"/>
+        <simulatedOrientationMetrics key="orientation"/>
+        <simulatedScreenMetrics key="destination" type="retina4"/>
+    </simulatedMetricsContainer>
 </document>

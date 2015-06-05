@@ -36,105 +36,10 @@
 }
 
 
-
-+(void)insertServerData:(NSDictionary*)IN_Dict{
-    
-       
-    
-    NSString* strFile = [DataManager getDBPath];
-    
-    sqlite3 *database;
-    int result = sqlite3_open([strFile UTF8String], &database);
-    if(result != SQLITE_OK)
-    {
-        NSLog(@"Error opening database");
-        return;
-    }
-    
-    
-    NSDictionary* oDictData = [IN_Dict objectForKey:@"data"];
-    
-    NSLog(@"insertServerData Start");
-    
-    
-    [DataManager executeSQL:@"DELETE FROM TrainStop":database];
-    [DataManager executeSQL:@"DELETE FROM Station":database];
-    [DataManager executeSQL:@"DELETE FROM Train":database];
-    
-    NSLog(@"insertServerData 1");
-
-    NSArray* arrRoutes = [oDictData objectForKey:@"routes"];
-   
-    for (int i=0; i <[arrRoutes count]; i++) {
-        
-        NSDictionary* oDict = [arrRoutes objectAtIndex:i];
-        
-        NSString* strTrainId =[oDict objectForKey:@"id"];
-        strTrainId = [strTrainId stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-        
-        NSString* strSQL = [NSString stringWithFormat:@"INSERT INTO Train VALUES ('%@','%@','%@','%@','%@')",
-                            strTrainId,
-                            [oDict objectForKey:@"name"],
-                            [oDict objectForKey:@"name"],
-                            [oDict objectForKey:@"northStationId"],
-                            [oDict objectForKey:@"southStationId"]];
-        
-        [DataManager executeSQL:strSQL:database];
-        
-        NSArray* arrStops = [oDict objectForKey:@"stations"];
-        
-        if (arrStops == nil) {
-            continue;
-        }
-        
-        for (int j=0; j <[arrStops count]; j++) {
-            
-            NSDictionary* oDict2 = [arrStops objectAtIndex:j];
-            
-            NSString* strSQL = [NSString stringWithFormat:@"INSERT INTO TrainStop VALUES ('%@','%@','%@','%@', %d)",
-                                strTrainId,
-                                [oDict2 objectForKey:@"stationId"],
-                                [oDict2 objectForKey:@"northBound"],
-                                [oDict2 objectForKey:@"southBound"],
-                                (j+1)];
-            
-            
-            [DataManager executeSQL:strSQL:database];
-
-        }
-    }
-    
-    NSLog(@"insertServerData 2");
-    
-    NSArray* arrStations = [oDictData objectForKey:@"stations"];
-    
-    for (int i=0; i <[arrStations count]; i++) {
-        
-        NSDictionary* oDict = [arrStations objectAtIndex:i];
-        
-        NSString* strSQL = [NSString stringWithFormat:@"INSERT INTO Station VALUES ('%@','%@','%@','%@') ",
-                            [oDict objectForKey:@"id"],
-                            [oDict objectForKey:@"name"],
-                            [oDict objectForKey:@"lat"],
-                            [oDict objectForKey:@"lon"]];
-        
-        [DataManager executeSQL:strSQL:database];
-    }
-    
-    
-    sqlite3_close(database);
-    
-    NSLog(@"insertServerData Over");
-    
-}
-
-
-
 +(NSMutableArray*) getLocalScheduledData:(NSString*)IN_strStationId : (NSString*) IN_strDirection
 {
     NSString* strSql =  [NSString stringWithFormat:@"SELECT ServiceID, RouteId, ArrivalTime FROM ScheduledData WHERE StationID = '%@' AND Direction = '%@' order by ArrivalTime", IN_strStationId, IN_strDirection];
     
-    NSLog(@"SQL '%@'", strSql);
     
     NSMutableArray *arrReturn= [[NSMutableArray alloc]init];
     
@@ -186,7 +91,6 @@
 {
     NSString* strSql = [NSString stringWithFormat: @"SELECT TrainStop.StationId,  TrainStop.RouteId, TrainStop.DirOrder, Station.Name, Train.Name, TrainStop.North, TrainStop.South, Station.Latitude, Station.Longitude FROM Train, TrainStop, Station where Train.Id = TrainStop.RouteId AND Station.Id = TrainStop.StationId AND Train.Id = '%@' ORDER BY TrainStop.DirOrder", IN_strTrain ];
     
-    NSLog(@"SQL '%@'", strSql);
     
     NSMutableArray *arrReturn= [[NSMutableArray alloc]init];
     
@@ -250,7 +154,6 @@
 {
     NSString* strSql = [NSString stringWithFormat: @"SELECT TrainStop.StationId,  TrainStop.RouteId, TrainStop.DirOrder, Station.Name, Train.Name, TrainStop.North, TrainStop.South, Station.Latitude, Station.Longitude FROM Train, TrainStop, Station where Train.Id = TrainStop.RouteId AND Station.Id = TrainStop.StationId AND Station.Id = '%@' ORDER BY TrainStop.DirOrder", IN_strStationId ];
     
-    NSLog(@"SQL '%@'", strSql);
     
     NSMutableArray *arrReturn= [[NSMutableArray alloc]init];
     

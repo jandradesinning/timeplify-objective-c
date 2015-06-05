@@ -19,8 +19,6 @@
     
     IBOutlet PullDownRefreshScrollView *m_ctrlPullDownScrollView;
     
-    IBOutlet UIButton* m_ctrlBtnLeftArrow;
-    IBOutlet UIButton* m_ctrlBtnRightArrow;
     IBOutlet UIButton* m_ctrlBtnSwitchDirection;
     
     
@@ -30,7 +28,6 @@
     IBOutlet UIView* m_viewDim;
     
     IBOutlet UILabel* m_ctrlLblNoInternet;
-    IBOutlet UILabel* m_ctrlLblTimeNow;
     IBOutlet UILabel* m_ctrlLblService;
     IBOutlet UILabel* m_ctrlLblDataType;
     IBOutlet UILabel* m_ctrlLblMainTimeValue;
@@ -103,9 +100,10 @@
 -(IBAction) btnFavoriteClicked:(id)sender;
 -(IBAction) btnSubwayClicked:(id)sender;
 -(IBAction) btnMChangeDirectionClicked:(id)sender;
--(IBAction) btnLeftArrowClicked:(id)sender;
--(IBAction) btnRightArrowClicked:(id)sender;
 -(IBAction) btnTestGPSClicked:(id)sender;
+
+-(void) goToLeftScreen;
+-(void) goToRightScreen;
 
 -(void) setFlipControllerValues;
 

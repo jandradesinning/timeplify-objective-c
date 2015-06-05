@@ -473,7 +473,6 @@ NSInteger sortScheduledDateComparer(id num1, id num2, void *context)
     for (int i= 0; i <[IN_arrRecs count]; i++) {
         
         NSMutableDictionary* oDict = [IN_arrRecs objectAtIndex:i];
-        NSLog(@"Dict '%@'", oDict);
         
         NSString* strRouteId = [oDict objectForKey:@"routeId"];
         if ([strRouteId isEqualToString:IN_curStation.m_strRouteId]) {

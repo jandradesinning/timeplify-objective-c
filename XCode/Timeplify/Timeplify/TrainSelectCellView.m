@@ -79,8 +79,6 @@
         NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", oTrain.m_strImage];
         NSString* strGrayImage = [NSString stringWithFormat:@"vehicle-logo-%@-gray.png", oTrain.m_strImage];
         
-        NSLog(@"Image '%@'", strNormalImage);
-        
         strNormalImage = [strNormalImage lowercaseString];
         strGrayImage = [strGrayImage lowercaseString];
         

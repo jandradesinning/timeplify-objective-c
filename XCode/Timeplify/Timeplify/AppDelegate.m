@@ -40,7 +40,24 @@
 //	NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
 	   
     
-	m_GPSCoordinate = newLocation.coordinate;
+    
+    
+    if ((newLocation.coordinate.latitude > 8.0)&&
+        (newLocation.coordinate.latitude < 9.0)){
+        
+        if (m_bInitalStationShown == NO) {
+            // TEST_CODE
+            CLLocationCoordinate2D oLoc = CLLocationCoordinate2DMake(INT_TESTING_LATITUDE, INT_TESTING_LONGITUDE); // Near 6   610 - morrison AV Sound View
+            m_GPSCoordinate=oLoc;
+            // TEST_CODE
+        }
+        
+    }
+    else
+    {
+        m_GPSCoordinate = newLocation.coordinate;
+    }
+    
 	m_iGPSStatus = 2;
     
     
@@ -54,16 +71,14 @@
         m_PrevGPSCoordinate = m_GPSCoordinate;
     }
     
-	   
-    if (newLocation.horizontalAccuracy < INT_GPS_ACCURACY) {
+    
+    if (m_bInitalStationShown == NO) {
         
-        if (m_bInitalStationShown == NO) {
-            m_bInitalStationShown = YES;
-            [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_ALL_SET_INITIALLY" object:nil];
-        }
+        m_bInitalStationShown = YES;
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_ALL_SET_INITIALLY" object:nil];
         
     }
-    
+
 }
 
 
@@ -74,12 +89,7 @@
     
     m_iGPSStatus = 1;
     
-    // TEST_CODE
-    CLLocationCoordinate2D oLoc = CLLocationCoordinate2DMake(INT_TESTING_LATITUDE, INT_TESTING_LONGITUDE); // Near 6   610 - morrison AV Sound View
-    m_GPSCoordinate=oLoc;
-    m_iGPSStatus = 2;
-    // TEST_CODE
-   	
+    
 }
 
 -(void) startGPS
@@ -124,6 +134,25 @@
 
 #pragma mark - Others
 
+-(void) setUpReachability
+{
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(reachabilityChanged:) name:kReachabilityChangedNotification object:nil];
+    
+    m_Reachability = [Reachability reachabilityForInternetConnection];
+    [m_Reachability startNotifier];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_REACHABILITY_CHANGED" object:nil];
+    
+}
+
+- (void) reachabilityChanged:(NSNotification *)note
+{
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_REACHABILITY_CHANGED" object:nil];
+}
+
+
+
+
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     m_bInitalStationShown = NO;
@@ -155,24 +184,7 @@
     
     
     
-    
-    
-    //Reachability *reachability = [Reachability reachabilityWithHostname:@"www.google.com"];
-    m_Reachability = [Reachability reachabilityForInternetConnection];
-    
-    
-    m_Reachability.reachableBlock = ^(Reachability *reachability) {
-        
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_REACHABILITY_CHANGED" object:nil];
-        };
-    
-    m_Reachability.unreachableBlock = ^(Reachability *reachability) {
-
-        [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_REACHABILITY_CHANGED" object:nil];
-    };
-    
-    [m_Reachability startNotifier];
-    
+    [self setUpReachability];
     
     
     

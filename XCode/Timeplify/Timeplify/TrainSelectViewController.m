@@ -192,73 +192,6 @@
 }
 
 
--(void)parseServerStaticDataResponse:(NSDictionary*)IN_Dict
-{
-    if (!([IN_Dict isKindOfClass:[NSDictionary class]])) {
-        [self displayError:@"Invalid response from server"];
-        return;
-    }
-    
-    NSLog(@"Dict '%@'", IN_Dict);
-    
-    [DataManager insertServerData:IN_Dict];
-    
-    [Utility saveStringInDefault:@"DATA_COPIED" :@"YES"];
-    
-    [self readTrainList];
-  
-}
-
-/*
--(void) getServerStaticData
-{
-    NSString* strSaved = [Utility getStringFromDefault:@"DATA_COPIED"];
-    if ([strSaved isEqualToString:@"YES"]) {
-        [self readTrainList];
-        return;
-    }
-    
-    
-    [self makeBusy];
-    
-    NSMutableDictionary* oDictParam= [[NSMutableDictionary alloc] init];
-    [oDictParam setObject:@"1.0" forKey:@"appVersion"];
-    [oDictParam setObject:@"" forKey:@"updatedTime"];
-    
-    
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:oDictParam
-                                                       options:NSJSONWritingPrettyPrinted
-                                                         error:nil];
-    NSString* strPostParam = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"JSON '%@'", strPostParam);
-
-    
-    [PFCloud callFunctionInBackground:@"getStaticData" withParameters:oDictParam
-                                block:^(id result, NSError *error)
-     {
-         [self makeReady];
-         
-         if (error) {
-             
-             [self displayError:[error localizedDescription]];
-             
-             }
-         else
-         {
-             [self parseServerStaticDataResponse: result];
-         }
-         
-         NSLog(@"Over");
-         
-     }];
-    
-    NSLog(@"Called");
-    
-}
-*/
-
-
-
 #pragma mark ServerAppSettings
 
 -(void)parseServerAppSettingsResponse:(NSDictionary*)IN_Dict
@@ -272,8 +205,7 @@
     NSMutableDictionary* oD2 = [[NSMutableDictionary alloc] initWithDictionary:IN_Dict];
     [Utility saveDictInDefault:@"DICT_APP_SETTINGS" :oD2];
  
-    //[self getServerStaticData];
-    
+     
     [Utility saveStringInDefault:@"DATA_COPIED" :@"YES"];
     [self readTrainList];
 
@@ -288,12 +220,6 @@
     [oDictParam setObject:@"1.0" forKey:@"appVersion"];
     [oDictParam setObject:@"" forKey:@"updatedTime"];
     
-    
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:oDictParam
-                                                       options:NSJSONWritingPrettyPrinted
-                                                         error:nil];
-    NSString* strPostParam = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    NSLog(@"JSON '%@'", strPostParam);
     
     
     [PFCloud callFunctionInBackground:@"getSettings" withParameters:oDictParam

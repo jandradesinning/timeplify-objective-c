@@ -25,6 +25,7 @@
     int m_iOrder;
     
     double m_dbWalkingDistance;
+    double m_dbNextTrainTime;
 }
 @property (strong, nonatomic) NSString* m_strStationId;
 @property (strong, nonatomic) NSString* m_strRouteId;
@@ -41,4 +42,5 @@
 
 @property (readwrite, assign) double m_dbDistanceFromGPS;
 @property (readwrite, assign) double m_dbWalkingDistance;
+@property (readwrite, assign) double m_dbNextTrainTime;
 @end

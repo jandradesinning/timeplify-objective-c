@@ -562,6 +562,11 @@ Parse.Cloud.define("getStatus", function(request, response) {
                 response.error(getErrorJSON(error.message));
             });
         } else {
+            routeId = request.params.route;
+            if(bOK && null == routeId) {
+                response.error(getErrorJSON("Parameter 'route' is missing"));
+                bOK = false;
+            }
             stationId = request.params.station;
             if(bOK && null == stationId) {
                 response.error(getErrorJSON("Parameter 'station' is missing"));

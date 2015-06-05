@@ -53,7 +53,6 @@
     
     m_ctrlLblMenu.font = [UIFont systemFontOfSize:15.0];
     
-    NSLog(@"m_dict '%@'", m_dict);
     
     CGRect oRect = m_ctrlLblMenu.frame;
     oRect.origin.x = 45;

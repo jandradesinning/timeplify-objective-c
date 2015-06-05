@@ -17,5 +17,4 @@
 }
 -(IBAction) btnNextClicked:(id)sender;
 -(void) getServerAppSettings;
-//-(void) getServerStaticData;
 @end

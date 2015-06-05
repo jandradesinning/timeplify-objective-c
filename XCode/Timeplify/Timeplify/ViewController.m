@@ -62,22 +62,6 @@
 @synthesize m_ctrlImgViewTrain;
 
 
--(void) setTimeNow
-{
-    NSDate* oDate = [NSDate date];
-    
-    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
-    
-    [formatter setTimeZone:[NSTimeZone timeZoneWithName:@"EST"]];
-    
-    [formatter setDateFormat:@"hh:mm a"];
-    NSString* strDate = [formatter stringFromDate:oDate];
-    strDate = [strDate uppercaseString];
-    
-    NSString* strTxt = [NSString stringWithFormat:@"%@ EST", strDate];
-
-    m_ctrlLblTimeNow.text = strTxt;
-}
 
 -(void) showAbout
 {
@@ -244,8 +228,6 @@
     
 -(void) timerUpdationCalled
 {
-    [self setTimeNow];
-    
     if (m_timerJustLeft != nil) {
         StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
         NSString* strNextTime = [oStatusUtil getNextTimeRemaining:m_arrNextTrains :m_curStation];
@@ -1029,13 +1011,13 @@
 
 
 
--(void)parseStatusServerResponse:(NSDictionary*)IN_Dict :(BOOL) IN_bUsingLocal
+-(int)parseStatusServerResponse:(NSDictionary*)IN_Dict :(BOOL) IN_bUsingLocal
 {
     
     
     if (IN_bUsingLocal == YES) {
         [self performSelector:@selector(getTrainStatusFromLocalDB) withObject:nil afterDelay:0.0];
-        return;
+        return 0;
     }
     
     
@@ -1047,15 +1029,13 @@
 
     if (IN_Dict == nil) {
         [self displayError:@"Invalid response from server"];
-        return;
+        return 1;
     }
-    
-    NSLog(@"Dict '%@'", IN_Dict);
 
     NSDictionary* oDictData = [IN_Dict objectForKey:@"data"];
     if (oDictData == nil) {
         [self displayError:@"Invalid response from server"];
-        return;
+        return 1;
     }
 
     
@@ -1066,7 +1046,7 @@
     
     if (!([oDict isKindOfClass:[NSDictionary class]])) {
         [self displayError:@"Invalid response from server"];
-        return;
+        return 1;
     }
    
     [oUtil storeServiceStatusInDefault:oDict];
@@ -1077,7 +1057,7 @@
     if (oNumStatus != nil) {
         if ([oNumStatus intValue] == 1) {
             [self performSelector:@selector(getTrainStatusFromLocalDB) withObject:nil afterDelay:0.0];
-            return;
+            return 0;
         }
         
     }
@@ -1093,7 +1073,7 @@
     
     [self setStatusValues];
     
-    
+    return 1;
 }
 
 
@@ -1118,7 +1098,6 @@
     
     NSMutableDictionary* oDict = [oUtil getLocalDBScheduledData:oStation];
     
-    NSLog(@"Dict '%@'", oDict);
     
     m_arrNextTrains = [oUtil getFormattedStatusResult:oDict:YES:m_curStation];
     
@@ -1142,7 +1121,6 @@
     
     ST_Station* oStation = m_curStation;
     
-    [self getWalkingDistance];
     
     NSString* strDirection = @"";
     if (oStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
@@ -1162,25 +1140,20 @@
     [oDictParam setObject:[NSNumber numberWithBool:NO] forKey:@"fetchScheduledData"];
     
     
-    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:oDictParam
-                                                       options:NSJSONWritingPrettyPrinted
-                                                         error:nil];
-    NSString* strPostParam = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    
-    NSLog(@"JSON '%@'", strPostParam);
+
     
     [PFCloud callFunctionInBackground:@"getStatus" withParameters:oDictParam
                                 block:^(id result, NSError *error)
      {
          
-         m_ctrlLblNoInternet.hidden = YES;
+         int iServerOk = 1;
+
          if (error) {
              
              if ([error code] == 100) {
                  //[self displayError:@"We’re unable to connect to Timeplify Servers, please check your connection and try again to receive live updates."];
-                 m_ctrlLblNoInternet.hidden = NO;
                  
-                 [self parseStatusServerResponse: nil :YES];
+                 iServerOk = [self parseStatusServerResponse: nil :YES];
              }
              else
              {
@@ -1193,12 +1166,14 @@
          }
          else
          {
-             [self parseStatusServerResponse: result :NO];
+             iServerOk = [self parseStatusServerResponse: result :NO];
              m_bRunningMode = YES;
              
          }
          
-         [self makeReady];
+         if (iServerOk == 1) {
+             [self makeReady];
+         }
          
          NSLog(@"Over");
          
@@ -1225,7 +1200,6 @@
     }
 
     m_ctrlLblMainTimeValue.hidden = NO;
-    m_ctrlLblNoInternet.hidden = YES;
     
     
     
@@ -1233,6 +1207,9 @@
     [self clearStatusValues];
     
     [m_arrNextTrains removeAllObjects];
+    
+    m_ctrlLblWalkingDistance.text = @"";
+    [self getWalkingDistance];
     
     StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
     BOOL bHasLive = [oStatusUtil doesRouteHaveLive:m_curStation.m_strRouteId];
@@ -1485,7 +1462,7 @@
     
 }
 
--(IBAction) btnLeftArrowClicked:(id)sender
+-(void) goToLeftScreen
 {
     if (m_curStation == nil) {
         return;
@@ -1517,7 +1494,7 @@
 
 }
 
--(IBAction) btnRightArrowClicked:(id)sender
+-(void) goToRightScreen
 {
     if (m_curStation == nil) {
         return;
@@ -1684,11 +1661,11 @@
 {
     
     if ([IN_strTxt isEqualToString:@"LEFT"]) {
-        [self btnLeftArrowClicked:0];
+        [self goToLeftScreen];
     }
     else
     {
-        [self btnRightArrowClicked:0];
+        [self goToRightScreen];
     }
 
     
@@ -1712,19 +1689,20 @@
     double dbNewX = m_ctrlPullDownScrollView.contentOffset.x;
     
     if (dbNewX < (m_dbOffSetPrevious - 100)) {
-        [self btnLeftArrowClicked:0];
+        [self goToLeftScreen];
         return;
     }
 
     if (dbNewX > (m_dbOffSetPrevious + 100)) {
-        [self btnRightArrowClicked:0];
+        [self goToRightScreen];
         return;
     }
 }
 
 -(void) setInternetStatus
 {
-    AppDelegate* appDel = (AppDelegate*)[[UIApplication sharedApplication] delegate];    
+    AppDelegate* appDel = (AppDelegate*)[[UIApplication sharedApplication] delegate];
+   
     if (appDel.m_Reachability.currentReachabilityStatus ==NotReachable) {
         m_ctrlLblNoInternet.hidden = NO;
     }
@@ -1777,8 +1755,6 @@
 
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
-    
-    [self setTimeNow];
     
     m_bFirstCallMade = NO;
     

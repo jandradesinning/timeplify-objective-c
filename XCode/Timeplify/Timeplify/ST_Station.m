@@ -24,6 +24,7 @@
 @synthesize m_iTemporaryDirection;
 @synthesize m_dbDistanceFromGPS;
 @synthesize m_dbWalkingDistance;
+@synthesize m_dbNextTrainTime;
 
 
 - (void)encodeWithCoder:(NSCoder *)aCoder{

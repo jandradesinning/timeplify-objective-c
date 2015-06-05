@@ -78,8 +78,6 @@
         
         NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", oTrain.m_strImage];
         
-        NSLog(@"Image '%@'", strNormalImage);
-        
         strNormalImage = [strNormalImage lowercaseString];
 
         [oBtn setBackgroundImage:[UIImage imageNamed:strNormalImage] forState:UIControlStateNormal];

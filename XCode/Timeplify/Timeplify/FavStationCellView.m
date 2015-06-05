@@ -27,18 +27,25 @@
     
     
     NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", m_Station.m_strRouteId];
-    NSLog(@"Image '%@'", strNormalImage);
     strNormalImage = [strNormalImage lowercaseString];
     m_ctrlImageView.image = [UIImage imageNamed:strNormalImage];
     
+    /*
     m_ctrlLblTime.text = @"";
     if (m_Station.m_dbWalkingDistance >=0 ) {
         StatusUtility* oStat = [[StatusUtility alloc] init];
         NSString* strTime = [oStat getFormattedSeconds:m_Station.m_dbWalkingDistance];
         m_ctrlLblTime.text = strTime;
     }
+    */
     
+    double dbTime = m_Station.m_dbNextTrainTime;
+    if (dbTime < 1) {
+        dbTime = 1;
+    }
     
+    NSString* strTime = [NSString stringWithFormat:@"%0.0lf min", dbTime];
+    m_ctrlLblTime.text = strTime;
      
     
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_NORTH) {

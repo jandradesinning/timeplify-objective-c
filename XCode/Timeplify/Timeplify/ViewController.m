@@ -101,7 +101,7 @@
     m_ctrlLblDataType.alpha = 1.0;
 }
 
-
+// This is to manage the blinking for when Live Data is available
 -(void) doDataTypeBlink
 {
     if (m_bDataTypeBlink == NO) {
@@ -111,7 +111,7 @@
     
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationBeginsFromCurrentState:YES];
-    [UIView setAnimationDuration:0.8];
+    [UIView setAnimationDuration:2];
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(animationToDataTypeBlinkStopped:finished:context:)];
     m_ctrlLblDataType.alpha = 0.0;
@@ -225,17 +225,22 @@
 
 #pragma mark Timer Updation
 
-    
+// This function is called every second
 -(void) timerUpdationCalled
 {
-    if (m_timerJustLeft != nil) {
+    if (m_timerJustLeft != nil) { // if the screen shows TimeJustLeft indicator, then update the NextTime on the screen
+        
         StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
         NSString* strNextTime = [oStatusUtil getNextTimeRemaining:m_arrNextTrains :m_curStation];
         m_ctrlLblNextTime.text = strNextTime;
+        
         return;
     }
     
+    
     [self removeOtherRoutesLeftTrains];
+    
+    
     [self setStatusValues];
 
 }
@@ -788,6 +793,7 @@
     m_ctrlLblDirection.text = @"";
     m_ctrlImgViewTrain.image = nil;
     m_bDataTypeBlink = NO;
+    m_ctrlLblWalkingDistance.text = @"";
 }
 
 -(void) setServiceStatus:(NSMutableDictionary*)IN_Dict
@@ -803,6 +809,7 @@
     m_ctrlLblService.textColor = oClr;
 }
 
+// This code runs every second and this code removes the first time on the left menu when it expires
 -(void) removeOtherRoutesLeftTrains
 {
     
@@ -814,6 +821,7 @@
     NSMutableDictionary* oDict = [m_arrNextTrains objectAtIndex:0];
     
     NSString* strRouteId = [oDict objectForKey:@"routeId"];
+    
     if ([strRouteId isEqualToString:m_curStation.m_strRouteId]) {
         return;
     }
@@ -853,6 +861,7 @@
 
 -(void) setStatusValues
 {
+    
     [self doDataTypeBlink];
     
     if ([m_arrNextTrains count] < 1) {
@@ -862,6 +871,7 @@
     StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
     
     NSMutableDictionary* oDict = [oStatusUtil getCurrentDisplayingDict:m_arrNextTrains :m_curStation];
+    
     if (oDict == nil) {
         return;
     }
@@ -874,18 +884,21 @@
     NSString* strNormalImage = [NSString stringWithFormat:@"vehicle-logo-%@.png", strRoute];
     strNormalImage = [strNormalImage lowercaseString];
     
-    m_ctrlImgViewTrain.image = [UIImage imageNamed:strNormalImage];
     
+    // Question: Is it necessary to set the image and station name every second for the currently select station?
+    
+    m_ctrlImgViewTrain.image = [UIImage imageNamed:strNormalImage];
     m_ctrlLblStation.text = m_curStation.m_strStationName;
     
     if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
         m_ctrlLblDirection.text = m_curStation.m_strNorthDirection;
     }
     
-    
     if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_SOUTH) {
         m_ctrlLblDirection.text = m_curStation.m_strSouthDirection;
     }
+    
+    // This is to tell whether the data is real time or scheduled and set the m_bDataTypeBlink accordingly
     
     NSString* strReal = [oDict objectForKey:@"REAL_TIME"];
     if ([strReal isEqualToString:@"YES"]) {
@@ -898,14 +911,18 @@
         m_bDataTypeBlink = NO;
     }
     
+    
+    // This is to retrieve the status label (Delay, Good Service, etc) and also the status color
     [self setServiceStatus:oDict];
+    
     m_ctrlLblLastStation.text = [oDict objectForKey:@"LAST_STATION"];
     
-    
+    // LEFT
     m_DummyLeftView.m_ctrlImgViewTrain.image = m_ctrlImgViewTrain.image;
     m_DummyLeftView.m_ctrlLblLastStation.text = m_ctrlLblLastStation.text;
     m_DummyLeftView.m_ctrlLblDirection.text = m_ctrlLblDirection.text;
- 
+    
+    // RIGHT
     m_DummyRightView.m_ctrlImgViewTrain.image = m_ctrlImgViewTrain.image;
     m_DummyRightView.m_ctrlLblLastStation.text = m_ctrlLblLastStation.text;
     m_DummyRightView.m_ctrlLblDirection.text = m_ctrlLblDirection.text;
@@ -915,6 +932,7 @@
     
     int iTimeRemaining = [oStatusUtil getTimeRemainingInSecs:oDict];
     
+    // Vibrate logic to indicate to the user he is cutting it close
     
     if (iTimeRemaining < m_iWalkingDistance) {
         if (m_iVibrateCalls < 1) {
@@ -932,7 +950,8 @@
         }
         
     }
-        
+    
+    
     NSString* strTime = [oStatusUtil getTimeRemaining:oDict];
     NSString* strTimeOnly = [oStatusUtil getTimeOnlyFromFormattedSecs:strTime];
     double dbTimeLeft = [strTime doubleValue];
@@ -981,6 +1000,7 @@
     m_viewDim.alpha = 0.0;
     
     [UIView commitAnimations];
+    
 }
 
 -(void) makeBusy
@@ -998,6 +1018,7 @@
     m_viewDim.alpha = 0.75;
     
     [UIView commitAnimations];
+    
 }
 
 -(void) displayError:(NSString*)IN_strMsg
@@ -1539,6 +1560,7 @@
 
 }
 
+/*
 -(void) arrangeHideView
 {
     CGRect oRct = m_ctrlViewHide.frame;
@@ -1547,7 +1569,7 @@
     m_ctrlViewHide.frame = oRct;
     
 }
-
+*/
 
 -(void) viewWillAppear:(BOOL)animated
 {
@@ -1561,7 +1583,7 @@
     oRct.size.height = self.view.frame.size.height;
     m_LeftMenuView.frame = oRct;
     
-    [self arrangeHideView];
+//    [self arrangeHideView];
     
     [self updateScrollLeftRight];
     
@@ -1751,33 +1773,53 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     
-    self.automaticallyAdjustsScrollViewInsets = NO;
+    
+    
+    self.automaticallyAdjustsScrollViewInsets = NO; //The default value of this property is YES, which allows the view controller to adjust its scroll view insets in response to the screen areas consumed by the status bar, navigation bar, and toolbar or tab bar. Set to NO if you want to manage scroll view inset adjustments yourself, such as when there is more than one scroll view in the view hierarchy.
 
     
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    // Question: why do we send the message of removeObserver when the view loads for the first time?
+    
     
     m_bFirstCallMade = NO;
+    // Question: why is this set in handleAllSetInitially?
     
     m_ctrlLblNoInternet.hidden = YES;
-    m_ctrlLblWalkingDistance.text = @"";
-    m_ctrlLblService.text = @"";
+    // This is the object that controlls the Internet status banner and it must be hidden when the view loads
+    
+    // m_ctrlLblWalkingDistance.text = @""
+    // m_ctrlLblService.text = @"";
+
+    // removed the two lines above before this is part of clearStatusValues
     
     [self clearStatusValues];
+    // clearStatusValues allows to clear all values for each of the fields on the GUI
+    
     
     m_ctrlViewHide.hidden = YES;
-    m_viewDim.hidden = YES;
-    m_ctrlActivity.hidden = YES;
-    [m_ctrlActivity startAnimating];
-    m_ctrlActivity.backgroundColor = [UIColor clearColor];
+    // Question: what does m_ctrlViewHide do? Can it be safely removed?
     
+    m_viewDim.hidden = YES;
+    // This is a nice gray layer that appears while the view is in make busy. It needs to be hidden on first launch.
+    
+    m_ctrlActivity.hidden = YES;
+    // This is the activity monitor, it has to be hidden when the view loads
+    
+    [m_ctrlActivity startAnimating];
+    // Question: Is this really needed here? Given that we have hidden the ctrlActivity before calling this?
+    
+    m_ctrlActivity.backgroundColor = [UIColor clearColor];
+    // Makes sense to to set background color to clear so that it's not shown, but we need to know why we need to start the animation here if it's hidden before the animation starts.
     
     
     [m_ctrlPullDownScrollView initPushLoadingView];
-    
+    // All this does is initialize the PullRefresh code, no actual implementation here
     
     
     if (m_bDummyFlip == NO)
-    {
+    {  // Question: what does m_bDummyFlip exactly do? I can see it gets set to NO at application launch on the delegate
+        
         [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_STATUS_TIMER_DELAY target:self selector:@selector(timerUpdationCalled) userInfo:nil repeats:YES];
         
         [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_SERVER_RECALL_TIMER_DELAY target:self selector:@selector(timerServerReCallCalled) userInfo:nil repeats:YES];

@@ -66,14 +66,14 @@
         if (isDraging && myscrollView.contentOffset.y < 0 - REFHEIGHT)
         {
             [UIView animateWithDuration:0.25 animations:^{
-                CALayer *layer = refreshView.refreshArrow.layer;
-                layer.transform = CATransform3DMakeRotation(M_PI, 0, 0, 1);
+                //CALayer *layer = refreshView.refreshArrow.layer;
+                //layer.transform = CATransform3DMakeRotation(M_PI, 0, 0, 1);
             }];
         }
         else
         {
             [UIView animateWithDuration:0.25 animations:^{
-                [refreshView.refreshArrow layer].transform = CATransform3DMakeRotation(M_PI * 2, 0, 0, 1);
+                //[refreshView.refreshArrow layer].transform = CATransform3DMakeRotation(M_PI * 2, 0, 0, 1);
             }];
         }
     }
@@ -111,7 +111,7 @@
         isLoading = true;
         
         [refreshView.refreshLoadingIcon startAnimating];
-        [refreshView.refreshArrow setHidden:YES];
+        //[refreshView.refreshArrow setHidden:YES];
         
         [self performSelector:@selector(stopLoading) withObject:nil afterDelay:0.5];
     }
@@ -121,7 +121,7 @@
 {
     isLoading = false;
     [refreshView.refreshLoadingIcon stopAnimating];
-    [refreshView.refreshArrow setHidden:NO];
+    //[refreshView.refreshArrow setHidden:NO];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_PULLED_TO_REFRESH" object:nil];
     

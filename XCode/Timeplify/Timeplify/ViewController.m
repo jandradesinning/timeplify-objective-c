@@ -111,7 +111,7 @@
     
     [UIView beginAnimations:nil context:NULL];
     [UIView setAnimationBeginsFromCurrentState:YES];
-    [UIView setAnimationDuration:2];
+    [UIView setAnimationDuration:1.7]; // changed from 0.8 to 1.7
     [UIView setAnimationDelegate:self];
     [UIView setAnimationDidStopSelector:@selector(animationToDataTypeBlinkStopped:finished:context:)];
     m_ctrlLblDataType.alpha = 0.0;
@@ -143,7 +143,7 @@
     {
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationBeginsFromCurrentState:YES];
-        [UIView setAnimationDuration:0.8];
+        [UIView setAnimationDuration:1.7]; // changed from 0.8 to 1.2
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(animationToGrayZeroStopped:finished:context:)];
         m_ctrlLblMainTimeValue.alpha = 0.0;

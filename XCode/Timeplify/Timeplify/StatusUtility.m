@@ -294,7 +294,6 @@
     NSDate* oDtNow = [NSDate date];
     oDtNow = [Utility getDateWithoutTime:oDtNow];
     
-    NSLog(@"Count1 = %d", (int)[IN_arrAllData count]);
     
     NSMutableArray* oArrFinalData = [[NSMutableArray alloc] init];
     
@@ -351,12 +350,10 @@
         [oArrFinalData addObject:oDict];
         
     }
-    
-    NSLog(@"Count2 = %d", (int)[oArrFinalData count]);
+
     
     [self removeLocalDBExceptionDates:oArrFinalData];
     
-    NSLog(@"Count3 = %d", (int)[oArrFinalData count]);
     
     return oArrFinalData;
 }

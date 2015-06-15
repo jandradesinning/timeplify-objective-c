@@ -12,6 +12,7 @@
 
 @interface FavStationCellView : UITableViewCell
 {
+    IBOutlet UIActivityIndicatorView* m_ctrlActivity;
     IBOutlet UIImageView* m_ctrlImageView;
     
     IBOutlet UILabel* m_ctrlLblStation;

@@ -46,6 +46,17 @@
     
     NSString* strTime = [NSString stringWithFormat:@"%0.0lf min", dbTime];
     m_ctrlLblTime.text = strTime;
+    
+    if (m_Station.m_iTimeUpdateStatus == 0) {
+        m_ctrlActivity.hidden = NO;
+        [m_ctrlActivity startAnimating];
+        m_ctrlLblTime.hidden = YES;
+    }
+    else
+    {
+        m_ctrlActivity.hidden = YES;
+        m_ctrlLblTime.hidden = NO;
+    }
      
     
     if (m_Station.m_iSelectedDirection == INT_DIRECTION_NORTH) {

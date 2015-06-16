@@ -751,9 +751,9 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
         }
         
         // TEST_CODE
-        NSString* strRet = [NSString stringWithFormat:@"%0.2lf min", (IN_iSecs/60.0)];
+        //NSString* strRet = [NSString stringWithFormat:@"%0.2lf min", (IN_iSecs/60.0)];
+        NSString* strRet = [NSString stringWithFormat:@"%d min", iMin];
         
-        //NSString* strRet = [NSString stringWithFormat:@"%d min", iMin];
         return strRet;
     }
     

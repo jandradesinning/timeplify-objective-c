@@ -746,8 +746,8 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
     
     if (iMin <= 60) {
         
-        if (iMin < 1) {
-            iMin = 1;
+        if (iMin < 0) {
+            iMin = 0;
         }
         
         // TEST_CODE

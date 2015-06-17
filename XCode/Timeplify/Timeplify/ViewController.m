@@ -954,7 +954,7 @@
     
     NSString* strTime = [oStatusUtil getTimeRemaining:oDict];
     NSString* strTimeOnly = [oStatusUtil getTimeOnlyFromFormattedSecs:strTime];
-    double dbTimeLeft = [strTime doubleValue];
+    double dbTimeLeft = [strTimeOnly doubleValue];
     if (dbTimeLeft < 1) {
         m_ctrlLblMainTimeValue.text = @"0";
         [self doJustLeftActions];

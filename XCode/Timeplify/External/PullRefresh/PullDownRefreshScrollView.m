@@ -60,9 +60,13 @@
 -(void)scrollViewDidScroll:(UIScrollView *)myscrollView
 {
     
-    
     if(!isLoading)
     {
+        
+        if (myscrollView.contentOffset.y > 0.0) {
+            myscrollView.contentOffset = CGPointZero;
+        }
+        
         if (isDraging && myscrollView.contentOffset.y < 0 - REFHEIGHT)
         {
             [UIView animateWithDuration:0.25 animations:^{

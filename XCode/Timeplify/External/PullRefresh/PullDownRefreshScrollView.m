@@ -65,6 +65,7 @@
         
         if (myscrollView.contentOffset.y > 0.0) {
             myscrollView.contentOffset = CGPointZero;
+            return;
         }
         
         if (isDraging && myscrollView.contentOffset.y < 0 - REFHEIGHT)
@@ -85,6 +86,8 @@
 
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
+    
+    scrollView.contentOffset = CGPointZero;
     
     NSLog(@"scrollViewDidEndDecelerating");
     [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_MAIN_VIEW_DECELARATED" object:nil];

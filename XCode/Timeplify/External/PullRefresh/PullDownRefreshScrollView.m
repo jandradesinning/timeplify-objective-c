@@ -63,8 +63,9 @@
     if(!isLoading)
     {
         
-        if (myscrollView.contentOffset.y > 0.0) {
-            myscrollView.contentOffset = CGPointZero;
+        if (myscrollView.contentOffset.y >= 0.0) {
+            CGPoint resetYtoZero = CGPointMake(myscrollView.contentOffset.x, 0.0);
+            myscrollView.contentOffset = resetYtoZero;
             return;
         }
         
@@ -86,8 +87,6 @@
 
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    
-    scrollView.contentOffset = CGPointZero;
     
     NSLog(@"scrollViewDidEndDecelerating");
     [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_MAIN_VIEW_DECELARATED" object:nil];

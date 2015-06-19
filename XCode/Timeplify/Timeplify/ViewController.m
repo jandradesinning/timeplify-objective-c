@@ -1706,6 +1706,7 @@
 
 -(void)handleDecelaratedMainView:(NSNotification *)pNotification
 {
+    
     NSLog(@"handleDecelaratedMainView");
     
     double dbNewX = m_ctrlPullDownScrollView.contentOffset.x;

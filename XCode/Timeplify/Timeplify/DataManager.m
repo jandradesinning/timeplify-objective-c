@@ -318,6 +318,7 @@
 	sqlite3_finalize(compiledStatement);
 	sqlite3_close(objSQLite3);
 	
+    
     return arrReturn;
     
 }

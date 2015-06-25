@@ -145,6 +145,7 @@
 		04DB9D561A35BB3B00EA5D17 /* AboutViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04DB9D541A35BB3B00EA5D17 /* AboutViewController.xib */; };
 		04DB9D591A35BC4C00EA5D17 /* About.html in Resources */ = {isa = PBXBuildFile; fileRef = 04DB9D581A35BC4C00EA5D17 /* About.html */; };
 		04DC939A1AD56A8C0037DD74 /* GotoSubway.png in Resources */ = {isa = PBXBuildFile; fileRef = 04DC93991AD56A8C0037DD74 /* GotoSubway.png */; };
+		F796988B1B3BF63600430E10 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F796988A1B3BF63600430E10 /* Images.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -320,6 +321,7 @@
 		04DB9D541A35BB3B00EA5D17 /* AboutViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AboutViewController.xib; sourceTree = "<group>"; };
 		04DB9D581A35BC4C00EA5D17 /* About.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = About.html; sourceTree = "<group>"; };
 		04DC93991AD56A8C0037DD74 /* GotoSubway.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GotoSubway.png; sourceTree = "<group>"; };
+		F796988A1B3BF63600430E10 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -675,6 +677,7 @@
 				048BAC341A4D7DEE006E6BAC /* NearestStation.m */,
 				047396B11A4FBD1F00BAC5CD /* DataManager.h */,
 				047396B21A4FBD1F00BAC5CD /* DataManager.m */,
+				F796988A1B3BF63600430E10 /* Images.xcassets */,
 			);
 			path = Timeplify;
 			sourceTree = "<group>";
@@ -738,7 +741,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0460;
-				ORGANIZATIONNAME = Anil;
+				ORGANIZATIONNAME = "Timeplify, LLC";
 				TargetAttributes = {
 					04CE82791A300F600033D5A0 = {
 						DevelopmentTeam = EYU7C8JLAF;
@@ -768,6 +771,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				046A40751A306FB40011C1A1 /* vehicle-logo-e-gray.png in Resources */,
+				F796988B1B3BF63600430E10 /* Images.xcassets in Resources */,
 				04435C8C1ABE86A700BA8F1B /* pull-arrow.png in Resources */,
 				046952431A61661C0095990A /* Direction2View.xib in Resources */,
 				046A40331A306FAB0011C1A1 /* walking-man.png in Resources */,
@@ -987,6 +991,8 @@
 		04CE829E1A300F600033D5A0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1005,6 +1011,8 @@
 		04CE829F1A300F600033D5A0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (

@@ -53,8 +53,9 @@
         self.automaticallyAdjustsScrollViewInsets = NO;
     }
     
-    NSString *filepath = [[NSBundle mainBundle] pathForResource:@"About.html" ofType:nil];
-    NSURL *url = [NSURL fileURLWithPath:filepath];
+    //NSString *filepath = [[NSBundle mainBundle] pathForResource:@"About.html" ofType:nil];
+    //NSURL *url = [NSURL fileURLWithPath:filepath];
+    NSURL *url = [NSURL URLWithString:@"http://timeplify.com"];
     [m_ctrlWeb loadRequest:[NSURLRequest requestWithURL:url]];
 
 }

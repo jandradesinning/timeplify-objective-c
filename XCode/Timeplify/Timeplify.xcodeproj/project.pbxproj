@@ -739,6 +739,11 @@
 			attributes = {
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = Anil;
+				TargetAttributes = {
+					04CE82791A300F600033D5A0 = {
+						DevelopmentTeam = EYU7C8JLAF;
+					};
+				};
 			};
 			buildConfigurationList = 04CE82751A300F600033D5A0 /* Build configuration list for PBXProject "Timeplify" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -982,6 +987,8 @@
 		04CE829E1A300F600033D5A0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/External/Parse",
@@ -990,6 +997,7 @@
 				GCC_PREFIX_HEADER = "Timeplify/Timeplify-Prefix.pch";
 				INFOPLIST_FILE = "Timeplify/Timeplify-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -997,6 +1005,8 @@
 		04CE829F1A300F600033D5A0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/External/Parse",
@@ -1005,6 +1015,7 @@
 				GCC_PREFIX_HEADER = "Timeplify/Timeplify-Prefix.pch";
 				INFOPLIST_FILE = "Timeplify/Timeplify-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

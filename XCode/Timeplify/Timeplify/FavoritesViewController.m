@@ -87,9 +87,6 @@
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    if (m_bProcessingOver == NO) {
-        return 0;
-    }
     
     return [m_arrStations count];
 }
@@ -171,7 +168,6 @@
     NSMutableArray* oArrFavStations = [GlobalCaller getFavStationsArray];
     for (int i = 0; i <[oArrFavStations count]; i++) {
         ST_Station* oStation = [oArrFavStations objectAtIndex:i];
-        oStation.m_iIndex = i;
         [m_arrStations addObject:oStation];
     }
     
@@ -205,7 +201,7 @@
 
 
 
-#pragma mark Distance Sort
+#pragma mark Name Sort
 
 
 NSInteger sortStationComparer2(id num1, id num2, void *context)
@@ -214,8 +210,9 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
 	ST_Station* oStation1 = (ST_Station*)num1;
 	ST_Station* oStation2 = (ST_Station*)num2;
 	
+    
 	
-	return (oStation1.m_dbWalkingDistance > oStation2.m_dbWalkingDistance);
+	return ([oStation1.m_strStationName compare: oStation2.m_strStationName]);
 }
 
 
@@ -279,12 +276,12 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
     }
     
     StatusUtility* oUtil = [[StatusUtility alloc]   init];
-    NSMutableArray*    arrNextTrains = [oUtil getFormattedStatusResult:oDict:NO:IN_Station];
+    NSMutableArray*    arrNextTrains = [oUtil getFormattedStatusResult:oDictData:NO:IN_Station];
     if ([arrNextTrains count] < 1) {
         return nil;
     }
     
-    NSDictionary* oDictOut = [arrNextTrains objectAtIndex:0];
+    NSMutableDictionary* oDictOut = [oUtil getCurrentDisplayingDict:arrNextTrains :oStation];
     return oDictOut;
 }
 
@@ -344,97 +341,54 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
     
 }
 
-#pragma mark Walking Distance
 
--(void) mainThreadAfterWalkingDistance:(ST_Station*)IN_stStation
+#pragma mark Train Times
+
+
+-(void) mainThreadAfterTrainTime:(ST_Station*)IN_stStation
 {
-    BOOL bOk = YES;
-    for (int i = 0; i < [m_arrStations count]; i++)
-	{
-		ST_Station* oStation = (ST_Station*) [m_arrStations objectAtIndex:i];
-        
-        if  (oStation.m_dbWalkingDistance < -100)
-        {
-            bOk = NO;
-            break;
-        }
-	}
+    IN_stStation.m_iTimeUpdateStatus = 1;
     
-    if (bOk == YES) {
-        
-        [self sortAllStations];
-        NSLog(@"Ok");
-        m_bProcessingOver = YES;
-        m_ctrlActivity.hidden = YES;
-        [m_ctrlTblStations reloadData];
+    if (IN_stStation.m_iIndex >= [m_arrStations count]) {
+        return;
     }
+    
+    NSIndexPath* oInd = [NSIndexPath indexPathForRow:IN_stStation.m_iIndex inSection:0];
+    FavStationCellView* ocell = (FavStationCellView*)[m_ctrlTblStations cellForRowAtIndexPath:oInd];
+    if (ocell == nil) {
+        return;
+    }
+    
+    [ocell setValues];
+
 }
 
--(void) getWalkingDistanceInBackground:(ST_Station*)IN_stStation
+-(void) getTrainTimeInBackground:(ST_Station*)IN_stStation
 {
     
     ST_Station* oStation = IN_stStation;
     
-    
     oStation.m_iTemporaryDirection = oStation.m_iSelectedDirection;
     [self updateTrainTimeOfStation:oStation];
-
-    
-    AppDelegate* appDel = (AppDelegate* )[[UIApplication sharedApplication] delegate];
-    if (appDel.m_iGPSStatus == 2)
-    {
-        NSString *strURL = [NSString stringWithFormat:@"http://maps.googleapis.com/maps/api/distancematrix/json?origins=%f,%f&destinations=%f,%f&mode=walking&language=en-EN&sensor=false",
-                            m_curGPS.latitude,
-                            m_curGPS.longitude,
-                            oStation.m_dbLatitude, oStation.m_dbLongitude];
-        
-        NSData *locData = [NSData dataWithContentsOfURL:[NSURL URLWithString:strURL]];
-        
-        if (locData != nil) {
-            NSDictionary *locDict = [NSJSONSerialization JSONObjectWithData:locData options:kNilOptions error:nil];
-            if (locDict != nil) {
-                StatusUtility* oStatusUtil = [[StatusUtility alloc] init];
-                oStation.m_dbWalkingDistance = [oStatusUtil getWalkingDistanceInSecs:locDict];
-            }
-            else
-            {
-                oStation.m_dbWalkingDistance = -1;
-            }
-        }
-        else
-        {
-            oStation.m_dbWalkingDistance = -1;
-        }
-        
-    }
-    else
-    {
-        oStation.m_dbWalkingDistance = -1;
-    }
         
     
-        
-    [self performSelectorOnMainThread:@selector(mainThreadAfterWalkingDistance:) withObject:oStation waitUntilDone:YES];
+    [self performSelectorOnMainThread:@selector(mainThreadAfterTrainTime:) withObject:oStation waitUntilDone:YES];
     
-	CFRunLoopRun();
+    CFRunLoopRun();
     
 }
 
--(void) getWalkingDistances
+-(void) getTrainTimes
 {
-    
-    
     for (int i = 0; i < [m_arrStations count]; i++)
-	{
-		ST_Station* oStation = (ST_Station*) [m_arrStations objectAtIndex:i];
+    {
+        ST_Station* oStation = (ST_Station*) [m_arrStations objectAtIndex:i];
+        [self performSelectorInBackground:@selector(getTrainTimeInBackground:) withObject:oStation];
         
-        oStation.m_dbWalkingDistance = -101;
-        [self performSelectorInBackground:@selector(getWalkingDistanceInBackground:) withObject:oStation];
-        
-	}
+    }
 }
 
-
+#pragma mark Others
 
 -(void) prepareStationList
 {
@@ -442,20 +396,22 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
     m_curGPS = appDel.m_GPSCoordinate;
     
     [self getStations];
+    [self sortAllStations];
     
-    
-    if ([m_arrStations count] < 1) {
-        m_bProcessingOver = YES;
-        m_ctrlActivity.hidden = YES;
-        [m_ctrlTblStations reloadData];
-        return;
-
+    for (int i = 0; i <[m_arrStations count]; i++) {
+        ST_Station* oStation = [m_arrStations objectAtIndex:i];
+        oStation.m_iTimeUpdateStatus = 0;
+        oStation.m_iIndex = i;
     }
     
-    [self getWalkingDistances];
+    m_ctrlActivity.hidden = YES;
+    [m_ctrlTblStations reloadData];
+
+    [self getTrainTimes];
+ //   [self getWalkingDistances];
 }
 
-#pragma mark Others
+
 
 
 -(void)handleReloadFavorites:(NSNotification *)pNotification
@@ -463,7 +419,6 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
     NSLog(@"handleReloadFavorites");
     [m_ctrlActivity startAnimating];
     m_ctrlActivity.hidden = NO;
-    m_bProcessingOver = NO;
     m_arrStations = [[NSMutableArray alloc] init];
     [m_ctrlTblStations reloadData];
     [self performSelector:@selector(prepareStationList) withObject:nil afterDelay:0.0];
@@ -484,7 +439,6 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
 
     [m_ctrlActivity startAnimating];
     m_ctrlActivity.hidden = NO;
-    m_bProcessingOver = NO;
     m_arrStations = [[NSMutableArray alloc] init];
     
     [self performSelector:@selector(prepareStationList) withObject:nil afterDelay:0.0];

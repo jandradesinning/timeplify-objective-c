@@ -23,6 +23,7 @@
     int m_iTemporaryDirection;
     double m_dbDistanceFromGPS;
     int m_iOrder;
+    int m_iTimeUpdateStatus;
     
     double m_dbWalkingDistance;
     double m_dbNextTrainTime;
@@ -37,6 +38,7 @@
 @property (readwrite, assign) double m_dbLatitude;
 @property (readwrite, assign) double m_dbLongitude;
 @property (readwrite, assign) int m_iOrder;
+@property (readwrite, assign) int m_iTimeUpdateStatus;
 @property (readwrite, assign) int m_iSelectedDirection;
 @property (readwrite, assign) int m_iTemporaryDirection;
 

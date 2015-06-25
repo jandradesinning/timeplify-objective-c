@@ -53,6 +53,8 @@
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	
+  //  NSLog(@"IN_Dict = %@  /n INT_strKey = %@", IN_Dict, IN_strKey);
+    
 	[defaults setObject:IN_Dict forKey:IN_strKey];
 	[defaults  synchronize];
 }

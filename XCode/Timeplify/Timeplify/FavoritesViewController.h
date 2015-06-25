@@ -17,8 +17,6 @@
     
     IBOutlet UIActivityIndicatorView* m_ctrlActivity;
     
-    BOOL m_bProcessingOver;
-    
     CLLocationCoordinate2D m_curGPS;
 }
 

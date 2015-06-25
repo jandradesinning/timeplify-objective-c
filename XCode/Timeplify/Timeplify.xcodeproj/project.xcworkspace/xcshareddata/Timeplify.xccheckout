@@ -10,31 +10,31 @@
 	<string>Timeplify</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
-		<key>4B4A526B-2612-4FBB-87D2-91B918471147</key>
+		<key>0AC522940139465053A932B3439C551872844379</key>
 		<string>https://git3.projectlocker.com/firmusoft/Jose.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>iOS/Timeplify/Timeplify.xcodeproj/project.xcworkspace</string>
+	<string>XCode/Timeplify/Timeplify.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
-		<key>4B4A526B-2612-4FBB-87D2-91B918471147</key>
+		<key>0AC522940139465053A932B3439C551872844379</key>
 		<string>../../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>https://git3.projectlocker.com/firmusoft/Jose.git</string>
 	<key>IDESourceControlProjectVersion</key>
-	<integer>110</integer>
+	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>4B4A526B-2612-4FBB-87D2-91B918471147</string>
+	<string>0AC522940139465053A932B3439C551872844379</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
 			<key>IDESourceControlWCCIdentifierKey</key>
-			<string>4B4A526B-2612-4FBB-87D2-91B918471147</string>
+			<string>0AC522940139465053A932B3439C551872844379</string>
 			<key>IDESourceControlWCCName</key>
-			<string>Timeplify</string>
+			<string>Jose</string>
 		</dict>
 	</array>
 </dict>

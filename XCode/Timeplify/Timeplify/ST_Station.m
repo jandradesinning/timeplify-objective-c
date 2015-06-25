@@ -20,6 +20,7 @@
 @synthesize m_dbLatitude;
 @synthesize m_dbLongitude;
 @synthesize m_iOrder;
+@synthesize m_iTimeUpdateStatus;
 @synthesize m_iSelectedDirection;
 @synthesize m_iTemporaryDirection;
 @synthesize m_dbDistanceFromGPS;

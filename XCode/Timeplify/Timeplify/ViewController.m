@@ -12,6 +12,8 @@
 #import "AllSetViewController.h"
 #import "FavoritesViewController.h"
 #import "AboutViewController.h"
+#import "CheckWebStatus.h"
+
 #import "GPSTestViewController.h"
 
 #import "LeftMenuView.h"
@@ -67,6 +69,13 @@
 {
     AboutViewController* viewController = [[AboutViewController alloc] initWithNibName:@"AboutViewController" bundle:nil];
     
+    [self.navigationController pushViewController:viewController animated:YES];
+    
+}
+
+-(void) showCheckWebStatus
+{
+    CheckWebStatus* viewController = [[CheckWebStatus alloc] initWithNibName:@"CheckWebStatus" bundle:nil];
     
     [self.navigationController pushViewController:viewController animated:YES];
     
@@ -1912,7 +1921,20 @@
     }
     
     m_ctrlPullDownScrollView.pagingEnabled = YES;
+    
+    
+    // Handle Tap on the m_ctrlLblService Label
+    UITapGestureRecognizer *gr = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(myAction:)];
+    [m_ctrlLblService addGestureRecognizer:gr];
+    gr.numberOfTapsRequired = 1;
+    gr.cancelsTouchesInView = NO;
   
+}
+
+- (void) myAction: (UITapGestureRecognizer *) gr {
+    
+    [self showCheckWebStatus];
+    
 }
 
 - (void)didReceiveMemoryWarning

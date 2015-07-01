@@ -5,49 +5,49 @@
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7701"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="AboutViewController">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CheckWebStatus">
             <connections>
-                <outlet property="m_ctrlActivity" destination="K53-FT-kb0" id="Vfb-Zb-hkb"/>
-                <outlet property="m_ctrlWeb" destination="fbf-nv-z9d" id="FFo-Sy-hC5"/>
-                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+                <outlet property="m_ctrlActivity" destination="JfZ-0u-Blg" id="5k0-DY-f2b"/>
+                <outlet property="m_ctrlWeb" destination="nAs-fm-bI3" id="juq-pQ-eTP"/>
+                <outlet property="view" destination="Pax-iH-YhG" id="Hpl-BF-BKK"/>
             </connections>
         </placeholder>
         <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
-        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="Pax-iH-YhG">
             <rect key="frame" x="0.0" y="0.0" width="320" height="480"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-                <webView contentMode="scaleToFill" id="fbf-nv-z9d">
+                <webView contentMode="scaleToFill" id="nAs-fm-bI3">
                     <rect key="frame" x="0.0" y="60" width="320" height="420"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                     <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                     <inset key="insetFor6xAndEarlier" minX="0.0" minY="20" maxX="0.0" maxY="0.0"/>
                     <connections>
-                        <outlet property="delegate" destination="-1" id="kfY-oU-BBA"/>
+                        <outlet property="delegate" destination="-1" id="4g5-ws-bhP"/>
                     </connections>
                 </webView>
-                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" id="K53-FT-kb0">
+                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="gray" id="JfZ-0u-Blg">
                     <rect key="frame" x="150" y="260" width="20" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                 </activityIndicatorView>
-                <view contentMode="scaleToFill" id="lNV-xB-3q7">
+                <view contentMode="scaleToFill" id="xhE-Ts-JMS">
                     <rect key="frame" x="0.0" y="0.0" width="320" height="60"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <subviews>
-                        <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="About" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="z85-i9-M1n">
+                        <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="MTA Train Status" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="rH7-Im-0fJ">
                             <rect key="frame" x="50" y="22" width="219" height="27"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
                             <nil key="highlightedColor"/>
                         </label>
-                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="FkL-G2-YyA">
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="pDN-4h-nZq">
                             <rect key="frame" x="0.0" y="18" width="36" height="36"/>
-                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <state key="normal" backgroundImage="left-arrow.png">
                                 <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                             </state>
                             <connections>
-                                <action selector="btnBackClicked:" destination="-1" eventType="touchUpInside" id="nvs-d4-5yb"/>
+                                <action selector="btnBackClicked:" destination="-1" eventType="touchUpInside" id="zdX-iv-iMk"/>
                             </connections>
                         </button>
                     </subviews>
@@ -58,6 +58,7 @@
             <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
             <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="294" y="294"/>
         </view>
     </objects>
     <resources>

@@ -146,6 +146,8 @@
 		04DB9D591A35BC4C00EA5D17 /* About.html in Resources */ = {isa = PBXBuildFile; fileRef = 04DB9D581A35BC4C00EA5D17 /* About.html */; };
 		04DC939A1AD56A8C0037DD74 /* GotoSubway.png in Resources */ = {isa = PBXBuildFile; fileRef = 04DC93991AD56A8C0037DD74 /* GotoSubway.png */; };
 		F796988B1B3BF63600430E10 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F796988A1B3BF63600430E10 /* Images.xcassets */; };
+		F7F7B9471B43675000EAD42A /* CheckWebStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = F7F7B9451B43675000EAD42A /* CheckWebStatus.m */; };
+		F7F7B9481B43675000EAD42A /* CheckWebStatus.xib in Resources */ = {isa = PBXBuildFile; fileRef = F7F7B9461B43675000EAD42A /* CheckWebStatus.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -322,6 +324,9 @@
 		04DB9D581A35BC4C00EA5D17 /* About.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = About.html; sourceTree = "<group>"; };
 		04DC93991AD56A8C0037DD74 /* GotoSubway.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GotoSubway.png; sourceTree = "<group>"; };
 		F796988A1B3BF63600430E10 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		F7F7B9441B43675000EAD42A /* CheckWebStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CheckWebStatus.h; sourceTree = "<group>"; };
+		F7F7B9451B43675000EAD42A /* CheckWebStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckWebStatus.m; sourceTree = "<group>"; };
+		F7F7B9461B43675000EAD42A /* CheckWebStatus.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CheckWebStatus.xib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -652,6 +657,7 @@
 		04CE82831A300F600033D5A0 /* Timeplify */ = {
 			isa = PBXGroup;
 			children = (
+				F7F7B9431B4366CB00EAD42A /* CheckWebStatus */,
 				0485B4C71AC28AC0006C356F /* SeeAllTrains */,
 				046952441A6174FF0095990A /* TrainStatus */,
 				04B8CF871A3C4C9B00DF7BDB /* GPSTest */,
@@ -713,6 +719,16 @@
 			);
 			path = Html;
 			sourceTree = SOURCE_ROOT;
+		};
+		F7F7B9431B4366CB00EAD42A /* CheckWebStatus */ = {
+			isa = PBXGroup;
+			children = (
+				F7F7B9441B43675000EAD42A /* CheckWebStatus.h */,
+				F7F7B9451B43675000EAD42A /* CheckWebStatus.m */,
+				F7F7B9461B43675000EAD42A /* CheckWebStatus.xib */,
+			);
+			name = CheckWebStatus;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -780,6 +796,7 @@
 				046A40891A306FB40011C1A1 /* vehicle-logo-z-gray.png in Resources */,
 				046A40781A306FB40011C1A1 /* vehicle-logo-f.png in Resources */,
 				04C886571AC14E3C00912B9D /* GotoFav.png in Resources */,
+				F7F7B9481B43675000EAD42A /* CheckWebStatus.xib in Resources */,
 				04633B4E1A8670EC008B0465 /* vehicle-logo-7.png in Resources */,
 				046A40651A306FB40011C1A1 /* vehicle-logo-3.png in Resources */,
 				0485B4D11AC28B08006C356F /* SeeAllTrainsCellView.xib in Resources */,
@@ -883,6 +900,7 @@
 				046AF6841A35851A00439ED5 /* Utility.m in Sources */,
 				048CD70F1A3454AF00D8A33B /* StationSelectViewController.m in Sources */,
 				04435C8F1ABE87F300BA8F1B /* PullRefreshView.m in Sources */,
+				F7F7B9471B43675000EAD42A /* CheckWebStatus.m in Sources */,
 				049255F41AE7980B00121CE1 /* Reachability.m in Sources */,
 				04823C101A30749200050964 /* ST_Train.m in Sources */,
 				044E65BC1A34A22C0078F839 /* FavStationCellView.m in Sources */,

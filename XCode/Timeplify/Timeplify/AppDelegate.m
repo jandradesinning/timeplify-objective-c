@@ -160,7 +160,15 @@
     
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     // Override point for customization after application launch.
-    self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+    
+    if ([Utility isDeviceiPhone5]) {
+        self.viewController = [[ViewController alloc] initWithNibName:@"ViewController_5" bundle:nil];
+    }
+    else
+    {
+        self.viewController = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+    }
+    
     
     self.viewController.m_VCFlipParent = nil;
     self.viewController.m_bDummyFlip = NO;

@@ -145,6 +145,7 @@
 		04DB9D561A35BB3B00EA5D17 /* AboutViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04DB9D541A35BB3B00EA5D17 /* AboutViewController.xib */; };
 		04DB9D591A35BC4C00EA5D17 /* About.html in Resources */ = {isa = PBXBuildFile; fileRef = 04DB9D581A35BC4C00EA5D17 /* About.html */; };
 		04DC939A1AD56A8C0037DD74 /* GotoSubway.png in Resources */ = {isa = PBXBuildFile; fileRef = 04DC93991AD56A8C0037DD74 /* GotoSubway.png */; };
+		04ECE0291B439EEB00E3C303 /* ViewController_5.xib in Resources */ = {isa = PBXBuildFile; fileRef = 04ECE0281B439EEB00E3C303 /* ViewController_5.xib */; };
 		F796988B1B3BF63600430E10 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F796988A1B3BF63600430E10 /* Images.xcassets */; };
 		F7F7B9471B43675000EAD42A /* CheckWebStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = F7F7B9451B43675000EAD42A /* CheckWebStatus.m */; };
 		F7F7B9481B43675000EAD42A /* CheckWebStatus.xib in Resources */ = {isa = PBXBuildFile; fileRef = F7F7B9461B43675000EAD42A /* CheckWebStatus.xib */; };
@@ -323,6 +324,7 @@
 		04DB9D541A35BB3B00EA5D17 /* AboutViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AboutViewController.xib; sourceTree = "<group>"; };
 		04DB9D581A35BC4C00EA5D17 /* About.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = About.html; sourceTree = "<group>"; };
 		04DC93991AD56A8C0037DD74 /* GotoSubway.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = GotoSubway.png; sourceTree = "<group>"; };
+		04ECE0281B439EEB00E3C303 /* ViewController_5.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ViewController_5.xib; sourceTree = "<group>"; };
 		F796988A1B3BF63600430E10 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		F7F7B9441B43675000EAD42A /* CheckWebStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CheckWebStatus.h; sourceTree = "<group>"; };
 		F7F7B9451B43675000EAD42A /* CheckWebStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CheckWebStatus.m; sourceTree = "<group>"; };
@@ -434,6 +436,7 @@
 				04CE82951A300F600033D5A0 /* ViewController.h */,
 				04CE82961A300F600033D5A0 /* ViewController.m */,
 				04CE82981A300F600033D5A0 /* ViewController.xib */,
+				04ECE0281B439EEB00E3C303 /* ViewController_5.xib */,
 				046952451A61752A0095990A /* StatusUtility.h */,
 				046952461A61752A0095990A /* StatusUtility.m */,
 				045569471AE7676000192EBC /* DummyLeftRightView.h */,
@@ -812,6 +815,7 @@
 				046A40771A306FB40011C1A1 /* vehicle-logo-f-gray.png in Resources */,
 				046A402B1A306FAB0011C1A1 /* exit-icon.png in Resources */,
 				046A40801A306FB40011C1A1 /* vehicle-logo-m.png in Resources */,
+				04ECE0291B439EEB00E3C303 /* ViewController_5.xib in Resources */,
 				046A407A1A306FB40011C1A1 /* vehicle-logo-g.png in Resources */,
 				046A402D1A306FAB0011C1A1 /* favorties-star-clear.png in Resources */,
 				048CD7101A3454AF00D8A33B /* StationSelectViewController.xib in Resources */,

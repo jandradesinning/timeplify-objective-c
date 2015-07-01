@@ -145,11 +145,18 @@
 
 +(BOOL) isDeviceiPhone5
 {
+    if ( UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad )
+    {
+        return NO;
+    }
+    
     BOOL bFive  =NO;
+    
+    
     
     CGRect oRect = [[UIScreen mainScreen] bounds];
     
-    if ((oRect.size.height > 560.0)&& (oRect.size.height < 570.0)){
+    if (oRect.size.height > 560.0){
         bFive = YES;
     }
     

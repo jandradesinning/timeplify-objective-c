@@ -65,6 +65,7 @@
 
 
 
+
 -(void) showAbout
 {
     AboutViewController* viewController = [[AboutViewController alloc] initWithNibName:@"AboutViewController" bundle:nil];
@@ -1264,7 +1265,13 @@
     ST_Station* oStation = [oNear getFirstNearestStation];
 
     if (oStation == nil) {
-        [self displayError:@"We’re unable to find stations within a radius of 3 miles. Please select your station from the available list."];
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Timeplify"
+                                                        message:@"We’re unable to find stations within a radius of 3 miles. Please select your station from the available list."
+                                                       delegate:self cancelButtonTitle:@"Go to Favorites" otherButtonTitles: @"See All Trains", nil];
+        
+        alert.tag = INT_ALERT_TAG_NO_STATION_IN_RADIUS;
+        [alert show];
         [self makeReady];
         return;
     }
@@ -1441,7 +1448,17 @@
     
     if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
         
-        ViewController* oVC2 = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+        ViewController* oVC2;
+        if ([Utility isDeviceiPhone5]) {
+            oVC2 = [[ViewController alloc] initWithNibName:@"ViewController_5" bundle:nil];
+        }
+        else
+        {
+            oVC2 = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+        }
+        
+        
+        
         oVC2.m_bDummyFlip = YES;
         oVC2.m_VCFlipParent = nil;
         oVC2.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
@@ -1462,7 +1479,15 @@
     else
     {
         
-        ViewController* oVC2 = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+        ViewController* oVC2;
+        if ([Utility isDeviceiPhone5]) {
+            oVC2 = [[ViewController alloc] initWithNibName:@"ViewController_5" bundle:nil];
+        }
+        else
+        {
+            oVC2 = [[ViewController alloc] initWithNibName:@"ViewController" bundle:nil];
+        }
+        
         oVC2.m_bDummyFlip = YES;
         oVC2.m_VCFlipParent = self;
         oVC2.modalTransitionStyle = UIModalTransitionStyleFlipHorizontal;
@@ -1777,6 +1802,43 @@
     m_ctrlImgViewTrain.image = m_VCFlipParent.m_ctrlImgViewTrain.image;
     
 }
+
+-(void) viewDidLayoutSubviews
+{
+    if (m_bDummyFlip == NO)
+    {
+        CGRect oRect = m_DummyLeftView.frame;
+        oRect.size.width = self.view.frame.size.width;
+        oRect.size.height = self.view.frame.size.height;
+        m_DummyLeftView.frame = oRect;
+        
+        oRect = m_DummyRightView.frame;
+        oRect.size.width = self.view.frame.size.width;
+        oRect.size.height = self.view.frame.size.height;
+        m_DummyRightView.frame = oRect;
+        
+    }
+    
+}
+
+
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    
+    if (alertView.tag == INT_ALERT_TAG_NO_STATION_IN_RADIUS) {
+        
+        if (buttonIndex == 0) {
+            [self btnFavoriteClicked:0];
+        }
+        else
+        {
+            [self btnSubwayClicked:0];
+        }
+    }
+    
+}
+
+
 
 - (void)viewDidLoad
 {

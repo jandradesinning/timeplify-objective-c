@@ -38,7 +38,8 @@
 #define INT_UPDATE_SERVER_RECALL_TIMER_DELAY        30.0
 
 
-#define INT_ALERT_TAG_RETRY             1
+#define INT_ALERT_TAG_RETRY                 1
+#define INT_ALERT_TAG_NO_STATION_IN_RADIUS  2
 
 #define STR_FOLDER_DATA_FILES           @"DataFiles"
 

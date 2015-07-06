@@ -237,12 +237,12 @@
              [self parseServerAppSettingsResponse: result];
          }
          
-         NSLog(@"Over");
+         //NSLog(@"Over");
          
      }];
     
     
-    NSLog(@"Called");
+    //NSLog(@"Called");
     
 
 }

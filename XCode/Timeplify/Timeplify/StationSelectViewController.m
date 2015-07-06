@@ -120,7 +120,7 @@
 {
     if (image != m_iTrainIndex) {
         
-        NSLog(@"Selected Index %d",image);
+        //NSLog(@"Selected Index %d",image);
         m_iTrainIndex = image;
         
         [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -303,7 +303,7 @@
     
     [m_searchDisplayController setActive:NO animated:YES];
     
-    NSLog(@"AAA Selected '%@'", oStation.m_strStationName);
+    //NSLog(@"AAA Selected '%@'", oStation.m_strStationName);
     
     BOOL bEnd = [self doActionOfEndStaion:oStation];
     if (bEnd == NO) {
@@ -671,7 +671,7 @@ NSInteger sortStationsByFavComparer(id num1, id num2, void *context)
 
 -(void) dealloc
 {
-    NSLog(@"dealloc");
+    //NSLog(@"dealloc");
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 

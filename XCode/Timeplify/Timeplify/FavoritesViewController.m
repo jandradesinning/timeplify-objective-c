@@ -416,7 +416,7 @@ NSInteger sortStationComparer2(id num1, id num2, void *context)
 
 -(void)handleReloadFavorites:(NSNotification *)pNotification
 {
-    NSLog(@"handleReloadFavorites");
+    //NSLog(@"handleReloadFavorites");
     [m_ctrlActivity startAnimating];
     m_ctrlActivity.hidden = NO;
     m_arrStations = [[NSMutableArray alloc] init];

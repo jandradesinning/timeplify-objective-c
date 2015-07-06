@@ -142,7 +142,7 @@ NSInteger sortStationComparer(id num1, id num2, void *context)
 
 -(NSMutableArray*) getNearestStations{
     
-    NSLog(@"getNearestStations");
+    //NSLog(@"getNearestStations");
     
     AppDelegate* appDel = (AppDelegate* )[[UIApplication sharedApplication] delegate];
     if (appDel.m_iGPSStatus != 2)

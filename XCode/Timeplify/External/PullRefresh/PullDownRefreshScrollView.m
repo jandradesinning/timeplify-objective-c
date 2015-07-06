@@ -88,7 +88,7 @@
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     
-    NSLog(@"scrollViewDidEndDecelerating");
+    //NSLog(@"scrollViewDidEndDecelerating");
     [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_MAIN_VIEW_DECELARATED" object:nil];
 }
 

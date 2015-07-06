@@ -122,7 +122,7 @@
     NSData *archivedObject = [NSKeyedArchiver archivedDataWithRootObject:IN_oData];
     
     NSString* strPath = [Utility getFilePathForKey:IN_strKey];
-    NSLog(@"Path '%@'", strPath);
+    //NSLog(@"Path '%@'", strPath);
     
     [[NSFileManager defaultManager] removeItemAtPath:strPath error:nil];
     [archivedObject writeToFile:strPath atomically:YES];
@@ -132,7 +132,7 @@
 +(NSObject*) getObjectFromDefault:(NSString*)IN_strKey
 {
     NSString* strPath = [Utility getFilePathForKey:IN_strKey];
-    NSLog(@"Path '%@'", strPath);
+    //NSLog(@"Path '%@'", strPath);
     
     NSData *archivedObject = [NSData dataWithContentsOfFile:strPath];
     if (archivedObject == nil) {

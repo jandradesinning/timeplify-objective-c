@@ -350,7 +350,7 @@
     NSString* strFile = [DataManager getDBPath];
     
     if ([[NSFileManager defaultManager] fileExistsAtPath:strFile]) {
-        NSLog(@"File exists");
+        //NSLog(@"File exists");
         return;
     }
     

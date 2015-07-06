@@ -1206,12 +1206,12 @@
              [self makeReady];
          }
          
-         NSLog(@"Over");
+         //NSLog(@"Over");
          
      }];
     
     
-    NSLog(@"Called");
+    //NSLog(@"Called");
 }
 
 
@@ -1414,13 +1414,13 @@
 
 -(IBAction) btnMChangeDirectionClicked:(id)sender
 {
-    NSLog(@"btnMChangeDirectionClicked");
+    //NSLog(@"btnMChangeDirectionClicked");
     
     if (m_curStation == nil) {
         return;
     }
     
-    NSLog(@"Bound '%@' '%@'", m_curStation.m_strNorthDirection, m_curStation.m_strSouthDirection);
+    //NSLog(@"Bound '%@' '%@'", m_curStation.m_strNorthDirection, m_curStation.m_strSouthDirection);
     
     if (m_curStation.m_iTemporaryDirection == INT_DIRECTION_NORTH) {
         
@@ -1630,7 +1630,7 @@
 {
     ST_Station* oStation = [pNotification object];
     
-    NSLog(@"handleFavStationSelected '%@'", oStation.m_strStationName);
+    //NSLog(@"handleFavStationSelected '%@'", oStation.m_strStationName);
     
     if ((oStation.m_iSelectedDirection == INT_DIRECTION_NORTH)||
         (oStation.m_iSelectedDirection == INT_DIRECTION_SOUTH)){
@@ -1653,7 +1653,7 @@
     
     ST_Station* oStation = [pNotification object];
     
-    NSLog(@"handleOneAllStationSelected '%@'", oStation.m_strStationName);
+    //NSLog(@"handleOneAllStationSelected '%@'", oStation.m_strStationName);
 
    
     if ([oStation.m_strSouthDirection length] < 1) {
@@ -1729,7 +1729,7 @@
 
 -(void)handleSwipedMainView:(NSNotification *)pNotification
 {
-    NSLog(@"handleSwipedMainView");
+    //NSLog(@"handleSwipedMainView");
 
         
     NSString* strDir = (NSString*)[pNotification object];
@@ -1741,7 +1741,7 @@
 -(void)handleDecelaratedMainView:(NSNotification *)pNotification
 {
     
-    NSLog(@"handleDecelaratedMainView");
+    //NSLog(@"handleDecelaratedMainView");
     
     double dbNewX = m_ctrlPullDownScrollView.contentOffset.x;
     
@@ -1772,7 +1772,7 @@
 
 -(void)handleReachabilityChanged:(NSNotification *)pNotification
 {
-    NSLog(@"handleReachabilityChanged");
+    //NSLog(@"handleReachabilityChanged");
     [self setInternetStatus];
 }
 
@@ -2009,7 +2009,7 @@
 
 -(void) dealloc
 {
-    NSLog(@"VC DEALLOC");
+    //NSLog(@"VC DEALLOC");
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 

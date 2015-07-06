@@ -85,7 +85,7 @@
 - (void)locationManager: (CLLocationManager *)manager
 	   didFailWithError: (NSError *)error
 {
-	NSLog(@"locationManager failed");
+	//NSLog(@"locationManager failed");
     
     m_iGPSStatus = 1;
     

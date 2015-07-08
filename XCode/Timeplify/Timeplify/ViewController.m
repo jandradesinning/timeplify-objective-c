@@ -62,7 +62,7 @@
 @synthesize m_ctrlLblStation;
 @synthesize m_ctrlLblDirection;
 @synthesize m_ctrlImgViewTrain;
-
+@synthesize m_ctrlImgJustLeft;
 
 
 
@@ -148,12 +148,20 @@
     
     if (m_iJustLeftCalls > INT_ZERO_BLINK_TIMES) {
         m_ctrlLblMainTimeValue.text = @"Just Left";
+        m_ctrlLblMainTimeUnit.text = @" ";
+        
+        if (m_ctrlImgJustLeft.image == nil){
+            [m_ctrlImgJustLeft setHidden:NO];
+            [self.view addSubview:m_ctrlImgJustLeft];
+            [m_ctrlImgJustLeft setImage:[UIImage imageNamed:@"justleft.png"]];
+        }
+        
     }
     else
     {
         [UIView beginAnimations:nil context:NULL];
         [UIView setAnimationBeginsFromCurrentState:YES];
-        [UIView setAnimationDuration:1.7]; // changed from 0.8 to 1.2
+        [UIView setAnimationDuration:0.9]; // changed from 0.8 to 1.2
         [UIView setAnimationDelegate:self];
         [UIView setAnimationDidStopSelector:@selector(animationToGrayZeroStopped:finished:context:)];
         m_ctrlLblMainTimeValue.alpha = 0.0;
@@ -167,6 +175,8 @@
         [self removeLeftTrains];
         [self setStatusValues];
         
+        [m_ctrlImgJustLeft setHidden:YES];
+        m_ctrlImgJustLeft.image = nil;
         
         if ([m_arrNextTrains count] < 1) {
             [self timerServerReCallCalled];

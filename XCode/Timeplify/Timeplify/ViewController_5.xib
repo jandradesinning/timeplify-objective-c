@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6245" systemVersion="14D136" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="7706" systemVersion="14E46" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none">
     <dependencies>
-        <deployment defaultVersion="1552" identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="ViewController">
             <connections>
                 <outlet property="m_ctrlActivity" destination="iR1-LH-MXF" id="Ymd-sl-EyU"/>
                 <outlet property="m_ctrlBtnSwitchDirection" destination="N5z-cr-Gkl" id="kZ6-hJ-fM6"/>
+                <outlet property="m_ctrlImgJustLeft" destination="97p-HQ-xRM" id="u4B-DA-8Mp"/>
                 <outlet property="m_ctrlImgViewTrain" destination="Phd-Qm-Hel" id="ZT6-wc-3nV"/>
                 <outlet property="m_ctrlLblDataType" destination="hTg-V7-gLN" id="NVA-97-VzN"/>
                 <outlet property="m_ctrlLblDirection" destination="3ie-sr-ztE" id="hoZ-jt-LCw"/>
@@ -198,6 +199,10 @@
                             <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                             <inset key="insetFor6xAndEarlier" minX="0.0" minY="20" maxX="0.0" maxY="-20"/>
                         </activityIndicatorView>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" id="97p-HQ-xRM" userLabel="Just Left">
+                            <rect key="frame" x="80" y="247" width="160" height="145"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        </imageView>
                     </subviews>
                     <connections>
                         <outlet property="delegate" destination="-1" id="0mV-J6-2sf"/>

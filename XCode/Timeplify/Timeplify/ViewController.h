@@ -39,6 +39,7 @@
     IBOutlet UILabel* m_ctrlLblDirection;
     
     IBOutlet UIImageView* m_ctrlImgViewTrain;
+    IBOutlet UIImageView* m_ctrlImgJustLeft;
     
     LeftMenuView* m_LeftMenuView;
     double m_dbLeftNavMovedDist;
@@ -93,7 +94,7 @@
 @property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblStation;
 @property (nonatomic, strong)   IBOutlet UILabel* m_ctrlLblDirection;
 @property (nonatomic, strong)   IBOutlet UIImageView* m_ctrlImgViewTrain;
-
+@property (nonatomic, strong)   IBOutlet UIImageView* m_ctrlImgJustLeft;
 
 -(IBAction) btnMenuClicked:(id)sender;
 -(IBAction) btnGPSClicked:(id)sender;

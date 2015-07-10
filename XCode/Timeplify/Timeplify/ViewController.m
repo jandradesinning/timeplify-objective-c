@@ -285,7 +285,7 @@
 
 -(void) mainThreadAfterWalkingDistance:(NSData*) IN_Data
 {
-    m_ctrlLblWalkingDistance.text = @"";
+    m_ctrlLblWalkingDistance.text = @" -- ";
     
     if (IN_Data == nil) {
         return;
@@ -813,7 +813,7 @@
     m_ctrlLblDirection.text = @"";
     m_ctrlImgViewTrain.image = nil;
     m_bDataTypeBlink = NO;
-    m_ctrlLblWalkingDistance.text = @"";
+    m_ctrlLblWalkingDistance.text = @" -- ";
 }
 
 -(void) setServiceStatus:(NSMutableDictionary*)IN_Dict
@@ -1249,7 +1249,7 @@
     
     [m_arrNextTrains removeAllObjects];
     
-    m_ctrlLblWalkingDistance.text = @"";
+    m_ctrlLblWalkingDistance.text = @" -- ";
     [self getWalkingDistance];
     
     StatusUtility* oStatusUtil = [[StatusUtility alloc] init];

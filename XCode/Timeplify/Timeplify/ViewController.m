@@ -147,12 +147,12 @@
     m_ctrlLblMainTimeValue.alpha = 1.0;
     
     if (m_iJustLeftCalls > INT_ZERO_BLINK_TIMES) {
-        m_ctrlLblMainTimeValue.text = @"Just Left";
-        m_ctrlLblMainTimeUnit.text = @" ";
+        m_ctrlLblMainTimeValue.text = nil;
+        m_ctrlLblMainTimeUnit.text = nil;
+        
         
         if (m_ctrlImgJustLeft.image == nil){
             [m_ctrlImgJustLeft setHidden:NO];
-            [self.view addSubview:m_ctrlImgJustLeft];
             [m_ctrlImgJustLeft setImage:[UIImage imageNamed:@"justleft.png"]];
         }
         
@@ -175,7 +175,7 @@
         [self removeLeftTrains];
         [self setStatusValues];
         
-        [m_ctrlImgJustLeft setHidden:YES];
+        //[m_ctrlImgJustLeft setHidden:YES];
         m_ctrlImgJustLeft.image = nil;
         
         if ([m_arrNextTrains count] < 1) {
@@ -812,6 +812,7 @@
     m_ctrlLblStation.text = @"";
     m_ctrlLblDirection.text = @"";
     m_ctrlImgViewTrain.image = nil;
+    m_ctrlImgJustLeft.image = nil;
     m_bDataTypeBlink = NO;
     m_ctrlLblWalkingDistance.text = @" -- ";
 }
@@ -1810,6 +1811,7 @@
     
     
     m_ctrlImgViewTrain.image = m_VCFlipParent.m_ctrlImgViewTrain.image;
+    m_ctrlImgJustLeft.image = m_VCFlipParent.m_ctrlImgJustLeft.image;
     
 }
 
@@ -1967,6 +1969,7 @@
     m_Direction2View.hidden = YES;
     m_Direction2View.alpha = 0.0;
     [self.view addSubview:m_Direction2View];
+    [self.view addSubview:m_ctrlImgJustLeft];
     m_viewDim.backgroundColor = [UIColor blackColor];
     m_viewDim.hidden = YES;
     m_viewDim.alpha = 0.0;

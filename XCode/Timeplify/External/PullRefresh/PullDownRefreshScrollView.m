@@ -142,7 +142,7 @@
 
 - (void)stopLoadingComplete
 {
-    NSLog(@"stopLoadingComplete");
+    //NSLog(@"stopLoadingComplete");
     
 }
 @end

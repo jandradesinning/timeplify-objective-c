@@ -1969,7 +1969,7 @@
     m_Direction2View.hidden = YES;
     m_Direction2View.alpha = 0.0;
     [self.view addSubview:m_Direction2View];
-    [self.view addSubview:m_ctrlImgJustLeft];
+    //[self.view addSubview:m_ctrlImgJustLeft];
     m_viewDim.backgroundColor = [UIColor blackColor];
     m_viewDim.hidden = YES;
     m_viewDim.alpha = 0.0;

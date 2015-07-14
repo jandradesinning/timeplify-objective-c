@@ -106,7 +106,7 @@
 
 -(void) goToLeftScreen;
 -(void) goToRightScreen;
-
+-(void) getNearestStation;
 -(void) setFlipControllerValues;
 
 @end

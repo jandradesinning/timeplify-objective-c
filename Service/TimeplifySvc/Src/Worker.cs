@@ -23,13 +23,15 @@ namespace Timeplify
         private Config _config = null;
         private Logger _appLogger = null;
         private Processor _processor = null;
+        private Type _parentType = null;
 
         #endregion //Private Members
 
         #region Constructor
 
-        public Worker()
+        public Worker(Type classType)
         {
+            _parentType = classType;
         }
 
         #endregion //Constructor
@@ -79,7 +81,7 @@ namespace Timeplify
         {
             get
             {
-                return Path.GetDirectoryName(Assembly.GetAssembly(typeof(TimeplifySvc)).CodeBase).Replace("file:\\", "");
+                return Path.GetDirectoryName(Assembly.GetAssembly(_parentType).CodeBase).Replace("file:\\", "");
             }
         }
 

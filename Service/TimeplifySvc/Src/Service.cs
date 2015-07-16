@@ -62,7 +62,7 @@ namespace Timeplify
 
             if (null == _csseWorker)
             {
-                _csseWorker = new Worker();
+                _csseWorker = new Worker(typeof(TimeplifySvc));
             }
         }
 

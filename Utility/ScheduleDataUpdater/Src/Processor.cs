@@ -15,9 +15,7 @@ using System.Text;
 using System.Linq;
 using System.Globalization;
 using System.Runtime.Serialization;
-using System.Web.Script.Serialization;
 using System.Collections.ObjectModel;
-using System.Runtime.Serialization.Json;
 using GTFS;
 using GTFS.IO;
 using GTFS.Entities;
@@ -25,7 +23,7 @@ using GTFS.Entities.Enumerations;
 using ProtoBuf;
 using transit_realtime;
 using nyct_subway;
-using Parse;
+using System.Configuration;
 
 namespace Timeplify
 {
@@ -154,33 +152,6 @@ namespace Timeplify
 
         #region Serialize
 
-        protected internal static class Serialize
-        {
-            public static string SerializeJson<T>(object data)
-            {
-                string jsonTxt = null;
-
-                try
-                {
-                    //Create a stream to serialize the object to.
-                    MemoryStream ms = new MemoryStream();
-                    // Serializer the User object to the stream.
-                    DataContractJsonSerializerSettings settings = new DataContractJsonSerializerSettings();
-                    settings.UseSimpleDictionaryFormat = true;
-                    DataContractJsonSerializer ser = new DataContractJsonSerializer(typeof(T), settings);
-                    ser.WriteObject(ms, data);
-                    byte[] json = ms.ToArray();
-                    ms.Close();
-                    jsonTxt = Encoding.UTF8.GetString(json, 0, json.Length);
-                }
-                catch(Exception e)
-                {
-                    jsonTxt = e.Message;
-                }
-
-                return jsonTxt;
-            }
-        }
 
         #endregion Serialize
 
@@ -220,51 +191,9 @@ namespace Timeplify
         #region Private Members
             
         /// <summary>
-        /// Timer to fetch gtfs real time feed.
-        /// </summary>
-        private Timer _gtfsRTFTimer = null;
-
-        /// <summary>
-        /// Timer to fetch gtfs static feed.
-        /// </summary>
-        private Timer _gtfsSFTimer = null;
-
-        /// <summary>
-        /// Timer to fetch service status feed.
-        /// </summary>
-        private Timer _serviceStatusTimer = null;
-
-        /// <summary>
-        /// Timer to cleanup live data.
-        /// </summary>
-        private Timer _cleanupLiveDataTimer = null;
-            
-        /// <summary>
-        /// Used for locking ...similar to critical section.
-        /// </summary>
-        private static Object _lockThis = new Object();
-            
-        /// <summary>
-        /// Used for identify service stop signal.
-        /// </summary>
-        private static bool _bStopping = false;
-
-        /// <summary>
         /// Hardcoded values of north & south bound for each route
         /// </summary>
         private Hashtable _routeMap = null;
-
-        private string _staticCounter = "";
-        private string _realTimeCounter = "";
-        private string _utcOffsetS = "";
-
-        private ParseObject _poSTSettings = null;
-        private ParseObject _poRTSettings = null;
-        private ParseObject _poSTSSettings = null;
-        private ParseObject _poUTCOSettings = null;
-
-        private uint _rtMaxCounter = 0;
-        private uint _rtCounter = 0;
 
         private Dictionary<string, string> _arrInterestedRoutes = null;
 
@@ -304,460 +233,24 @@ namespace Timeplify
                 
             try
             {
-                //Initialize parse client with Application ID and .NET Key
-                //AFQ
-                //ParseClient.Initialize("zvTZXlTzpGnrccEwEXiokp2UJ7ZusYftc4Wt9B0i", "Bv8UkHYe1WhIiu86rK6boshd0LIXK54k1hC1HP05");
-                //Nimi
-                //ParseClient.Initialize("7OSoOE1pxwdcRPC0da76wl18XzwsfF8a9fIDFxgI", "pHynJyUGufWbFxgZNjQjrniSsxHrdYlw4DoBjlfj");
-                //Jose
-                ParseClient.Initialize("RbAVcTWNVSPFsEXu1xhfmehMhkeBlZqdeyEcXseS", "IHMBICp0kZiMCpVB57PY4x7tpvTSt87AjYvhPccr");
-                bRet = StartTimers();
+                DownloadStaticFeed();
             }
             catch(Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to initialize CPCSClient. [Error] {0}.", e.Message);
+                Console.WriteLine("[INFO] Failed to initialize Static Feed Processor. [Error] {0}.", e.Message);
             }
                 
             return bRet;
-        }
-            
-        /// <summary>            
-        /// Clear acknowledgement map.
-        /// Stops timer.
-        /// </summary>
-        /// <returns>true if success.</returns>
-        protected override bool UnInitialize()
-        {
-            // Locals
-            bool bRet = false;
-                
-            try
-            {
-                _bStopping  = true;
-                bRet        = StopTimers();
-                    
-                _lockThis      = null;
-            }
-            catch(Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.NonFatalError, "Failed to Uninitialize Processor. [Error] {0}.", e.Message);
-            }
-                
-            return base.UnInitialize();
         }
             
         #endregion //CDisposableObj Members
             
         #region Private Methods
             
-        /// <summary>
-        /// Starts the process & acknowledgement timers.
-        /// </summary>
-        /// <returns></returns>
-        private bool StartTimers()
-        {
-            // Locals
-            bool bRet = false;
-                
-            try
-            {
-                // live data is not available for a given set of stations by only using scheduled data when the previously retrieved live data is older than 5 minutes.
-                _rtMaxCounter = 1;//((uint)(5 * 60) / Worker.Instance.Configuration.GTFSRealTimeFeedInterval);
-
-                StartTimer(ref _gtfsRTFTimer, Worker.Instance.Configuration.GTFSRealTimeFeedInterval, GTFSRTFTimerProc, "GTFS Real Time");
-                // ATTN: If the service is stopped in between make sure that either the parse cloud is cleared before starting the service again or this timer function be commented as Static data  is only updated once every four months, otherwise data will be overwritten.
-                StartTimer(ref _gtfsSFTimer, Worker.Instance.Configuration.GTFSStaticFeedInterval, GTFSSFTimerProc, "GTFS Static");
-                StartTimer(ref _serviceStatusTimer, Worker.Instance.Configuration.ServiceStatusInterval, ServiceStatusTimerProc, "ServiceStatus");
-                StartTimer(ref _cleanupLiveDataTimer, 1*60, CleanUpTimerProc, "Cleanup Live Data");
-                    
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Successfully started timer","");
-            }
-            catch(Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to start timer. [Error] {0}.", e.Message);
-            }
-                
-            return bRet; 
-        }
-
-        // Timer Function
-        private bool StartTimer(ref Timer timer, uint uInterval, TimerCallback procCallbk, string description)
-        {
-            // Locals
-            bool bRet = false;
-
-            try
-            {
-                if (null == timer)
-                {
-                    timer = new Timer(new TimerCallback(procCallbk));
-                    timer.Change(HALF_MILLI_SECS, uInterval * 1000);
-                }
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Successfully started " + description + " timer", "");
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to start timer. [Error] {0}.", e.Message);
-            }
-
-            return bRet;
-        }
-
-        private bool StopTimer(ref Timer timer, string description)
-        {
-            // Locals
-            bool bRet = false;
-
-            try
-            {
-                if (null != timer)
-                {
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Stopping " + description + "Timer");
-                    timer.Change(Timeout.Infinite, Timeout.Infinite);
-                    timer.Dispose();
-                    timer = null;
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Stopped " + description + "Timer");
-                }
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to stop timer. [Error] {0}.", e.Message);
-            }
-
-            return bRet;
-        }
-            
-        /// <summary>
-        /// Stops the process & acknowledgement timers.
-        /// </summary>
-        /// <returns></returns>
-        private bool StopTimers()
-        {
-            // Locals
-            bool bRet = false;
-                
-            try
-            {
-                StopTimer(ref _gtfsRTFTimer, "GTFS Real Time");
-                StopTimer(ref _gtfsSFTimer, "GTFS Static");
-                StopTimer(ref _serviceStatusTimer, "ServiceStatus");
-                StopTimer(ref _cleanupLiveDataTimer, "Cleanup Live Data");
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Successfully stoppped timers", "");
-            }
-            catch(Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to stop timer. [Error] {0}.", e.Message);
-            }
-                
-            return bRet; 
-        }
 
         private string GetCurrentTimeString()
         {
             return DateTime.Now.ToString(FND_FMT);
-        }
-
-        // Download and process RealTime Feed
-        private ulong DownloadRTFeed(string url, string folder, ref RealTimeData rtData)
-        {
-            // Locals
-            FeedMessage fm = null;
-            string file = null;
-            ulong ulTimeStamp = 0;
-
-            try
-            {
-                file = folder + GetCurrentTimeString();
-                fm = DownloadRTFile(url, file);
-                SaveRTFeed(file, fm);
-                ProcessRTFeed(fm, ref rtData);
-                File.Delete(file);
-                ulTimeStamp = fm.header.timestamp;
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to download feed. [Error] {0}.", e.Message);
-            }
-
-            return ulTimeStamp;
-        }
-
-        // Download RealTime data
-        private FeedMessage DownloadRTFile(string url, string toLocalPath)
-        {
-            // Locals
-            FeedMessage fm = null;
-            byte[] buffer = null;
-            WebRequest wr = null;
-            WebResponse response = null;
-            Stream responseStream = null;
-            MemoryStream memoryStream = null;
-            int count = 0;
-
-            try
-            {
-                buffer = new byte[4097];
-                wr = WebRequest.Create(url);
-                wr.Proxy = GetProxy();
-
-                response = wr.GetResponse();
-                responseStream = response.GetResponseStream();
-                memoryStream = new MemoryStream();
-
-                do
-                {
-                    count = responseStream.Read(buffer, 0, buffer.Length);
-                    memoryStream.Write(buffer, 0, count);
-
-                    if (count == 0)
-                    {
-                        break;
-                    }
-                }
-                while (true);
-
-                memoryStream.Seek(0, SeekOrigin.Begin);
-                fm = (FeedMessage)Serializer.Deserialize<FeedMessage>(memoryStream);
-                
-                memoryStream.Close();
-                responseStream.Close();
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to download feed. [Error] {0}.", e.Message);
-            }
-
-            return fm;
-        }
-
-        // Process RealTime Feed
-        private void ProcessRTFeed(FeedMessage fm, ref RealTimeData rtData)
-        {
-            try
-            { 
-                // Feed Logic
-                // for matching stop_id in the real-time feed using node:
-                // 1 FeedEntity.trip_update.trip.route_id
-                // 2 FeedEntity.trip_update.trip.direction
-                // 3 TripUpdate.stop_time_update.StopTimeUpdate.stop_id
-                // 4 if FeedEntity.trip_update.trip.is_assigned continue
-                // 3 Once the matching node(s) are selected, pick corresponding node's StopTimeUpdate.arrival.time
-                //      1 First in the list shall be countdownNext
-                //      2 Second in the list shall be countdownAfterNext
-                foreach(FeedEntity fe in fm.entity)
-                {
-                    TripUpdate tu = fe.trip_update;
-                    if(null != tu)
-                    {
-                        foreach(TripUpdate.StopTimeUpdate stu in tu.stop_time_update)
-                        {
-                        #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                            if ("6" == tu.trip.route_id /*|| "6X" == tu.trip.route_id*/)//TO AVOID BURST LIMIT ISSUE FOR TESTING
-                        #endif
-                            {
-                                if (tu.trip.nyct_trip_descriptor.is_assigned)
-                                {
-                                    string rId = GetRouteId(tu.trip.route_id);
-
-                                    RTStationData stationData = null;
-                                    // Last character denoting direction not needed, as we store parent stationid
-                                    string stopId = stu.stop_id.Remove(stu.stop_id.Length - 1, 1);
-
-                                    rtData.TryGetValue(stopId, out stationData);
-
-                                    if (null == stationData)
-                                    {
-                                        stationData = new RTStationData();
-                                        rtData.Add(stopId, stationData);
-                                    }
-                                    else 
-                                    {
-                                        stationData = rtData[stopId];
-                                    }
-
-                                    RTStopData stopData = new RTStopData();
-                                    stopData.RouteId = rId;
-                                    
-                                    if (null != stu.arrival && 0 != stu.arrival.time)
-                                    {
-                                        stopData.ArrivalTime = (ulong)stu.arrival.time;
-                                    }
-                                    else if (null != stu.departure && 0 != stu.departure.time)
-                                    {
-                                        stopData.ArrivalTime = (ulong)stu.departure.time;
-                                    }
-
-                                    if (NyctTripDescriptor.Direction.NORTH == tu.trip.nyct_trip_descriptor.direction)
-                                    {
-                                        stationData.North.Add(stopData);
-                                    }
-                                    else 
-                                    {
-                                        stationData.South.Add(stopData);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process real time feed. [Error] {0}.", e.Message);
-            }
-        }
-
-        private void GetUTCOffset(ref List<ParseObject> listPO)
-        {
-            try
-            {
-                var curDTime = DateTime.UtcNow;
-                var tzEST = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-                var utcOffset = new DateTimeOffset(curDTime, TimeSpan.Zero);
-                string utcOffsetS = tzEST.GetUtcOffset(utcOffset).ToString();
-
-                if (_utcOffsetS != utcOffsetS)
-                {
-                    GetSettings("utcOffset", new string[] { utcOffsetS }, SetUTCOSettings);
-                    SaveSettings(_poUTCOSettings, ref listPO);
-                    _utcOffsetS = utcOffsetS;
-                }
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to get utc offset. [Error] {0}.", e.Message);
-            }
-        }
-
-        private void SetUTCOSettings(ParseObject poSettings)
-        {
-            try
-            {
-                _poUTCOSettings = poSettings;
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set utc offset settings. [Error] {0}.", e.Message);
-            }
-        }
-
-        // Get settings value from Settings Table
-        private async void GetSettings(string settingsKey, string[] settingsValues, SetSettingsCallback ssCallback)
-        {
-            ParseObject poSettings = null;
-
-            try
-            {
-                const string TBL_SETTINGS        = "Settings";
-                const string COL_SETTINGS_VALUES = "settingsValues";
-                const string COL_SETTINGS_KEY    = "settingsKey";
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to get {0} - {1} from parse.", COL_SETTINGS_KEY, settingsKey);
-
-                var query = ParseObject.GetQuery(TBL_SETTINGS);
-                poSettings = await query.WhereEqualTo(COL_SETTINGS_KEY, settingsKey).FirstOrDefaultAsync();
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "GOT {0} - {1} from parse.", COL_SETTINGS_KEY, settingsKey);                
-
-                if (null != poSettings)
-                {
-                    try
-                    {
-                        Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to delete {0} - {1} from parse.", COL_SETTINGS_KEY, settingsKey);
-                        await poSettings.DeleteAsync();
-                        Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "DELETED {0} - {1} from parse.", COL_SETTINGS_KEY, settingsKey);
-                    }
-                    catch
-                    { 
-                    }
-                }
-
-                poSettings = new ParseObject(TBL_SETTINGS);
-                poSettings[COL_SETTINGS_KEY] = settingsKey;
-
-                foreach (var settingsValue in settingsValues)
-                {
-                    poSettings.AddToList(COL_SETTINGS_VALUES, settingsValue);
-                }
-
-                ssCallback(poSettings);
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to get settings for {1}. [Error] {0}.", e.Message, settingsKey);
-            }
-        }
-
-        // Add settings values to list of ParseObject
-        private void SaveSettings(ParseObject poSettings, ref List<ParseObject> listPO)
-        {
-            try
-            {
-                listPO.Add(poSettings);
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to save settings. [Error] {0}.", e.Message);
-            }
-        }
-
-        private delegate void SetSettingsCallback(ParseObject poSettings);
-
-        // Add static feed settings value to ParseObject
-        private void SetSTSettings(ParseObject poSettings)
-        {
-            try
-            {
-                _poRTSettings = poSettings;
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set static feed settings. [Error] {0}.", e.Message);
-            }
-        }
-
-        // Add status feed settings value to ParseObject
-        private void SetSTSSettings(ParseObject poSettings)
-        {
-            try
-            {
-                _poSTSSettings = poSettings;
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set status feed settings. [Error] {0}.", e.Message);
-            }
-        }
-
-        // Add real time feed settings value to ParseObject
-        private void SetRTSettings(ParseObject poSettings)
-        {
-            try
-            {
-                _poRTSettings = poSettings;
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to set real time feed settings. [Error] {0}.", e.Message);
-            }
-        }
-
-        // Save real time feed
-        private void SaveRTFeed(string file, FeedMessage fm)
-        {
-            try
-            {
-                string xmlfeed = SerializeXml<FeedMessage>(fm);
-                StreamWriter xmlfile = new StreamWriter(file + ".xml");
-                xmlfile.WriteLine(xmlfeed);
-                xmlfile.Close();
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to save feed. [Error] {0}.", e.Message);
-            }
         }
 
         private static readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -767,319 +260,32 @@ namespace Timeplify
             return UnixEpoch.AddSeconds(seconds);
         }
 
-        private static string SerializeXml<T>(T obj, Type[] extraTypes = null)
-        {
-            using (var stream = new MemoryStream())
-            {
-                var ns = new XmlSerializerNamespaces();
-                ns.Add("", "");
-                var serializer = GetXmlSerializer(typeof(T), extraTypes);
-                serializer.Serialize(stream, obj, ns);
-                stream.Position = 0;
-                return new StreamReader(stream).ReadToEnd();
-            }
-        }
-
-        private static XmlSerializer GetXmlSerializer(Type type, Type[] extraTypes)
-        {
-            var key = new StringBuilder();
-            XmlSerializer serializer = null;
-
-            key.Append(type.FullName);
-            if (null != extraTypes)
-            {
-                foreach (var extraType in extraTypes)
-                {
-                    key.AppendFormat("~{0}", extraType.FullName);
-                }
-                serializer = new XmlSerializer(type, extraTypes);
-            }
-            else
-            {
-                serializer = new XmlSerializer(type);
-            }
-
-            return serializer;
-        }
-
         private WebProxy GetProxy()
         {
             WebProxy webProxy = null;
+            /// Proxy ip address       
+            string proxyAddress = null;            
+            /// Proxy port
+            string port = null;
+            ushort proxyPort = 0;
 
-            if ((null != Worker.Instance.Configuration.ProxyAddress) && 
-                (0 < Worker.Instance.Configuration.ProxyAddress.Length) && 
-                (0 < Worker.Instance.Configuration.ProxyPort))
+            proxyAddress = ConfigurationManager.AppSettings["proxyAddress"];
+            port = ConfigurationManager.AppSettings["proxyPort"];
+
+            if (port != null && 0 < port.Length)
             {
-                webProxy = new WebProxy(Worker.Instance.Configuration.ProxyAddress, Worker.Instance.Configuration.ProxyPort);
+                proxyPort = Convert.ToUInt16(port);
+            }
+
+            if ((null != proxyAddress) &&
+                (0 < proxyAddress.Length) &&
+                (0 < proxyPort))
+            {
+                webProxy = new WebProxy(proxyAddress, proxyPort);
                 webProxy.BypassProxyOnLocal = false;
             }
             return webProxy;
-        }
-
-        // Download and process Service Status Feed
-        private void DownloadServiceStatusFeed()
-        {
-            // Locals
-            string curDT = null;
-            string dataFolder = null;
-            string remoteUri = null;
-            string localFile = null;
-
-            try
-            {
-                dataFolder = Worker.Instance.Configuration.GTFSRealTimeDataFolder;
-
-                if (!Directory.Exists(dataFolder))
-                {
-                    Directory.CreateDirectory(dataFolder);
-                }
-
-                curDT = GetCurrentTimeString();
-                localFile = dataFolder + curDT + "_serviceStatus.xml";
-                remoteUri = Worker.Instance.Configuration.ServiceStatusFeedURL;
-
-                // Create a new WebClient instance.
-                WebClient webClient = new WebClient();
-                webClient.Proxy = GetProxy();
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Downloading File \"{0}\" to \"{1}\" .......\n\n", remoteUri, localFile);
-                // Download the Web resource and save it into the current filesystem folder.
-                webClient.DownloadFile(remoteUri, localFile);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Successfully Downloaded File \"{0}\" to \"{1}\"", remoteUri, localFile);
-
-                ProcessStatusFeed(localFile);
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to download static feed. [Error] {0}.", e.Message);
-            }
-        }
-
-        // Process Service Status feed
-        private async void ProcessStatusFeed(string statusFile)
-        {
-            try
-            {
-                // Feed Logic
-                //1 Get subway nodes from Service status real time feed.
-                //2 Get line's related node by looking into name node, based on route_id (need to split name node's value).
-                
-                XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.Load(statusFile);
-
-                string feedTime = xmlDoc.SelectSingleNode("//timestamp").InnerText;
-                DateTime dtfeed = DateTime.ParseExact(feedTime, "M/d/yyyy h:m:s tt", CultureInfo.InvariantCulture);
-                string statusFeedTime = dtfeed.ToString("ddMMyyyyHHmmss");
-
-                List<ParseObject> listPO = new List<ParseObject>();
-                ServiceStatusData ssData = new ServiceStatusData();
-
-                XmlNodeList xmlNodes = xmlDoc.SelectNodes("//subway/line");
-
-                foreach (XmlNode xmlNode in xmlNodes)
-                {
-                    string name = xmlNode["name"].InnerText;
-                    string status = xmlNode["status"].InnerText;
-                    AddInterestedRouteStatus(name, status, statusFeedTime, ref ssData);
-                }
-
-                ParseObject poServiceStatus = new ParseObject("ServiceStatus");
-                poServiceStatus["ssMap"] = Serialize.SerializeJson<ServiceStatusData>(ssData);
-                poServiceStatus["uid"] = statusFeedTime;
-                listPO.Add(poServiceStatus);
-
-                GetSettings("statusTime", new string[] { statusFeedTime }, SetSTSSettings);
-                SaveSettings(_poSTSSettings, ref listPO);
-
-                GetUTCOffset(ref listPO);
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} service status objects to parse.", listPO.Count);
-
-                await ParseObject.SaveAllAsync<ParseObject>(listPO);                
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} service status objects to parse.", listPO.Count);
-                listPO.Clear();
-                
-                File.Delete(statusFile);
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process status feed. [Error] {0}.", e.Message);
-            }
-        }
-
-        private void AddInterestedRouteStatus(string routeId, string status, string statusFeedTime, ref ServiceStatusData ssData)
-        {
-            Dictionary<string, string> arrInterestedRoutes = null;
-
-            try
-            {
-                if (IsInterestedRoute(routeId))
-                {
-                    arrInterestedRoutes = new Dictionary<string, string>();
-                #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                    arrInterestedRoutes.Add("6", "6"); //TO AVOID BURST LIMIT ISSUE FOR TESTING                    
-                #else
-                    arrInterestedRoutes = getInterestedRoutes();                    
-                #endif
-
-                    foreach (KeyValuePair<string, string> route in arrInterestedRoutes)
-                    {
-                        if (routeId.Contains(route.Value))
-                        {
-                            AddRouteStatus(route.Key, status, statusFeedTime, ref ssData);
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add interested Route Status. [Error] {0}.", e.Message);
-            }
-        }
-
-        private Dictionary<string, string> getInterestedRoutes()
-        {
-            try
-            {
-                if (null == _arrInterestedRoutes)
-                {
-                    // Locals
-                    string curDT = null;
-                    string remoteUri = null;
-                    string localFile = null;
-                    string dataFolder = null;
-
-                    dataFolder = Worker.Instance.Configuration.GTFSStaticDataFolder;
-
-                    if (!Directory.Exists(dataFolder))
-                    {
-                        Directory.CreateDirectory(dataFolder);
-                    }
-
-                    curDT = GetCurrentTimeString();
-                    localFile = dataFolder + curDT + ".gtfs";
-                    dataFolder = dataFolder + "gtfs_" + curDT;
-                    remoteUri = Worker.Instance.Configuration.GTFSStaticFeedURL;
-
-                    // Create a new WebClient instance.
-                    WebClient webClient = new WebClient();
-                    webClient.Proxy = GetProxy();
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Downloading File \"{0}\" to \"{1}\" .......\n\n", remoteUri, localFile);
-                    // Download the Web resource and save it into the current filesystem folder.
-                    webClient.DownloadFile(remoteUri, localFile);
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Successfully Downloaded File \"{0}\" to \"{1}\"", remoteUri, localFile);
-
-                    ZipFile.ExtractToDirectory(localFile, dataFolder);
-
-                    _arrInterestedRoutes = new Dictionary<string, string>();
-
-                    // create the reader.
-                    var reader = new GTFSReader<GTFSFeed>();
-
-                    // execute the reader.
-                    var feed = reader.Read(new GTFSDirectorySource(new DirectoryInfo(dataFolder)));
-
-                    // get all routes
-                    var routes = new List<Route>(feed.GetRoutes());
-                    var trips = new List<Trip>(feed.GetTrips());
-                    var stopTimes = new List<StopTime>(feed.GetStopTimes());
-                    var stops = new List<Stop>(feed.GetStops());
-
-                    int i = 0;
-
-#if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                    List<string> interestedRoutes = new List<string>();
-                    interestedRoutes.Add("R");
-                    interestedRoutes.Add("6");
-#endif
-
-                    var parentStops = stops.Where(stop => ((0 == stop.ParentStation.Length) || (null == stop.ParentStation))).ToList();
-
-                    i = 0;
-
-                    foreach (var route in routes)
-                    {
-                        i++;
-#if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                        if (0 == interestedRoutes.Count)
-                        {
-                            break;
-                        }
-                        if ("R" == route.Id || "6" == route.Id)//TO AVOID BURST LIMIT ISSUE FOR TESTING
-#endif
-                        {
-                            // find stations in a particular route
-                            var routeStops = (from stop in stops
-                                              join stopTime in stopTimes on stop.Id equals stopTime.StopId
-                                              join trip in trips on stopTime.TripId equals trip.Id
-                                              where trip.Direction == GTFS.Entities.Enumerations.DirectionType.OneDirection//North to south
-                                              join myroute in routes on trip.RouteId equals myroute.Id
-                                              where myroute.Id == route.Id
-                                              select stop).Distinct().ToList();
-
-                            if (0 < routeStops.Count)
-                            {
-                                // IsInterestedRoute was initially used for testing purpose, when only one station was added each for scheduled and live
-                                // IsNotExpressTrains is used to avoid repetition of stations
-                                if (IsInterestedRoute(route.ShortName) && IsNotExpressTrains(route.Id))
-                                {
-                                    var routeId = GetRouteId(route.Id);
-                                    var routeSN = GetRouteId(route.ShortName);
-
-                                    if (null == (from interestedRoute in _arrInterestedRoutes.Keys
-                                                 where interestedRoute == routeId
-                                                 select interestedRoute).FirstOrDefault())
-                                    {
-                                        _arrInterestedRoutes.Add(routeId, routeSN);
-                                    }
-                                }
-                            }
-#if (SKIP_PARSE_LIMIT_BURST_ISSUE)
-                                interestedRoutes.Remove(route.Id);
-#endif
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process static feed. [Error] {0}.", e.Message);
-            }
-
-            return _arrInterestedRoutes;
-        }
-
-        // Add service status for  different routes
-        private void AddRouteStatus(string routeId, string status, string statusFeedTime, ref ServiceStatusData ssData)
-        {
-            try
-            {
-                switch (status)
-                {
-                    case "GOOD SERVICE":
-                        status = "goodService";
-                        break;
-                    case "DELAYS":
-                        status = "delays";
-                        break;
-                    case "SUSPENDED":
-                        status = "suspended";
-                        break;
-                    case "PLANNED WORK":
-                        status = "plannedWork";
-                        break;
-                    case "SERVICE CHANGE":
-                        status = "serviceChange";
-                        break;
-                }
-
-                ssData.Add(routeId, status);
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add Route Status. [Error] {0}.", e.Message);
-            }
-        }
+        }       
 
         // Download and process Static Feed
         private void DownloadStaticFeed()
@@ -1092,7 +298,7 @@ namespace Timeplify
 
             try
             {
-                dataFolder = Worker.Instance.Configuration.GTFSStaticDataFolder;
+                dataFolder = Directory.GetCurrentDirectory() + @"\Input\";
 
                 if (!Directory.Exists(dataFolder))
                 {
@@ -1102,22 +308,22 @@ namespace Timeplify
                 curDT = GetCurrentTimeString();
                 localFile = dataFolder + curDT + ".gtfs";
                 dataFolder = dataFolder + "gtfs_" + curDT;
-                remoteUri = Worker.Instance.Configuration.GTFSStaticFeedURL;
+                remoteUri = ConfigurationManager.AppSettings["staticFeedUrl"];
 
                 // Create a new WebClient instance.
                 WebClient webClient = new WebClient();
                 webClient.Proxy = GetProxy();
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Downloading File \"{0}\" to \"{1}\" .......\n\n", remoteUri, localFile);
+                Console.WriteLine("[INFO] Downloading File \"{0}\" to \"{1}\" .......\n\n", remoteUri, localFile);
                 // Download the Web resource and save it into the current filesystem folder.
                 webClient.DownloadFile(remoteUri, localFile);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Successfully Downloaded File \"{0}\" to \"{1}\"", remoteUri, localFile);
+                Console.WriteLine("[INFO] Successfully Downloaded File \"{0}\" to \"{1}\"", remoteUri, localFile);
 
                 ZipFile.ExtractToDirectory(localFile, dataFolder);
-                ProcessStaticFeed(dataFolder);
+                ProcessStaticFeed(dataFolder, curDT);
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to download static feed. [Error] {0}.", e.Message);
+                Console.WriteLine("[INFO] Failed to download static feed. [Error] {0}.", e.Message);
             }
         }
 
@@ -2192,7 +1398,7 @@ namespace Timeplify
         }
 
         // Process Static Feed
-        private async void ProcessStaticFeed(string dataFolder)
+        private void ProcessStaticFeed(string dataFolder, string curDT)
         {
             try
             {
@@ -2201,11 +1407,11 @@ namespace Timeplify
                 // 2 Get all stop_id for a given trip_id from stop_times.txt
                 // 3 Do #2 for each trip_id resulted in #1.
                 // 4 Get unique stop_id from stops.txt based on the above list.
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "ProcessStaticFeed BEGIN: " + GetCurrentTimeString());
-
+                Console.WriteLine("[INFO] ProcessStaticFeed BEGIN: " + GetCurrentTimeString());
+                int capacity = 51231360;
                 // create the reader.
                 var reader = new GTFSReader<GTFSFeed>();
-
+                string outputFolder = Directory.GetCurrentDirectory() + @"\Output\" + curDT;
                 // execute the reader.
                 var feed = reader.Read(new GTFSDirectorySource(new DirectoryInfo(dataFolder)));
 
@@ -2214,46 +1420,10 @@ namespace Timeplify
                 var trips = new List<Trip>(feed.GetTrips());
                 var stopTimes = new List<StopTime>(feed.GetStopTimes());
                 var stops = new List<Stop>(feed.GetStops());
-                var calendarDates = new List<CalendarDate>(feed.GetCalendarDates());
-                var calendars = new List<GTFS.Entities.Calendar>(feed.GetCalendars());
-
-                _staticCounter = GetCurrentTimeString();
-
-                List<ParseObject> listStaticPO = new List<ParseObject>();
-                if (null == _arrInterestedRoutes)
-                {
-                    _arrInterestedRoutes = new Dictionary<string, string>();
-                }
 
                 int i = 0;
 
-                var exceptionDates = calendarDates.Where(calendarDate => (ExceptionType.Removed == calendarDate.ExceptionType)).ToList();
-
-                foreach (var exceptionDate in exceptionDates)
-                {
-                    i++;
-                    AddExceptionDate(exceptionDate, i, ref listStaticPO);
-                }
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static calendar dates to parse.", listStaticPO.Count);
-                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static calendar dates objects to parse.", listStaticPO.Count);
-                listStaticPO.Clear();
-
-                i = 0;
-
-                foreach (var calendar in calendars)
-                {
-                    i++;
-                    AddCalendar(calendar, i, ref listStaticPO);
-                }
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static calendars to parse.", listStaticPO.Count);
-                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static calendar calendars objects to parse.", listStaticPO.Count);
-                listStaticPO.Clear();
-
-                i = 0;
+                _arrInterestedRoutes = new Dictionary<string, string>();
 
             #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
                 List<string> interestedRoutes = new List<string>();
@@ -2263,20 +1433,35 @@ namespace Timeplify
 
                 var parentStops = stops.Where(stop => ((0 == stop.ParentStation.Length) || (null == stop.ParentStation))).ToList();
 
+                StringBuilder sbCSV = new StringBuilder(capacity);
+                sbCSV.AppendLine(string.Format("{0},{1},{2},{3}", "Id", "Name", "Latitude", "Longitude"));
+
                 foreach (var stop in parentStops)
                 {
                     i++;
-                    AddStation(stop, i, ref listStaticPO);
+                    AddStation(stop, i, ref sbCSV);
                 }
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static station objects to parse.", listStaticPO.Count);
-                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static station objects to parse.", listStaticPO.Count);
-                listStaticPO.Clear();
+                if (!Directory.Exists(outputFolder))
+                {
+                    Directory.CreateDirectory(outputFolder);
+                }
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STATIONS****************");
+                System.IO.StreamWriter file = new System.IO.StreamWriter(outputFolder + @"\Station.csv");
+                file.Write(sbCSV.ToString());
+                file.Close();
+                file.Dispose();
+                file = null;
+
+                Console.WriteLine("[INFO] ************SAVED ALL STATIONS****************");
 
                 i = 0;
+
+                sbCSV = new StringBuilder(capacity);
+                sbCSV.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",\"{4}\"", "Id", "Name", "Image", "NorthStationId", "SouthStationId"));
+
+                StringBuilder sbTrainStop = new StringBuilder(capacity);
+                sbTrainStop.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",\"{4}\"", "RouteId", "StationId", "North", "South", "DirOrder"));
 
                 foreach (var route in routes)
                 {
@@ -2299,13 +1484,11 @@ namespace Timeplify
 
                         if (0 < routeStops.Count)
                         {
-                            ParseObject poRoute = null;
-
                             if (IsInterestedRoute(route.ShortName) && IsNotExpressTrains(route.Id))
                             {
-                                poRoute = AddRoute(route, routeStops, i);
+                                AddRoute(route, routeStops, i, ref sbCSV);
 
-                                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "*********RouteStationMap***************");
+                                Console.WriteLine("[INFO] *********RouteStationMap***************");
 
                                 int j = 0;
                                 RouteStationBoundDataList rsbdList = new RouteStationBoundDataList();
@@ -2313,70 +1496,65 @@ namespace Timeplify
                                 foreach (var routeStop in routeStops)
                                 {
                                     j++;
-                                    AddRouteStationBounds(route.Id, routeStop.ParentStation, routeStop.Name, j, ref rsbdList);
+                                    AddRouteStationBounds(route.Id, routeStop.ParentStation, routeStop.Name, j, ref rsbdList, ref sbTrainStop);
                                 }
-                                poRoute["stations"] = Serialize.SerializeJson<RouteStationBoundDataList>(rsbdList);
-                                listStaticPO.Add(poRoute);
                             }
                         }
                         else
                         {
-                            Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, i + ".\trouteId\t" + route.Id + "\tZERO STOPS");
+                            Console.WriteLine("[INFO] " + i + ".\trouteId\t" + route.Id + "\tZERO STOPS");
                         }
                         #if (SKIP_PARSE_LIMIT_BURST_ISSUE)
                             interestedRoutes.Remove(route.Id);
                         #endif
                     }
                 }
-                
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static routestationbounds objects to parse.", listStaticPO.Count);
-                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static routestationbounds objects to parse.", listStaticPO.Count);
-                listStaticPO.Clear();
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL ROUTES****************");
+                file = new System.IO.StreamWriter(outputFolder + @"\TrainStop.csv");
+                file.Write(sbTrainStop.ToString());
+                file.Close();
+                file.Dispose();
+                file = null;
+
+                file = new System.IO.StreamWriter(outputFolder + @"\Train.csv");
+                file.Write(sbCSV.ToString());
+                file.Close();
+                file.Dispose();
+                file = null;
+
+                Console.WriteLine("[INFO] ************SAVED ALL ROUTES****************");
+
+                sbCSV = new StringBuilder(capacity);
+                sbCSV.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",\"{4}\"", "StationID", "Direction", "ServiceID", "RouteId", "ArrivalTime"));                
+
+                int iLen = parentStops.Count;
+                i = 0;
 
                 // this is what we need
                 foreach (var parentStop in parentStops)
                 {                    
                     ScheduledStationData stationData = new ScheduledStationData();
-                    ProcessStationTimes(stopTimes, parentStop.Id, "S", trips, ref stationData.South);
-                    ProcessStationTimes(stopTimes, parentStop.Id, "N", trips, ref stationData.North);                                        
-
-                    ParseObject poScheduledData = new ParseObject(PT_S_SD);
-                    poScheduledData["stationTimeMap"] = Serialize.SerializeJson<ScheduledStationData>(stationData);
-                    poScheduledData["stationId"] = parentStop.Id;
-                    poScheduledData["uid"] = _staticCounter;
-                    listStaticPO.Add(poScheduledData);                    
+                    ProcessStationTimes(stopTimes, parentStop.Id, "S", trips, ref stationData.South, ref sbCSV, ref i);
+                    ProcessStationTimes(stopTimes, parentStop.Id, "N", trips, ref stationData.North, ref sbCSV, ref i);
                 }
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static scheduleddata objects to parse.", listStaticPO.Count);
-                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static scheduleddata objects to parse.", listStaticPO.Count);
-                listStaticPO.Clear();
-
-                GetSettings("staticTime", new string[] { _staticCounter }, SetSTSettings);
-                SaveSettings(_poSTSettings, ref listStaticPO);
-
-                GetUTCOffset(ref listStaticPO);
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} static settings objects to parse.", listStaticPO.Count);
-                await ParseObject.SaveAllAsync<ParseObject>(listStaticPO);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} static settings objects to parse.", listStaticPO.Count);
-                listStaticPO.Clear();
+                file = new System.IO.StreamWriter(outputFolder + @"\ScheduledData.csv");
+                file.Write(sbCSV.ToString());
+                file.Close();
+                file.Dispose();
+                file = null;
 
                 Directory.Delete(dataFolder, true);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "************SAVED ALL STOP TIMES****************");
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "ProcessStaticFeed END: " + GetCurrentTimeString());
+                Console.WriteLine("[INFO] ************SAVED ALL STOP TIMES****************");
+                Console.WriteLine("[INFO] ProcessStaticFeed END: " + GetCurrentTimeString());
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process static feed. [Error] {0}.", e.Message);
+                Console.WriteLine("[INFO] Failed to process static feed. [Error] {0}.", e.Message);
             }
         }
 
-        private void AddRouteStationBounds(string routeId, string stationId, string stopName, int iIndex, ref RouteStationBoundDataList rsbdList)
+        private void AddRouteStationBounds(string routeId, string stationId, string stopName, int iIndex, ref RouteStationBoundDataList rsbdList, ref StringBuilder csv)
         {
             try
             {
@@ -2385,71 +1563,56 @@ namespace Timeplify
                 rsbData.NorthBound = GetDisplayName(routeId, stationId, true);
                 rsbData.SouthBound = GetDisplayName(routeId, stationId, false);
                 rsbdList.Add(rsbData);
-                
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stationId + "\tstationName\t" + stopName);
+
+                csv.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",\"{4}\"", routeId, stationId, GetDisplayName(routeId, stationId, true), GetDisplayName(routeId, stationId, false), iIndex));
+
+                Console.WriteLine("[INFO] " + iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stationId + "\tstationName\t" + stopName);
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Stations. [Error] {0}.", e.Message);
+                Console.WriteLine("[INFO] Failed to add a Stations. [Error] {0}.", e.Message);
             }
         }
 
-        private void AddStation(Stop stop, int iIndex, ref List<ParseObject> listStaticPO)
+        private void AddRoute(Route route, List<Stop> routeStops, int iIndex, ref StringBuilder sb)
         {
+            string routeId = null;
+            string routeSN = null;
+
             try
             {
-                ParseObject poStation = new ParseObject("Station");
-                poStation["stationId"] = stop.Id;
-                poStation["name"] = stop.Name;
-                poStation["latitude"] = stop.Latitude;
-                poStation["longitude"] = stop.Longitude;
-                poStation["uid"] = _staticCounter;
-                listStaticPO.Add(poStation);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\tstationId\t" + stop.Id + "\tname\t" + stop.Name);
+                routeId = GetRouteId(route.Id);
+
+                routeSN = GetRouteId(route.ShortName);
+
+                if (null == (from interestedRoute in _arrInterestedRoutes.Keys
+                             where interestedRoute == routeId
+                             select interestedRoute).FirstOrDefault())
+                {
+                    _arrInterestedRoutes.Add(routeId, routeSN);
+                }
+
+                sb.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",\"{4}\"", routeId, route.ShortName, route.ShortName, routeStops[0].ParentStation, routeStops[routeStops.Count - 1].ParentStation));
+
+                Console.WriteLine("[INFO] " + iIndex + ".\trouteId\t" + route.Id + "\tnorthStationId\t" + routeStops[0].ParentStation
+                    + "\tsouthStationId\t" + routeStops[routeStops.Count - 1].ParentStation);
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Stations. [Error] {0}.", e.Message);
+               Console.WriteLine("[INFO] Failed to add a Route. [Error] {0}.", e.Message);
             }
         }
 
-        private void AddExceptionDate(CalendarDate calenderDate, int iIndex, ref List<ParseObject> listStaticPO)
+        private void AddStation(Stop stop, int iIndex, ref StringBuilder sb)
         {
             try
             {
-                ParseObject poExceptionDate = new ParseObject("ExceptionDate");
-                poExceptionDate["serviceId"] = calenderDate.ServiceId;
-                poExceptionDate["date"] = calenderDate.Date.ToString("yyyyMMdd");
-                poExceptionDate["uid"] = _staticCounter;
-                listStaticPO.Add(poExceptionDate);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\tserviceId\t" + calenderDate.ServiceId + "\tdate\t" + calenderDate.Date);
+                sb.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\"", stop.Id, stop.Name, stop.Latitude, stop.Longitude));
+                Console.WriteLine("[INFO] " + iIndex + ".\tstationId\t" + stop.Id + "\tname\t" + stop.Name);
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add an Exception date. [Error] {0}.", e.Message);
-            }
-        }
-
-        private void AddCalendar(GTFS.Entities.Calendar calender, int iIndex, ref List<ParseObject> listStaticPO)
-        {
-            try
-            {
-                ParseObject poCalendar = new ParseObject("Calendar");
-                poCalendar["serviceId"] = calender.ServiceId;
-                poCalendar["monDay"] = calender.Monday;
-                poCalendar["tuesDay"] = calender.Tuesday;
-                poCalendar["wednesDay"] = calender.Wednesday;
-                poCalendar["thursDay"] = calender.Thursday;
-                poCalendar["friDay"] = calender.Friday;
-                poCalendar["saturDay"] = calender.Saturday;
-                poCalendar["sunDay"] = calender.Sunday;
-                poCalendar["uid"] = _staticCounter;
-                listStaticPO.Add(poCalendar);
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\tserviceId\t" + calender.ServiceId);
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Calendar. [Error] {0}.", e.Message);
+                Console.WriteLine("[INFO] Failed to add a Stations. [Error] {0}.", e.Message);
             }
         }
 
@@ -2465,44 +1628,6 @@ namespace Timeplify
             return rId;
         }
 
-        private ParseObject AddRoute(Route route, List<Stop> routeStops, int iIndex)
-        {
-            ParseObject poRoute = null;
-            string routeId = null;
-            string routeSN = null;
-
-            try
-            {
-                routeId = GetRouteId(route.Id);
-                poRoute = new ParseObject("Route");
-                poRoute["routeId"] = routeId;
-                poRoute["shortName"] = route.ShortName;
-                poRoute["backgroundColor"] = route.Color;
-                poRoute["textColor"] = route.TextColor;
-                poRoute["northStationId"] = routeStops[0].ParentStation;
-                poRoute["southStationId"] = routeStops[routeStops.Count - 1].ParentStation;
-                poRoute["uid"] = _staticCounter;
-
-                routeSN = GetRouteId(route.ShortName);
-
-                if (null == (from interestedRoute in _arrInterestedRoutes.Keys
-                             where interestedRoute == routeId
-                             select interestedRoute).FirstOrDefault())
-                {
-                    _arrInterestedRoutes.Add(routeId, routeSN);
-                }
-
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + route.Id + "\tnorthStationId\t" + routeStops[0].ParentStation
-                    + "\tsouthStationId\t" + routeStops[routeStops.Count - 1].ParentStation);
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Route. [Error] {0}.", e.Message);
-            }
-
-            return poRoute;
-        }
-
         private static IEnumerable<TSource> DistinctBy<TSource, TKey>(IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
         {
             HashSet<TKey> seenKeys = new HashSet<TKey>();
@@ -2515,7 +1640,7 @@ namespace Timeplify
             }
         }
 
-        private void AddScheduleData(string stopId, string serviceId, string routeId, TimeOfDay departureTime, string direction, int iIndex, ref List<ScheduledStopData> stopDataList)
+        private void AddScheduleData(string stopId, string serviceId, string routeId, TimeOfDay departureTime, string direction, int iIndex, ref List<ScheduledStopData> stopDataList, ref StringBuilder sb, ref int i)
         {
             try
             {
@@ -2525,17 +1650,20 @@ namespace Timeplify
                 stopData.ArrivalTime = departureTime.Hours + ":" + departureTime.Minutes + ":" + departureTime.Seconds;
                 stopDataList.Add(stopData);
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stopId
+                sb.AppendLine(string.Format("\"{0}\",\"{1}\",\"{2}\",\"{3}\",\"{4}\"", stopId, direction, serviceId, stopData.RouteId, stopData.ArrivalTime));
+                i++;
+
+                Console.WriteLine("[INFO] " + iIndex + ".\trouteId\t" + routeId + "\tstationId\t" + stopId
                     + "\tserviceId\t" + serviceId + "\tdepartureTime\t" + stopData.ArrivalTime + "\tdirection\t" + direction
                     );
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to add a Stations. [Error] {0}.", e.Message);
+               Console.WriteLine("[INFO] Failed to add a Stations. [Error] {0}.", e.Message);
             }
         }
 
-        private void ProcessStationTimes(List<StopTime> stopTimes, String stopId, string direction, List<Trip> trips, ref List<ScheduledStopData> stopDataList)
+        private void ProcessStationTimes(List<StopTime> stopTimes, String stopId, string direction, List<Trip> trips, ref List<ScheduledStopData> stopDataList, ref StringBuilder sb, ref int j)
         {
             try
             {
@@ -2546,12 +1674,12 @@ namespace Timeplify
                     ThenBy(stopTime => stopTime.ArrivalTime.Seconds).
                     ToList();
 
-                var stationTimesA = DistinctBy(stationTimes, stopTime => stopTime.ArrivalTime).ToList();
+                //var stationTimesA = DistinctBy(stationTimes, stopTime => stopTime.ArrivalTime).ToList();
 
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Total station departure times count" + stationTimesA.Count);
+                Console.WriteLine("[INFO] Total station departure times count" + stationTimes.Count);
 
                 int i = 0;
-                foreach (var stationTime in stationTimesA)
+                foreach (var stationTime in stationTimes)
                 {
                     var curTrip = trips.Where(trip => trip.Id == stationTime.TripId).FirstOrDefault();
 
@@ -2561,13 +1689,13 @@ namespace Timeplify
                     if ("R" == curTrip.RouteId || "6" == curTrip.RouteId)//TO AVOID BURST LIMIT ISSUE FOR TESTING
                 #endif
                     {
-                        AddScheduleData(stopId, curTrip.ServiceId, curTrip.RouteId, stationTime.ArrivalTime, direction, i, ref stopDataList);
+                        AddScheduleData(stopId, curTrip.ServiceId, curTrip.RouteId, stationTime.ArrivalTime, direction, i, ref stopDataList, ref sb, ref j);
                     }
                 }
             }
             catch (Exception e)
             {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process station departure times. [Error] {0}.", e.Message);
+               Console.WriteLine("[INFO] Failed to process station departure times. [Error] {0}.", e.Message);
             }
         }
 
@@ -2580,149 +1708,6 @@ namespace Timeplify
         #endregion //Public Methods
             
         #region Callbacks
-            
-        private void GTFSRTFTimerProc(object state)
-        {
-            // Locals
-            string url = null;
-            string folder = null;
-
-            // For better memory performance.
-            GC.Collect();
-                
-            if(!_disposed && !_bStopping)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Invoked GTFSTimerProc callback.", "");
-
-                if (0 == _rtCounter)
-                {
-                    // live data is not available for a given set of stations by only using scheduled data when the previously retrieved live data is older than 5 minutes.
-                    _realTimeCounter = GetCurrentTimeString();
-                }
-
-                _rtCounter++;
-                
-                url = Worker.Instance.Configuration.GTFSRealTimeFeedURL;
-                folder = Worker.Instance.Configuration.GTFSRealTimeDataFolder;
-
-                if (!Directory.Exists(folder))
-                {
-                    Directory.CreateDirectory(folder);
-                }
-
-                RealTimeData rtData = new RealTimeData();
-                ulong ulTimeStamp = 0;
-
-                // Real-Time Subway Locations - 1, 2, 3, 4, 5, 6, S Lines
-                DownloadRTFeed(url + "&feed_id=1", folder + "gtfs_123456S_", ref rtData);
-
-                // Real-Time Subway Locations - L Line
-                ulTimeStamp = DownloadRTFeed(url + "&feed_id=2", folder + "gtfs_L_", ref rtData);
-
-                SaveRTData(rtData, ulTimeStamp);
-
-                if (_rtMaxCounter <= _rtCounter)
-                {
-                    _rtCounter = 0;
-                }
-            }
-
-            // For better memory performance.
-            GC.Collect();
-        }
-
-        private async void SaveRTData(RealTimeData rtData, ulong ulTimeStamp)
-        {
-            // Locals
-            List<ParseObject> listPO = null;
-
-            try
-            {
-                if (0 < rtData.Count)
-                {
-                    listPO = new List<ParseObject>();
-                    ParseObject poRealTimeData = new ParseObject("RealTimeData");
-                    poRealTimeData["stationTimeMap"] = Serialize.SerializeJson<RealTimeData>(rtData);
-                    poRealTimeData["uid"] = _realTimeCounter;
-                    listPO.Add(poRealTimeData);
-
-                    GetSettings("realTime", new string[] { _realTimeCounter, DateTimeFromUnixTimestampSeconds(ulTimeStamp).ToString(FND_FMT) }, SetRTSettings);
-                    SaveSettings(_poRTSettings, ref listPO);
-
-                    GetUTCOffset(ref listPO);
-
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Going to save {0} real time objects to parse.", listPO.Count);
-                    await ParseObject.SaveAllAsync<ParseObject>(listPO);
-                    Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Saved {0} real time objects to parse.", listPO.Count);
-                    listPO.Clear();
-                }
-            }
-            catch (Exception e)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.FatalError, "Failed to process status feed. [Error] {0}.", e.Message);
-            }
-        }
-        
-
-        private void GTFSSFTimerProc(object state)
-        {
-            // For better memory performance.
-            GC.Collect();
-
-            if (!_disposed && !_bStopping)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Invoked GTFSTimerProc callback.", "");
-
-                DownloadStaticFeed();
-            }
-
-            // For better memory performance.
-            GC.Collect();
-        }
-
-        private void ServiceStatusTimerProc(object state)
-        {
-            // For better memory performance.
-            GC.Collect();
-
-            if (!_disposed && !_bStopping)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Invoked ServiceStatusTimerProc callback.", "");
-
-                DownloadServiceStatusFeed();
-            }
-
-            // For better memory performance.
-            GC.Collect();
-        }
-         
-        private void CleanUpTimerProc(object state)
-        {
-            // For better memory performance.
-            GC.Collect();
-
-            if (!_disposed && !_bStopping)
-            {
-                Worker.Instance.Logger.LogMessage(LogPriorityLevel.Informational, "Invoked CleanUpTimerProc callback.", "");
-
-                DirectoryInfo dataFolder = new DirectoryInfo(Worker.Instance.Configuration.GTFSRealTimeDataFolder);
-                // Delete all files in live data folder ie real time gtfs & service status
-                foreach (FileInfo file in dataFolder.GetFiles())
-                {
-                    try
-                    {
-                        // Even if one of those files fails to delete, continue with others
-                        file.Delete();
-                    }
-                    catch
-                    { 
-                    }
-                }
-            }
-
-            // For better memory performance.
-            GC.Collect();
-        }
         #endregion //Callbacks
     }
 }

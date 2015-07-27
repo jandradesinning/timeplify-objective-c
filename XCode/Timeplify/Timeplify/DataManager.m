@@ -354,7 +354,7 @@
         return;
     }
     
-    NSLog(@"Copies file '%@'", strFile);
+    // NSLog(@"Copies file '%@'", strFile);
     
     NSString *databasePathFromApp=[[[NSBundle mainBundle]resourcePath] stringByAppendingPathComponent:strName];
     

@@ -416,8 +416,40 @@
 
 #pragma mark - Others
 
+-(void) removeNonFavoriteRotes
+{
+    NSMutableDictionary* oDictTemp = [[NSMutableDictionary alloc] init];
+    NSMutableArray* oArrRoutes = [GlobalCaller getFavTrainsArray];
+    for (int i=0; i <[oArrRoutes count]; i++) {
+        ST_Train* oTrain = [oArrRoutes objectAtIndex:i];
+        NSString* strKey = oTrain.m_strId;
+        [oDictTemp setObject:@"YES" forKey:strKey];
+    }
+    
+    NSMutableArray* oArrStations = [GlobalCaller getFavStationsArray];
+    for (int i = ([oArrStations count]-1); i>= 0; i--) {
+        ST_Station* oStation = [oArrStations objectAtIndex:i];
+        NSString* strKey = oStation.m_strRouteId;
+        
+        NSString* strVal = [oDictTemp objectForKey:strKey];
+        if (strVal == nil) {
+            [oArrStations removeObjectAtIndex:i];
+        }
+        
+    }
+    
+    [Utility saveObjectInDefault:STR_KEY_FAV_STATIONS :oArrStations];
+}
+
 -(IBAction) btnDoneClicked:(id)sender
 {
+     if (m_iScreenMode == INT_STATION_SEL_FROM_FAV)
+     {
+         [self removeNonFavoriteRotes];
+     }
+    
+    
+    
     [[NSNotificationCenter defaultCenter] postNotificationName:@"EVENT_RELOAD_FAVORITES" object:nil];
     
     [NSObject cancelPreviousPerformRequestsWithTarget:self];

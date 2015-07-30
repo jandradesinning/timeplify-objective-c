@@ -427,7 +427,7 @@
     }
     
     NSMutableArray* oArrStations = [GlobalCaller getFavStationsArray];
-    for (int i = ([oArrStations count]-1); i>= 0; i--) {
+    for (int i = ((int)[oArrStations count]-1); i>= 0; i--) {
         ST_Station* oStation = [oArrStations objectAtIndex:i];
         NSString* strKey = oStation.m_strRouteId;
         

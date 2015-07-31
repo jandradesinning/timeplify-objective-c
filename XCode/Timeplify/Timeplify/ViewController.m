@@ -1269,13 +1269,15 @@
     [self updateScrollLeftRight];
 }
 
-
 -(void) getDelayedNearestStation
 {
     NearestStation* oNear = [[NearestStation alloc] init];
     ST_Station* oStation = [oNear getFirstNearestStation];
-
-    if (oStation == nil) {
+    
+    if (([[self.navigationController topViewController] isKindOfClass:[FavoritesViewController class]] || [[self.navigationController topViewController] isKindOfClass:[SeeAllTrainsViewController class]]) && oStation == nil) {
+        //NSLog(@"Favorites or SellAllTrains ViewController currently shown");
+        return;
+    }else if (oStation == nil) {
         
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Timeplify"
                                                         message:@"We’re unable to find stations within a radius of 1 mile. Please select your station from the available list."

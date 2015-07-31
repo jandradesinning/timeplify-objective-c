@@ -114,7 +114,6 @@
     }
         
     
-    
     cell.m_iRowIndex = (int) indexPath.row;
     cell.m_Station = oStation;
     [cell setValues];

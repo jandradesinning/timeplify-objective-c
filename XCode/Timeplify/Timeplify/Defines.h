@@ -54,7 +54,7 @@
 #define STR_PARSE_CLIENT_KEY            @"h24351TKlXm2NXeQHUley8dvHyfLEJVAKBWA147e"
 
 
-#define INT_MAX_STATION_DISTANCE        (1*1609.34)// currently 1 mile  3 Miles = (0.6*1609.34)
+#define INT_MAX_STATION_DISTANCE        (0.01*1609.34)// currently 1 mile  3 Miles = (3*1609.34)
 #define INT_MAX_SCHEDULED_RECS          10
 
 #define INT_TESTING_LATITUDE            40.821

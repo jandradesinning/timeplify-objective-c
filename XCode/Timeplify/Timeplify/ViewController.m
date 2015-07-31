@@ -1278,8 +1278,8 @@
     if (oStation == nil) {
         
         UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Timeplify"
-                                                        message:@"We’re unable to find stations within a radius of 3 miles. Please select your station from the available list."
-                                                       delegate:self cancelButtonTitle:@"Ok" otherButtonTitles: @"See All Trains", nil];
+                                                        message:@"We’re unable to find stations within a radius of 1 mile. Please select your station from the available list."
+                                                       delegate:self cancelButtonTitle:@"Favorites" otherButtonTitles: @"See All Trains", nil];
         
         alert.tag = INT_ALERT_TAG_NO_STATION_IN_RADIUS;
         [alert show];

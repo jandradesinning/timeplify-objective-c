@@ -37,6 +37,8 @@
 #define INT_UPDATE_STATUS_TIMER_DELAY               1.0
 #define INT_UPDATE_SERVER_RECALL_TIMER_DELAY        30.0
 
+#define INT_UPDATE_SERVICE_STATUS_DELAY             60.0
+
 
 #define INT_ALERT_TAG_RETRY                 1
 #define INT_ALERT_TAG_NO_STATION_IN_RADIUS  2

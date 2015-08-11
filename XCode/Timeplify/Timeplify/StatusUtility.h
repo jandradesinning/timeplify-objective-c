@@ -16,6 +16,7 @@
 }
 -(UIColor*) getServiceStatusColor:(NSDictionary*)IN_Dict;
 -(NSString*) getServiceStatusText:(NSDictionary*)IN_Dict;
+-(NSMutableAttributedString*) getServiceStatusFormattedText:(NSString*)IN_strStatus :(UIColor*)IN_Color :(BOOL)IN_bRealTime;
 -(NSString*) getServiceStatusfromDefault:(NSDictionary*)IN_Dict;
 -(void) storeServiceStatusInDefault:(NSDictionary*)IN_Dict;
 -(BOOL) isServiceStatusStoredInDefault;

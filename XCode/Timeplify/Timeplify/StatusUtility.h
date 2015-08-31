@@ -21,6 +21,8 @@
 -(void) storeServiceStatusInDefault:(NSDictionary*)IN_Dict;
 -(BOOL) isServiceStatusStoredInDefault;
 
+-(ST_Station*) getEarlyStationRouteForGPSNearest:(NSMutableArray*)IN_arrNextTrains :(ST_Station*)IN_curStation :(NSMutableArray*)IN_arrGPSStations;
+
 -(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData :(ST_Station*)IN_curStation;
 -(NSString*) getTimeRemaining:(NSDictionary*)IN_Dict;
 -(NSString*) getNextTimeRemaining:(NSMutableArray*)IN_ArrRecs :(ST_Station*)IN_curStation;

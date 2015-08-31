@@ -46,6 +46,8 @@
     
     Direction2View* m_Direction2View;
     
+    NSMutableArray* m_arrGPSNearestStationsWithRoutes;
+    
     NSMutableArray* m_arrNextTrains;
     int m_iCurrentFavOnlyTrainPos;
     int m_iCurrentNextFavOnlyTrainPos;

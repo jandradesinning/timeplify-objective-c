@@ -737,6 +737,29 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
 }
 
 
+-(ST_Station*) getEarlyStationRouteForGPSNearest: (NSMutableArray*)IN_arrNextTrains : (ST_Station*)IN_curStation :(NSMutableArray*)IN_arrGPSStations
+{
+    if ([IN_arrNextTrains count] < 1) {
+        return nil;
+    }
+    
+    NSMutableDictionary* oDict = [IN_arrNextTrains objectAtIndex:0];
+    NSString* strRouteId = [oDict objectForKey:@"routeId"];
+    
+    for (int i=0; i <[IN_arrGPSStations count]; i++) {
+        ST_Station* oStation = [IN_arrGPSStations objectAtIndex:i];
+        
+        if ([strRouteId isEqualToString:oStation.m_strRouteId]) {
+            oStation.m_iSelectedDirection = IN_curStation.m_iSelectedDirection;
+            oStation.m_iTemporaryDirection = IN_curStation.m_iTemporaryDirection;
+            return oStation;
+        }
+        
+    }
+    
+    return nil;
+}
+
 
 -(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData :(ST_Station*)IN_curStation
 {

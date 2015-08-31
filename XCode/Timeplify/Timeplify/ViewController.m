@@ -893,6 +893,10 @@
     
     NSMutableDictionary* oDict = [oStatusUtil getCurrentDisplayingDict:m_arrNextTrains :m_curStation];
     
+    
+    
+    
+    
     if (oDict == nil) {
         return;
     }
@@ -1108,10 +1112,17 @@
         
     }
 
-    
-    
+      
     m_arrNextTrains = [oUtil getFormattedStatusResult:oDict:IN_bUsingLocal:m_curStation];
     
+    if (m_arrGPSNearestStationsWithRoutes != nil) {
+        ST_Station* oGPSEarlyTrain = [oUtil getEarlyStationRouteForGPSNearest:m_arrNextTrains :m_curStation :m_arrGPSNearestStationsWithRoutes];
+        if (oGPSEarlyTrain != nil) {
+            m_curStation = oGPSEarlyTrain;
+        }
+        m_arrGPSNearestStationsWithRoutes = nil;
+    }
+
    
     if ([m_arrNextTrains count] > 0) {
         m_iVibrateCalls = 0;
@@ -1145,7 +1156,16 @@
     NSMutableDictionary* oDict = [oUtil getLocalDBScheduledData:oStation];
     
     
+    
     m_arrNextTrains = [oUtil getFormattedStatusResult:oDict:YES:m_curStation];
+    
+    if (m_arrGPSNearestStationsWithRoutes != nil) {
+        ST_Station* oGPSEarlyTrain = [oUtil getEarlyStationRouteForGPSNearest:m_arrNextTrains :m_curStation :m_arrGPSNearestStationsWithRoutes];
+        if (oGPSEarlyTrain != nil) {
+            m_curStation = oGPSEarlyTrain;
+        }
+        m_arrGPSNearestStationsWithRoutes = nil;
+    }
     
     
     if ([m_arrNextTrains count] > 0) {
@@ -1276,7 +1296,18 @@
 -(void) getDelayedNearestStation
 {
     NearestStation* oNear = [[NearestStation alloc] init];
-    ST_Station* oStation = [oNear getFirstNearestStation];
+    
+    m_arrGPSNearestStationsWithRoutes = [oNear getStationsWithRoutesOfFirstNearestStation];
+    
+    ST_Station* oStation;
+    if ([m_arrGPSNearestStationsWithRoutes count] < 1) {
+        oStation = nil;
+    }
+    else
+    {
+        oStation = [m_arrGPSNearestStationsWithRoutes objectAtIndex:0];
+    }
+   
     
     if (([[self.navigationController topViewController] isKindOfClass:[FavoritesViewController class]] || [[self.navigationController topViewController] isKindOfClass:[SeeAllTrainsViewController class]]) && oStation == nil) {
         //NSLog(@"Favorites or SellAllTrains ViewController currently shown");
@@ -1864,6 +1895,7 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     
+    m_arrGPSNearestStationsWithRoutes = nil;
     
     
     self.automaticallyAdjustsScrollViewInsets = NO; //The default value of this property is YES, which allows the view controller to adjust its scroll view insets in response to the screen areas consumed by the status bar, navigation bar, and toolbar or tab bar. Set to NO if you want to manage scroll view inset adjustments yourself, such as when there is more than one scroll view in the view hierarchy.

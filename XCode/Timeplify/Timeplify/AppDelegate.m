@@ -97,7 +97,7 @@
         return;
     }
     
-//	NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
+	//NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
 	   
     
     
@@ -173,7 +173,6 @@
 	m_LocationManager.delegate = self;
     
     if ([m_LocationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {        
-        // TEST_CODE
         [m_LocationManager requestWhenInUseAuthorization];
     }
     

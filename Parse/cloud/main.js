@@ -1,5 +1,5 @@
 var moment = require('cloud/moment');
-   
+    
 function getESTTime(utcOffset) {
     var estTime = moment().utcOffset(utcOffset);
     var year = estTime.format("YYYY");
@@ -11,7 +11,7 @@ function getESTTime(utcOffset) {
     var day = estTime.format("d");
     return getDateObj(year, month, date, hours, minutes, seconds, day);
 }
-  
+   
 function getESTNextDay(utcOffset) {
     var today = moment();
     var tomorrow = today.add('days', 1);    
@@ -25,7 +25,7 @@ function getESTNextDay(utcOffset) {
     var day = estTime.format("d");
     return getDateObj(year, month, date, hours, minutes, seconds, day);
 }
-  
+   
 function getDateObj(year, month, date, hours, minutes, seconds, day) {
     var curTime = new Date(year, month, date, hours, minutes, seconds).getTime();
     var todayMorning = new Date(year, month, date).getTime();
@@ -41,17 +41,17 @@ function getDateObj(year, month, date, hours, minutes, seconds, day) {
         "day": day
     }
 }
-   
+    
 function getServiceStatus(uid) {
     var promises = [];
     var serviceStatus = null;
     var ServiceStatus = Parse.Object.extend("ServiceStatus");
     var querySStatus = new Parse.Query(ServiceStatus);
-                    
+                     
     querySStatus.equalTo("uid", uid);
-               
+                
     promises.push(querySStatus.first());
-               
+                
     return Parse.Promise.when(promises).then(function(ssObj) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -63,9 +63,9 @@ function getServiceStatus(uid) {
         return promise;
     });
 }
-  
+   
 function prepareScheduledData(stpData, curTime, curDay, curD, curM, curY, today, runningDaysMap, exceptionDatesMap, sMap, scheduledData) {
-                   
+                    
     var arrTime = stpData.t;
     var diff =  (today + convertToMilliSeconds(arrTime)) - curTime;                 
     var diffStr = getTimeString(diff);              
@@ -73,19 +73,19 @@ function prepareScheduledData(stpData, curTime, curDay, curD, curM, curY, today,
     var runningDays = runningDaysMap[serviceId];
     var exceptionDates = exceptionDatesMap[serviceId];
     var bOK = true;
-            
+             
     if((undefined != exceptionDates) && (-1 != exceptionDates.indexOf(curY + "" + curM + "" + curD))){
         bOK = false;
     }
-            
+             
     if(bOK && (undefined != runningDays) && (-1 == runningDays.indexOf(curDay))){
         bOK = false;
     }
-            
+             
     if(bOK && ((null == diffStr) || 0 >= diff)) {              
         bOK = false;
     }
-                   
+                    
     if(bOK) {   
         var sData = {
             "routeId": stpData.r,
@@ -112,21 +112,21 @@ function prepareScheduledData(stpData, curTime, curDay, curD, curM, curY, today,
         }
     }
 }
-            
+             
 function getScheduledData(routeId, stationId, direction, uid, ssUID, skip, runningDaysMap, exceptionDatesMap, utcOffset) {
     var promises = [];
     var scheduledData = [];
     var ScheduledData = Parse.Object.extend("ScheduledData");
     var querySData = new Parse.Query(ScheduledData);
-                    
+                     
     querySData.equalTo("stationId", stationId);
     //querySData.equalTo("direction", direction);
     querySData.equalTo("uid", uid); 
     querySData.skip(skip);
     querySData.limit(1000);
-                    
+                     
     promises.push(querySData.first());
-                
+                 
     return Parse.Promise.when(promises).then(function(sdObj) {
         var promise = Parse.Promise.as();
         var estTime = getESTTime(utcOffset);         
@@ -136,29 +136,29 @@ function getScheduledData(routeId, stationId, direction, uid, ssUID, skip, runni
         var curM = estTime.month;
         var curY = estTime.year;
         var today = estTime.todayMorning;
-           
+            
         promise = promise.then(function() {
             if(sdObj) {
                 var sMap = {};          
                 var stationTimeMap = JSON.parse(sdObj.get("stationTimeMap"));               
                 var stopData = stationTimeMap[direction];               
-                  
+                   
                 for (var i = 0; i < stopData.length; i++) {                 
                     var stpData = stopData[i];                  
                     prepareScheduledData(stpData, curTime, curDay, curD, curM, curY, today, runningDaysMap, exceptionDatesMap, sMap, scheduledData);
                 }
-                  
+                   
                 if(0 == scheduledData.length) {
                     // try with next day
                     estTime = getESTNextDay(utcOffset);
-           
+            
                     curTime = estTime.curTime;
                     curDay = parseInt(estTime.day);
                     curD = estTime.date;
                     curM = estTime.month;
                     curY = estTime.year;
                     today = estTime.todayMorning;
-                      
+                       
                     for (var i = 0; i < stopData.length; i++) {
                         prepareScheduledData(stpData, curTime, curDay, curD, curM, curY, today, runningDaysMap, exceptionDatesMap, sMap, scheduledData);
                     }
@@ -174,19 +174,19 @@ function getScheduledData(routeId, stationId, direction, uid, ssUID, skip, runni
         return scheduledData;
     });
 }
-       
+        
 function compareDateTime(a, b) {
     var retVal = 0;
     var str = a.arrivalTime.split(":");
     var aHours = Math.floor(str[0]);
     var aMinutes = Math.floor(str[1]);
     var aSeconds = Math.floor(str[2]);
-                
+                 
     str = b.arrivalTime.split(":");
     var bHours = Math.floor(str[0]);
     var bMinutes = Math.floor(str[1]);
     var bSeconds = Math.floor(str[2]);
-                
+                 
     if(aHours == bHours) {
         if(aMinutes == bMinutes) {
             if(aSeconds == bSeconds) {
@@ -200,23 +200,23 @@ function compareDateTime(a, b) {
     } else {
         retVal = aHours - bHours;
     }
-                
+                 
     return retVal;
 }
-            
+             
 function getRealTimeData(routeId, stationId, direction, uid, ssUID, skip, utcOffset) {
     var promises = [];
     var realTimeData = [];
     var dataAvailForReqRoute = false;
     var RealTimeData = Parse.Object.extend("RealTimeData");
     var queryRTData = new Parse.Query(RealTimeData);
-      
+       
     queryRTData.equalTo("uid", uid);
     queryRTData.skip(skip);
     queryRTData.limit(1000);    
-                    
+                     
     promises.push(queryRTData.first());
-                
+                 
     return Parse.Promise.when(promises).then(function(rtdObj) {
         var promise = Parse.Promise.as();
         var curTime = (new Date()).getTime();     
@@ -232,7 +232,7 @@ function getRealTimeData(routeId, stationId, direction, uid, ssUID, skip, utcOff
                         var arrTime = stpData.t * 1000;
                         var diff = arrTime - curTime;
                         var diffStr = getTimeString(diff);
-                       
+                        
                         if((null != diffStr) && (0 < diff)) {
                             if(!dataAvailForReqRoute) {
                                 dataAvailForReqRoute = (stpData.r == routeId);
@@ -280,7 +280,7 @@ function getRealTimeData(routeId, stationId, direction, uid, ssUID, skip, utcOff
         };
     });
 }
-               
+                
 function getTimeString(milliSeconds) {
     var x = milliSeconds / 1000;
     var seconds = x % 60;
@@ -290,10 +290,10 @@ function getTimeString(milliSeconds) {
     var hours = x % 24;
     x /= 24;
     var days = x;
-                   
+                    
     return Math.floor(hours) + ":" + Math.floor(minutes) + ":" + Math.floor(seconds)
 }
-               
+                
 function convertToMilliSeconds(timeString) {
     var str = timeString.split(":");
     var milliSeconds = 0;
@@ -303,13 +303,13 @@ function convertToMilliSeconds(timeString) {
     milliSeconds = ((hours * 60 * 60) + (minutes * 60) + seconds) * 1000;
     return milliSeconds;
 }
-               
+                
 function setServiceStatus(trainData, ssUID) {
     var promises = [];
     var routeMap = {};
-          
+           
     promises.push(getServiceStatus(ssUID));
-               
+                
     return Parse.Promise.when(promises).then(function(ssMap) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -322,47 +322,13 @@ function setServiceStatus(trainData, ssUID) {
             return trainData;
         });
         return promise;
-               
+                
     });
 }
-               
-function getSettings() {
-    var promises = [];  
-    var Settings = Parse.Object.extend("Settings");
-    var querySettings = new Parse.Query(Settings);
-                    
-    promises.push(querySettings.find());
-                
-    return Parse.Promise.when(promises).then(function(settingsObjs) {
-        var promise = Parse.Promise.as();
-        promise = promise.then(function() {
-            var settings = {};
-                            
-            for (var i = 0; i < settingsObjs.length; i++) {
-                var settingsObj = settingsObjs[i];
-                                
-                var settingsValues = eval(JSON.stringify(settingsObj.get("settingsValues")));
-                var settingsKey = settingsObj.get("settingsKey");
-                if("realTime" == settingsKey) {
-                    settings.realTimeFeedTime = settingsValues[0];
-                    settings.gtfsFeedTime = settingsValues[1];
-                } else if ("staticTime" == settingsKey) {
-                    settings.staticFeedTime = settingsValues[0];
-                } else if ("statusTime" == settingsKey) {
-                    settings.serviceStatusFeedTime = settingsValues[0];
-                } else if ("utcOffset" == settingsKey) {
-                    settings.utcOffset = settingsValues[0];
-                }
-            }
-            return settings;
-        });
-        return promise;
-    });
-}
-                
+           
 function getStatus(settings, realTimeDataEx, scheduledData, fetchScheduledData, serviceStatus) {
     var status = {};
-                
+                 
     status = {
         "status": (false == realTimeDataEx.dataAvailForReqRoute) ? 1/*NO RealTimeData*/ : 0/*SUCCESS*/,
         "data": {
@@ -373,7 +339,7 @@ function getStatus(settings, realTimeDataEx, scheduledData, fetchScheduledData, 
             "serviceStatus": serviceStatus
         }
     };
-                
+                 
     if(fetchScheduledData && scheduledData) {
         status.data.scheduled = {
             "data": scheduledData,
@@ -382,27 +348,27 @@ function getStatus(settings, realTimeDataEx, scheduledData, fetchScheduledData, 
     }
     return status;
 }
-        
+         
 function getExceptionDates() {
     var promises = [];  
     var ExceptionDate = Parse.Object.extend("ExceptionDate");
     var queryExceptionDate = new Parse.Query(ExceptionDate);
-                    
+                     
     promises.push(queryExceptionDate.find());
-                
+                 
     return Parse.Promise.when(promises).then(function(exceptionDateObjs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
             var expDateMap = {};
-                            
+                             
             for (var i = 0; i < exceptionDateObjs.length; i++) {
                 var exceptionDateObj = exceptionDateObjs[i];
                 var serviceId = exceptionDateObj.get("serviceId");
-                        
+                         
                 if(!expDateMap[serviceId]) {
                     expDateMap[serviceId] = [];
                 }
-                        
+                         
                 expDateMap[serviceId].push(exceptionDateObj.get("date"));
             }
             return expDateMap;
@@ -410,51 +376,51 @@ function getExceptionDates() {
         return promise;
     });
 }
-        
+         
 function getRunningDays() {
     var promises = [];  
     var Calendar = Parse.Object.extend("Calendar");
     var queryCalendar = new Parse.Query(Calendar);
-                    
+                     
     promises.push(queryCalendar.find());
-                
+                 
     return Parse.Promise.when(promises).then(function(calendarObjs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
             var runningDaysMap = {};
-                            
+                             
             for (var i = 0; i < calendarObjs.length; i++) {
                 var calendarObj = calendarObjs[i];
                 var serviceId = calendarObj.get("serviceId");
-                        
+                         
                 if(!runningDaysMap[serviceId]) {
                     runningDaysMap[serviceId] = [];
                 }
-                        
+                         
                 if(calendarObj.get("sunDay")) {
                     runningDaysMap[serviceId].push(0);
                 }               
-                        
+                         
                 if(calendarObj.get("monDay")) {
                     runningDaysMap[serviceId].push(1);
                 }
-                        
+                         
                 if(calendarObj.get("tuesDay")) {
                     runningDaysMap[serviceId].push(2);
                 }
-                        
+                         
                 if(calendarObj.get("wednesDay")) {
                     runningDaysMap[serviceId].push(3);
                 }
-                        
+                         
                 if(calendarObj.get("thursDay")) {
                     runningDaysMap[serviceId].push(4);
                 }
-                        
+                         
                 if(calendarObj.get("friDay")) {
                     runningDaysMap[serviceId].push(5);
                 }
-                        
+                         
                 if(calendarObj.get("saturDay")) {
                     runningDaysMap[serviceId].push(6);
                 }
@@ -464,30 +430,30 @@ function getRunningDays() {
         return promise;
     });
 }
-  
+   
 // check whether any update for scheduledData available
 Parse.Cloud.define("isUpdateForScheduledDataAvailable", function(request, response) {
     var bOK = true;
     var isAvailable = false;
-                    
+                     
     /*  
     {
       "appVersion": "10020",
       "scheduledDataUpdatedTime" : "ddMMyyyyHHmmss"
     }
     */
-                
+                 
     try
     {
         if(bOK && null == request.params.scheduledDataUpdatedTime) {
             response.error(getErrorJSON("Parameter 'scheduledDataUpdatedTime' is missing"));
             bOK = false;
         }
-                    
+                     
         if(bOK) {
             var status = {};
             var returns = [];
-                            
+                             
             getSettings().then(function(settings){
                 returns.push(settings);
                 if ( (null == request.params.scheduledDataUpdatedTime) ||
@@ -495,7 +461,7 @@ Parse.Cloud.define("isUpdateForScheduledDataAvailable", function(request, respon
                 ) {       
                     isAvailable = true;          
                 }
-                  
+                   
                 status = {
                     "status": isAvailable ? 1 : 0
                 };
@@ -508,73 +474,72 @@ Parse.Cloud.define("isUpdateForScheduledDataAvailable", function(request, respon
         response.error(getErrorJSON(e.message));
     }
 });
-               
+                
 function prepareServiceStatus(ssUID) {
     var promises = [];
-          
+           
     promises.push(getServiceStatus(ssUID));
-               
+                
     return Parse.Promise.when(promises).then(function(ssMap) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
             return ssMap;
         });
         return promise;
-               
+                
     });
 }      
-
+ 
 function isEmpty(obj) {
-
+ 
     // null and undefined are "empty"
     if (obj == null) return true;
-
+ 
     // Assume if it has a length property with a non-zero value
     // that that property is correct.
     if (obj.length > 0)    return false;
     if (obj.length === 0)  return true;
-
+ 
     // Otherwise, does it have any properties of its own?
     // Note that this doesn't handle
     // toString and valueOf enumeration bugs in IE < 9
     for (var key in obj) {
         if (hasOwnProperty.call(obj, key)) return false;
     }
-
+ 
     return true;
 }
-
+ 
 // returns all routes' service status
 Parse.Cloud.define("getServiceStatus", function(request, response) {
-	var retObj = {};
-
+    var retObj = {};
+ 
     try
-    {			
-		retObj = {
-			"service": {
-				"status": -1, /*0 - SUCCESS, -1 - ERROR/EMPTY*/
-				"data": null,
-				"feedTime": null
-			}
-		};                    
-		  
-		getSettings().then(function(settings){
-			retObj.service.feedTime = settings.serviceStatusFeedTime;
-			return prepareServiceStatus(settings.serviceStatusFeedTime);    
-		}).then(function(serviceStatus){        
-			retObj.service.data = serviceStatus;
-			
-			// check if serviceStatus is empty or null
-			retObj.service.status = isEmpty(serviceStatus) ? -1 : 0;
-			response.success(retObj);
-		}, function(error) {
-			response.error(getErrorJSON(error.message));
-		});
+    {           
+        retObj = {
+            "service": {
+                "status": -1, /*0 - SUCCESS, -1 - ERROR/EMPTY*/
+                "data": null,
+                "feedTime": null
+            }
+        };                    
+           
+        getSettings().then(function(settings){
+            retObj.service.feedTime = settings.serviceStatusFeedTime;
+            return prepareServiceStatus(settings.serviceStatusFeedTime);    
+        }).then(function(serviceStatus){            
+            retObj.service.data = serviceStatus;            
+            // check if serviceStatus is empty or null
+            retObj.service.status = isEmpty(serviceStatus) ? -1 : 0;            
+            response.success(retObj);
+        }, function(error) {
+            response.error(getErrorJSON(error.message));
+        });
     } catch (e) {
         response.error(getErrorJSON(e.message));
     }
 });  
-      
+       
 // returns all routes' stations
 Parse.Cloud.define("getStatus", function(request, response) {
     var bOK = true;
@@ -582,7 +547,7 @@ Parse.Cloud.define("getStatus", function(request, response) {
     var stationId = null;
     var direction = null;
     var fetchScheduledData = false;
-                    
+                     
     /*  
     {
       "appVersion": "10020",
@@ -592,19 +557,19 @@ Parse.Cloud.define("getStatus", function(request, response) {
       "route": "1"
     }
     */
-                
+                 
     try
     {
         var liveRoutes = ["1","2","3","4","5","6","L","S"];
         if(-1 == liveRoutes.indexOf(request.params.route)) {
             var status = {};
-                
+                 
             status = {
                 "status": 1/*NO RealTimeData*/,
                 "data": {
                 }
             };                    
-              
+               
             getSettings().then(function(settings){
                 return prepareServiceStatus(settings.serviceStatusFeedTime);    
             }).then(function(serviceStatus){        
@@ -624,17 +589,17 @@ Parse.Cloud.define("getStatus", function(request, response) {
                 response.error(getErrorJSON("Parameter 'station' is missing"));
                 bOK = false;
             }
-                            
+                             
             direction = request.params.direction;
             if(bOK && null == direction) {
                 response.error(getErrorJSON("Parameter 'direction' is missing"));
                 bOK = false;
             }
-                    
+                     
             if(bOK) {
                 var status = {};
                 var returns = [];
-                                
+                                 
                 getSettings().then(function(settings){
                     returns.push(settings);
                     fetchScheduledData = request.params.fetchScheduledData;
@@ -664,17 +629,17 @@ Parse.Cloud.define("getStatus", function(request, response) {
         response.error(getErrorJSON(e.message));
     }
 });  
-                
+                 
 function addRouteList() {
     var Route = Parse.Object.extend("Route");
     var queryRoute = new Parse.Query(Route);
     var routes = [];
     var promises = [];
     var promisesX = [];
-                    
+                     
     queryRoute.limit(1000);
     promises.push(queryRoute.find());
-                
+                 
     return Parse.Promise.when(promises).then(function(routeObjs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -708,16 +673,16 @@ function addRouteList() {
         return Parse.Promise.error(error);
     });
 }
-                
+                 
 function addStationList() { 
     var Station = Parse.Object.extend("Station");
     var queryStation = new Parse.Query(Station);
     var stations = [];
     var promises = [];
-                    
+                     
     queryStation.limit(1000);
     promises.push(queryStation.find());
-                
+                 
     return Parse.Promise.when(promises).then(function(stationObjs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -739,7 +704,7 @@ function addStationList() {
         return Parse.Promise.error(error);
     });
 }
-         
+          
 function getErrorJSON(message) {
     var errObj = {
         "status" : -1, //ERROR
@@ -749,7 +714,7 @@ function getErrorJSON(message) {
     }
     return JSON.stringify(errObj);
 }
-           
+            
 // returns all routes, stations
 Parse.Cloud.define("getStaticData", function(request, response) {
     var bOK = true;
@@ -765,17 +730,17 @@ Parse.Cloud.define("getStaticData", function(request, response) {
             response.error(getErrorJSON("Parameter 'appVersion' is missing"));
             bOK = false;
         }
-                  
+                   
         if(bOK) {       
             var promises = [];
-                
+                 
             promises.push(getSettings());
             promises.push(addRouteList());
             promises.push(addStationList());
-                            
+                             
             Parse.Promise.when(promises).then(function(settings, routes, stations) {
                 var myResponse = null;
-                      
+                       
                 if ( (null == request.params.updatedTime) ||
                      (null != request.params.updatedTime && request.params.updatedTime != settings.staticFeedTime)
                 ) {       
@@ -788,7 +753,7 @@ Parse.Cloud.define("getStaticData", function(request, response) {
                         }
                     };              
                 } else {
-                             
+                              
                     myResponse = {
                         "status": 2//DATAUPTODATE
                     }//"Static data is uptodate"
@@ -803,7 +768,7 @@ Parse.Cloud.define("getStaticData", function(request, response) {
         response.error(getErrorJSON(e.message));
     }
 });
-           
+            
 Parse.Cloud.define("getSettings", function(request, response) {
     var bOK = true;
     /*
@@ -812,7 +777,7 @@ Parse.Cloud.define("getSettings", function(request, response) {
       "updatedTime": "05122014140830"
     }
     */
-                    
+                     
     try
     {
         if(bOK) {
@@ -903,12 +868,12 @@ Parse.Cloud.define("getSettings", function(request, response) {
         response.error(getErrorJSON(e.message));
     }
 });
-               
-function deleteAllObjects(className, uid, objs) {
+                
+function deleteAllObjects(objs) {
     var promises = [];
-               
+                
     promises.push(Parse.Object.destroyAll(objs));
-                    
+                     
     return Parse.Promise.when(promises).then(function() {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
@@ -917,38 +882,38 @@ function deleteAllObjects(className, uid, objs) {
         return promise;
     });
 }
-               
+                
 function deleteAllRowsEx(className, uid, limit) {
     var promises = [];
     var Table = Parse.Object.extend(className);
     var query = new Parse.Query(Table);
-                    
+                     
     // find all rows that doesn't match 
     query.notEqualTo("uid", uid);
     query.limit(limit);
     promises.push(query.find());
-                    
+                     
     return Parse.Promise.when(promises).then(function(objs) {
         var promise = Parse.Promise.as();
         promise = promise.then(function() {
-            return deleteAllObjects(className, uid, objs);
+            return deleteAllObjects(objs);
         });
         return promise;
     });
 }
-                
+                 
 function deleteAllRows(className, uid) {
     var promises = [];
     var Table = Parse.Object.extend(className);
     var query = new Parse.Query(Table);
     var limit = 1000;
-                    
+                     
     // find all rows that doesn't match 
     query.notEqualTo("uid", uid);
     query.limit(limit);
-                    
+                     
     promises.push(query.count());
-                    
+                     
     return Parse.Promise.when(promises).then(function(objCount) {
         var loop = objCount/limit;
         var promise = Parse.Promise.as();
@@ -969,7 +934,86 @@ function deleteAllRows(className, uid) {
     }).then(function(){
     });
 }
-          
+ 
+// get all the latest feedTimes 
+function getSettings() {
+    return getSettingsEx(false);
+}
+ 
+function getSettingsEx(deleteObj){
+     
+    var promises = [];
+    var Settings = Parse.Object.extend("Settings");
+    var querySettings = new Parse.Query(Settings);
+      
+    querySettings.descending("updatedAt");
+                      
+    promises.push(querySettings.find());
+                 
+    return Parse.Promise.when(promises).then(function(settingsObjs) {
+        var promise = Parse.Promise.as();
+        promise = promise.then(function() {
+            var settings = {};
+            var delObjs = settingsObjs;
+             
+             
+            for (var i = 0; i < settingsObjs.length; i++) {
+                var settingsObj = settingsObjs[i];
+                if(getSettingsValue(settings, settingsObj))
+        {
+            delete delObjs[i];
+        }   
+        // break the loop once all required feedTimes are set
+        exitLoop(settings, i, settingsObjs);
+            } 
+        if(deleteObj){
+            return deleteAllObjects(delObjs); 
+        } else{ 
+            return settings;
+        }               
+        });
+        return promise;
+    });
+}
+ 
+function getSettingsValue(settings, settingsObj){
+    var bRet = false;
+    var settingsValues = eval(JSON.stringify(settingsObj.get("settingsValues")));
+    var settingsKey = settingsObj.get("settingsKey");
+    if("realTime" == settingsKey && !settings.realTimeFeedTime) {
+        settings.realTimeFeedTime = settingsValues[0];
+        settings.gtfsFeedTime = settingsValues[1];
+        bRet = true;        
+    } else if ("staticTime" == settingsKey && !settings.staticFeedTime) {
+        settings.staticFeedTime = settingsValues[0];
+         bRet = true;       
+    } else if ("statusTime" == settingsKey && !settings.serviceStatusFeedTime) {
+        settings.serviceStatusFeedTime = settingsValues[0];
+        bRet = true;        
+    } else if ("utcOffset" == settingsKey && !settings.utcOffset) {
+        settings.utcOffset = settingsValues[0];
+        bRet = true;        
+    }   
+    return bRet;
+}
+ 
+function exitLoop(settings, i, settingsObjs){
+    if(
+        settings.realTimeFeedTime &&
+        settings.staticFeedTime &&
+        settings.serviceStatusFeedTime &&
+        settings.utcOffset)
+    {
+        i = settingsObjs.length;
+    }
+}
+ 
+ 
+// get all the latest feedTimes and delete every other values in Settings Table except these 
+function deleteAllObsoleteSettings() {
+    return getSettingsEx(true);
+}
+            
 Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
     /*
     {
@@ -984,9 +1028,9 @@ Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
         var count = 0;
         var settings = {};
         var returns = [];
-                        
+                         
         Parse.Cloud.useMasterKey();
-                        
+                         
         promises.push(getSettings().then(function(settings){
             returns.push(settings.serviceStatusFeedTime);
             returns.push(settings.staticFeedTime);
@@ -1005,8 +1049,10 @@ Parse.Cloud.job("deleteAllObsoleteRows", function(request, response) {
             return deleteAllRows("Station", returns[1]);
         }).then(function(){
             return deleteAllRows("ScheduledData", returns[1]);
+        }).then(function(){
+            return deleteAllObsoleteSettings();
         }));
-                        
+                         
         return Parse.Promise.when(promises).then(function(rowCount) {
             var promise = Parse.Promise.as();
             // For each item, extend the promise with a function to delete it.

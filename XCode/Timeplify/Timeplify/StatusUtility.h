@@ -16,9 +16,12 @@
 }
 -(UIColor*) getServiceStatusColor:(NSDictionary*)IN_Dict;
 -(NSString*) getServiceStatusText:(NSDictionary*)IN_Dict;
+-(NSMutableAttributedString*) getServiceStatusFormattedText:(NSString*)IN_strStatus :(UIColor*)IN_Color :(BOOL)IN_bRealTime;
 -(NSString*) getServiceStatusfromDefault:(NSDictionary*)IN_Dict;
 -(void) storeServiceStatusInDefault:(NSDictionary*)IN_Dict;
 -(BOOL) isServiceStatusStoredInDefault;
+
+-(ST_Station*) getEarlyStationRouteForGPSNearest:(NSMutableArray*)IN_arrNextTrains :(ST_Station*)IN_curStation :(NSMutableArray*)IN_arrGPSStations;
 
 -(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData :(ST_Station*)IN_curStation;
 -(NSString*) getTimeRemaining:(NSDictionary*)IN_Dict;

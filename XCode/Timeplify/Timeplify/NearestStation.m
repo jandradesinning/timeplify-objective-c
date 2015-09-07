@@ -78,11 +78,14 @@
 #pragma mark - Get Station with Route
 
 
--(ST_Station*) getStationWithRoute:(ST_Station*) IN_Station
+-(NSMutableArray*) getStationsWithRoutesOfStation:(ST_Station*) IN_Station
 {
     NSMutableArray* oArrFavTrains = [GlobalCaller getFavTrainsArray];
     
     NSMutableArray* oArrStations = [DataManager getStationsOfTrainStopInStation:IN_Station.m_strStationId];
+    
+    
+    NSMutableArray* oArrFavoriteOut = [[NSMutableArray alloc] init];
     
     
     for (int i = 0; i <[oArrStations count]; i++) {
@@ -91,19 +94,18 @@
         for (int j = 0; j < [oArrFavTrains count]; j++) {
             ST_Train* oTrain = [oArrFavTrains objectAtIndex:j];
             if ([oTrain.m_strId isEqualToString:oStation.m_strStationId]) {
-                return oStation;
+                [oArrFavoriteOut addObject:oStation];
             }
         }
         
     }
     
-    if ([oArrStations count] > 0) {
-        ST_Station* oStation =  [oArrStations objectAtIndex:0];
-        return oStation;
+    if ([oArrFavoriteOut count] > 0) {
+        return oArrFavoriteOut;
     }
     
-    return nil;
     
+    return  oArrStations;
 }
 
 #pragma mark - Others
@@ -178,7 +180,7 @@ NSInteger sortStationComparer(id num1, id num2, void *context)
     return oArrNearStations;
 }
 
--(ST_Station*) getFirstNearestStation
+-(NSMutableArray*) getStationsWithRoutesOfFirstNearestStation
 {
     NSMutableArray* oArrNearStations = [self getNearestStations];
     if (oArrNearStations == nil) {
@@ -188,6 +190,9 @@ NSInteger sortStationComparer(id num1, id num2, void *context)
     if ([oArrNearStations count] < 1) {
         return nil;
     }
+    
+    
+    NSMutableArray* oArrOut = [[NSMutableArray alloc] init];
     
     NSMutableArray* oArrFavStations = [GlobalCaller getFavStationsArray];
     
@@ -199,15 +204,22 @@ NSInteger sortStationComparer(id num1, id num2, void *context)
             ST_Station* oFavStation = [oArrFavStations objectAtIndex:j];
             
             if ([oStation.m_strStationId isEqualToString:oFavStation.m_strStationId]) {
-                return oFavStation;
+                [oArrOut addObject:oFavStation];
             }
             
         }
+        
+        if ([oArrOut count] > 0) {
+            return oArrOut;
+        }
     }
     
+    
+    
+    
     ST_Station* oStation = (ST_Station*) [oArrNearStations objectAtIndex:0];
-    oStation = [self getStationWithRoute:oStation];
-    return oStation;
+    oArrOut = [self getStationsWithRoutesOfStation:oStation];
+    return oArrOut;
     
 }
 

@@ -22,6 +22,66 @@
 @synthesize m_iGPSStatus;
 @synthesize m_Reachability;
 
+
+#pragma mark - Train Service Status
+
+-(void) parseTrainServiceStatusResult:(NSDictionary*)IN_Dict
+{
+    
+    NSDictionary* oDict = [IN_Dict objectForKey:@"service"];
+    if (oDict == nil) {
+        return;
+    }
+    
+    NSDictionary* oDictStatus = [oDict objectForKey:@"data"];
+    if (oDictStatus == nil) {
+        return;
+    }
+    
+    
+    NSString* strFeedTime = [oDict objectForKey:@"feedTime"];
+    if (strFeedTime != nil) {
+        [Utility saveStringInDefault:@"ALL_SERVICE_STATUSES_FEED_TIME" :strFeedTime];
+    }
+    
+    NSMutableDictionary* oD2 = [[NSMutableDictionary alloc] initWithDictionary:oDictStatus];
+    [Utility saveDictInDefault:@"ALL_SERVICE_STATUSES" :oD2];
+    
+}
+
+-(void) updateTrainServiceStatus
+{
+    NSMutableDictionary* oDictParam= [[NSMutableDictionary alloc] init];
+    [oDictParam setObject:@"1.0" forKey:@"appVersion"];
+    
+    [PFCloud callFunctionInBackground:@"getServiceStatus" withParameters:oDictParam
+                                block:^(id result, NSError *error)
+     {
+         if (error) {
+             
+         }
+         else
+         {
+             [self parseTrainServiceStatusResult: result];
+             
+         }
+         
+     }];
+    
+}
+
+-(void) timerUpdateServiceStatusCalled
+{
+    if (!([[UIApplication sharedApplication] applicationState] == UIApplicationStateActive)) {
+        return;
+    }
+    
+    [self updateTrainServiceStatus];
+    
+    
+}
+
+
 #pragma mark - GPS
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations
@@ -37,7 +97,7 @@
         return;
     }
     
-//	NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
+	//NSLog(@"Latitude = %f Longitude = %f Acuracy %f %f",newLocation.coordinate.latitude,newLocation.coordinate.longitude, newLocation.horizontalAccuracy, newLocation.verticalAccuracy);
 	   
     
     
@@ -113,7 +173,6 @@
 	m_LocationManager.delegate = self;
     
     if ([m_LocationManager respondsToSelector:@selector(requestWhenInUseAuthorization)]) {        
-        // TEST_CODE
         [m_LocationManager requestWhenInUseAuthorization];
     }
     
@@ -195,6 +254,8 @@
     [self setUpReachability];
     
     
+    [NSTimer scheduledTimerWithTimeInterval:INT_UPDATE_SERVICE_STATUS_DELAY target:self selector:@selector(timerUpdateServiceStatusCalled) userInfo:nil repeats:YES];
+    
     
     
 	[NSTimer scheduledTimerWithTimeInterval:5.0 target:self
@@ -236,6 +297,7 @@
                 [self.viewController getNearestStation];
     }
     
+    [self updateTrainServiceStatus];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

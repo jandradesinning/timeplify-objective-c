@@ -14,7 +14,7 @@
     
 }
 -(NSMutableArray*) getNearestStations;
--(ST_Station*) getFirstNearestStation;
+-(NSMutableArray*) getStationsWithRoutesOfFirstNearestStation;
 
 -(ST_Station*) getPrevStationofStation:(ST_Station*) IN_Station :(int)IN_iDirection;
 -(ST_Station*) getNextStationofStation:(ST_Station*) IN_Station :(int)IN_iDirection;

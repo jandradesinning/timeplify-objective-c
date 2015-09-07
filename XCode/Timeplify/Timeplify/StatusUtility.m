@@ -161,6 +161,70 @@
     
 }
 
+
+-(NSMutableAttributedString*) getServiceStatusFormattedText:(NSString*)IN_strStatus :(UIColor*)IN_Color :(BOOL)IN_bRealTime
+{
+    NSMutableAttributedString *strAttrib;
+    
+    UIFont* oFontMain = [UIFont boldSystemFontOfSize:20];
+    UIFont* oFontDate = [UIFont systemFontOfSize:10.0];
+    
+    NSString* strTime = [Utility getStringFromDefault:@"ALL_SERVICE_STATUSES_FEED_TIME"];
+    if (([strTime length] < 1)||(IN_bRealTime == YES)) {
+        strAttrib = [[NSMutableAttributedString alloc] initWithString:IN_strStatus];
+        int iLen = (int)[IN_strStatus length];
+        [strAttrib addAttribute:NSFontAttributeName
+                          value:oFontMain
+                          range:NSMakeRange(0, iLen)];
+        
+        [strAttrib addAttribute:NSForegroundColorAttributeName
+                          value:IN_Color
+                          range:NSMakeRange(0, iLen)];
+        
+    }
+    else
+    {
+        long iTime = [strTime longLongValue];
+        NSDate* oDate = [NSDate dateWithTimeIntervalSince1970:iTime];
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"hh:mm a"];
+        NSString *strDate = [dateFormatter stringFromDate:oDate];
+        
+        NSString *dateString = [NSString stringWithFormat:@"Last known @ %@", strDate];
+        
+        NSString* strText = [NSString stringWithFormat:@"%@\n%@", IN_strStatus, dateString];
+        
+        strAttrib = [[NSMutableAttributedString alloc] initWithString:strText];
+        int iLen1 = (int)[IN_strStatus length];
+        int iLen2 = (int)[dateString length];
+        
+        
+        [strAttrib addAttribute:NSFontAttributeName
+                          value:oFontMain
+                          range:NSMakeRange(0, iLen1)];
+        
+        [strAttrib addAttribute:NSForegroundColorAttributeName
+                          value:IN_Color
+                          range:NSMakeRange(0, iLen1)];
+        
+        
+        [strAttrib addAttribute:NSFontAttributeName
+                          value:oFontDate
+                          range:NSMakeRange((iLen1+1), iLen2)];
+        
+        [strAttrib addAttribute:NSForegroundColorAttributeName
+                          value:[UIColor blackColor]
+                          range:NSMakeRange((iLen1+1), iLen2)];
+        
+        
+    }
+    
+    
+    return strAttrib;
+    
+}
+
+
 -(NSString*) getServiceStatusfromDefault:(NSDictionary*)IN_Dict
 {
     NSString* strRoute = [IN_Dict objectForKey:@"routeId"];
@@ -188,6 +252,16 @@
     if (oDictStatus == nil) {
         return;
     }
+    
+    NSDictionary* oDictReal = [IN_Dict objectForKey:@"realTime"];
+    if (oDictReal != nil) {
+        NSString* strFeedTime = [oDictReal objectForKey:@"feedTime"];
+        if (strFeedTime != nil) {
+            [Utility saveStringInDefault:@"ALL_SERVICE_STATUSES_FEED_TIME" :strFeedTime];
+        }
+    }
+    
+
     
     NSMutableDictionary* oD2 = [[NSMutableDictionary alloc] initWithDictionary:oDictStatus];
     [Utility saveDictInDefault:@"ALL_SERVICE_STATUSES" :oD2];
@@ -662,6 +736,29 @@ NSInteger sortRealtimeDateComparer(id num1, id num2, void *context)
     }
 }
 
+
+-(ST_Station*) getEarlyStationRouteForGPSNearest: (NSMutableArray*)IN_arrNextTrains : (ST_Station*)IN_curStation :(NSMutableArray*)IN_arrGPSStations
+{
+    if ([IN_arrNextTrains count] < 1) {
+        return nil;
+    }
+    
+    NSMutableDictionary* oDict = [IN_arrNextTrains objectAtIndex:0];
+    NSString* strRouteId = [oDict objectForKey:@"routeId"];
+    
+    for (int i=0; i <[IN_arrGPSStations count]; i++) {
+        ST_Station* oStation = [IN_arrGPSStations objectAtIndex:i];
+        
+        if ([strRouteId isEqualToString:oStation.m_strRouteId]) {
+            oStation.m_iSelectedDirection = IN_curStation.m_iSelectedDirection;
+            oStation.m_iTemporaryDirection = IN_curStation.m_iTemporaryDirection;
+            return oStation;
+        }
+        
+    }
+    
+    return nil;
+}
 
 
 -(NSMutableArray*) getFormattedStatusResult:(NSDictionary*)IN_Dict :(BOOL) IN_bLocalData :(ST_Station*)IN_curStation

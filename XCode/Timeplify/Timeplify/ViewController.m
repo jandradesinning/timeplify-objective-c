@@ -817,17 +817,17 @@
     m_ctrlLblWalkingDistance.text = @" -- ";
 }
 
--(void) setServiceStatus:(NSMutableDictionary*)IN_Dict
+-(void) setServiceStatus:(NSMutableDictionary*)IN_Dict :(BOOL)IN_bRealTime
 {
     
     StatusUtility* oSUtil = [[StatusUtility alloc] init];
-    NSString* strTxt = [oSUtil getServiceStatusText:IN_Dict];
-    
-    m_ctrlLblService.text = strTxt;
-    
+    NSString* strStatusTxt = [oSUtil getServiceStatusText:IN_Dict];
     UIColor* oClr = [oSUtil getServiceStatusColor:IN_Dict];
-
-    m_ctrlLblService.textColor = oClr;
+    
+    NSMutableAttributedString* oFormattedText = [oSUtil getServiceStatusFormattedText:strStatusTxt :oClr:IN_bRealTime];
+    
+    m_ctrlLblService.attributedText = oFormattedText;
+    
 }
 
 // This code runs every second and this code removes the first time on the left menu when it expires
@@ -893,6 +893,10 @@
     
     NSMutableDictionary* oDict = [oStatusUtil getCurrentDisplayingDict:m_arrNextTrains :m_curStation];
     
+    
+    
+    
+    
     if (oDict == nil) {
         return;
     }
@@ -921,20 +925,24 @@
     
     // This is to tell whether the data is real time or scheduled and set the m_bDataTypeBlink accordingly
     
+    BOOL bRealTime;
+    
     NSString* strReal = [oDict objectForKey:@"REAL_TIME"];
     if ([strReal isEqualToString:@"YES"]) {
         m_ctrlLblDataType.text = @"Realtime Data";
         m_bDataTypeBlink = YES;
+        bRealTime = YES;
     }
     else
     {
         m_ctrlLblDataType.text = @"Scheduled Data";
         m_bDataTypeBlink = NO;
+        bRealTime = NO;
     }
     
     
     // This is to retrieve the status label (Delay, Good Service, etc) and also the status color
-    [self setServiceStatus:oDict];
+    [self setServiceStatus:oDict:bRealTime];
     
     m_ctrlLblLastStation.text = [oDict objectForKey:@"LAST_STATION"];
     
@@ -1104,10 +1112,17 @@
         
     }
 
-    
-    
+      
     m_arrNextTrains = [oUtil getFormattedStatusResult:oDict:IN_bUsingLocal:m_curStation];
     
+    if (m_arrGPSNearestStationsWithRoutes != nil) {
+        ST_Station* oGPSEarlyTrain = [oUtil getEarlyStationRouteForGPSNearest:m_arrNextTrains :m_curStation :m_arrGPSNearestStationsWithRoutes];
+        if (oGPSEarlyTrain != nil) {
+            m_curStation = oGPSEarlyTrain;
+        }
+        m_arrGPSNearestStationsWithRoutes = nil;
+    }
+
    
     if ([m_arrNextTrains count] > 0) {
         m_iVibrateCalls = 0;
@@ -1141,7 +1156,16 @@
     NSMutableDictionary* oDict = [oUtil getLocalDBScheduledData:oStation];
     
     
+    
     m_arrNextTrains = [oUtil getFormattedStatusResult:oDict:YES:m_curStation];
+    
+    if (m_arrGPSNearestStationsWithRoutes != nil) {
+        ST_Station* oGPSEarlyTrain = [oUtil getEarlyStationRouteForGPSNearest:m_arrNextTrains :m_curStation :m_arrGPSNearestStationsWithRoutes];
+        if (oGPSEarlyTrain != nil) {
+            m_curStation = oGPSEarlyTrain;
+        }
+        m_arrGPSNearestStationsWithRoutes = nil;
+    }
     
     
     if ([m_arrNextTrains count] > 0) {
@@ -1272,7 +1296,18 @@
 -(void) getDelayedNearestStation
 {
     NearestStation* oNear = [[NearestStation alloc] init];
-    ST_Station* oStation = [oNear getFirstNearestStation];
+    
+    m_arrGPSNearestStationsWithRoutes = [oNear getStationsWithRoutesOfFirstNearestStation];
+    
+    ST_Station* oStation;
+    if ([m_arrGPSNearestStationsWithRoutes count] < 1) {
+        oStation = nil;
+    }
+    else
+    {
+        oStation = [m_arrGPSNearestStationsWithRoutes objectAtIndex:0];
+    }
+   
     
     if (([[self.navigationController topViewController] isKindOfClass:[FavoritesViewController class]] || [[self.navigationController topViewController] isKindOfClass:[SeeAllTrainsViewController class]]) && oStation == nil) {
         //NSLog(@"Favorites or SellAllTrains ViewController currently shown");
@@ -1860,6 +1895,7 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     
+    m_arrGPSNearestStationsWithRoutes = nil;
     
     
     self.automaticallyAdjustsScrollViewInsets = NO; //The default value of this property is YES, which allows the view controller to adjust its scroll view insets in response to the screen areas consumed by the status bar, navigation bar, and toolbar or tab bar. Set to NO if you want to manage scroll view inset adjustments yourself, such as when there is more than one scroll view in the view hierarchy.

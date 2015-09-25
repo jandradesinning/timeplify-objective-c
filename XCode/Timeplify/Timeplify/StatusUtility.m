@@ -213,7 +213,7 @@
                           range:NSMakeRange((iLen1+1), iLen2)];
         
         [strAttrib addAttribute:NSForegroundColorAttributeName
-                          value:[UIColor blackColor]
+                          value:[UIColor whiteColor]
                           range:NSMakeRange((iLen1+1), iLen2)];
         
         

@@ -68,9 +68,13 @@
 
 -(void) showAbout
 {
-    AboutViewController* viewController = [[AboutViewController alloc] initWithNibName:@"AboutViewController" bundle:nil];
+//    AboutViewController* viewController = [[AboutViewController alloc] initWithNibName:@"AboutViewController" bundle:nil];
     
-    [self.navigationController pushViewController:viewController animated:YES];
+//    [self.navigationController pushViewController:viewController animated:YES];
+    
+    NSURL *url = [NSURL URLWithString:@"http://timeplify.com"];
+    UIApplication *application = [UIApplication sharedApplication];
+    [application openURL:url];
     
 }
 

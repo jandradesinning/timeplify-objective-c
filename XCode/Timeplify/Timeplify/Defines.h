@@ -65,7 +65,7 @@
 #define INT_GPS_ACCURACY                250
 
 
-#define STR_APP_STORE_ID                @"893213536"
+#define STR_APP_STORE_ID                @"1012318612"
 
 #define INT_GPS_NOTIFY_MIN_DISTANCE     100 // TEST_CODE 100
 

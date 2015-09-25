@@ -52,7 +52,7 @@
     
     //NSString *filepath = [[NSBundle mainBundle] pathForResource:@"About.html" ofType:nil];
     //NSURL *url = [NSURL fileURLWithPath:filepath];
-    NSURL *url = [NSURL URLWithString:@"http://m.mta.info/mt/www.mta.info?un_jtt_redirect=un_jtt_iosV"];
+    NSURL *url = [NSURL URLWithString:@"http://m.mta.info/mt/www.mta.info?un_jtt_v_ifnojs=Subway"];
     [m_ctrlWeb loadRequest:[NSURLRequest requestWithURL:url]];
     
     m_ctrlActivity.hidden = YES;
